@@ -1,6 +1,8 @@
 import app from "./app";
 import { config } from "./config/config";
 import { connectToDb, disconnectFromDb } from "./config/db";
+import dns from "node:dns"
+dns.setServers(['1.1.1.1','8.8.8.8'])
 
 const startServer = async () => {
   try {
