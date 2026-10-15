@@ -23,6 +23,26 @@ export const INVITATION_PERMISSIONS: Record<Role, Role[]> = {
 };
 
 /**
+ * Roles permitted to assign new roles to members (actorRole -> allowed new roles)
+ */
+export const MEMBER_ROLE_ASSIGNMENT_PERMISSIONS: Record<Role, Role[]> = {
+  SUPER_ADMIN: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  ADMIN: [ROLES.MANAGER, ROLES.DEVELOPER],
+  MANAGER: [],
+  DEVELOPER: [],
+};
+
+/**
+ * Roles permitted to modify members (role or status) based on the target member's current role
+ */
+export const MEMBER_MODIFICATION_TARGET_PERMISSIONS: Record<Role, Role[]> = {
+  SUPER_ADMIN: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  ADMIN: [ROLES.MANAGER, ROLES.DEVELOPER],
+  MANAGER: [],
+  DEVELOPER: [],
+};
+
+/**
  * Invitation status lifecycle
  */
 export const INVITATION_STATUS = {

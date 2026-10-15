@@ -1,6 +1,6 @@
 import { ClientSession, Types } from "mongoose";
 import { User, IUser } from "../models/User";
-import { Role } from "../types";
+import { Role, ROLES } from "../types";
 
 export interface CreateUserInput {
   name: string;
@@ -14,6 +14,7 @@ export interface CreateUserInput {
 export interface FindMembersFilter {
   role?: Role;
   isActive?: boolean;
+  search?: string;
 }
 
 export interface PaginationOptions {
@@ -78,6 +79,11 @@ export class UserDao {
     if (filter.isActive !== undefined) {
       query.isActive = filter.isActive;
     }
+    if (filter.search && filter.search.trim().length > 0) {
+      const sanitized = filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(sanitized, "i");
+      query.$or = [{ name: regex }, { email: regex }];
+    }
 
     let cursor = User.find(query).sort({ createdAt: -1 });
 
@@ -106,8 +112,30 @@ export class UserDao {
     if (filter.isActive !== undefined) {
       query.isActive = filter.isActive;
     }
+    if (filter.search && filter.search.trim().length > 0) {
+      const sanitized = filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(sanitized, "i");
+      query.$or = [{ name: regex }, { email: regex }];
+    }
 
     return await User.countDocuments(query).exec();
+  }
+
+  /**
+   * Count active Super Admins within an organization.
+   */
+  async countActiveSuperAdmins(
+    organizationId: string | Types.ObjectId,
+    session?: ClientSession
+  ): Promise<number> {
+    return await User.countDocuments(
+      {
+        organizationId,
+        role: ROLES.SUPER_ADMIN,
+        isActive: true,
+      },
+      { session }
+    ).exec();
   }
 
   /**

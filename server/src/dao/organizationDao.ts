@@ -42,6 +42,21 @@ export class OrganizationDao {
   }
 
   /**
+   * Update an organization by its ID.
+   */
+  async updateById(
+    id: string | Types.ObjectId,
+    update: Partial<IOrganization>,
+    session?: ClientSession
+  ): Promise<IOrganization | null> {
+    return await Organization.findByIdAndUpdate(
+      id,
+      { $set: update },
+      { returnDocument: "after", session }
+    ).exec();
+  }
+
+  /**
    * Delete an organization by ID (used for compensating rollbacks).
    */
   async deleteById(id: string | Types.ObjectId, session?: ClientSession): Promise<boolean> {

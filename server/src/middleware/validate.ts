@@ -11,7 +11,12 @@ export const validate = (schema: ZodSchema, location: RequestLocation = "body") 
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       const parsed = await schema.parseAsync(req[location]);
-      req[location] = parsed;
+      Object.defineProperty(req, location, {
+        value: parsed,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
       next();
     } catch (error) {
       if (error instanceof ZodError) {
