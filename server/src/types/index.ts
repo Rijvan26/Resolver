@@ -54,6 +54,48 @@ export const INVITATION_STATUS = {
 export type InvitationStatus = (typeof INVITATION_STATUS)[keyof typeof INVITATION_STATUS];
 
 /**
+ * Incident status lifecycle
+ */
+export const INCIDENT_STATUS = {
+  OPEN: "OPEN",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+} as const;
+
+export type IncidentStatus = (typeof INCIDENT_STATUS)[keyof typeof INCIDENT_STATUS];
+
+/**
+ * Incident priority levels
+ */
+
+export const INCIDENT_PRIORITY = {
+  LOW: "LOW",
+  MEDIUM: "MEDIUM",
+  HIGH: "HIGH",
+  CRITICAL: "CRITICAL",
+} as const;
+
+export type IncidentPriority = (typeof INCIDENT_PRIORITY)[keyof typeof INCIDENT_PRIORITY];
+
+/**
+ * Activity & Audit log action types
+ */
+export const ACTIVITY_ACTION = {
+  INCIDENT_CREATED: "INCIDENT_CREATED",
+  STATUS_CHANGED: "STATUS_CHANGED",
+  PRIORITY_CHANGED: "PRIORITY_CHANGED",
+  ASSIGNEE_CHANGED: "ASSIGNEE_CHANGED",
+  DETAILS_UPDATED: "DETAILS_UPDATED",
+  COMMENT_ADDED: "COMMENT_ADDED",
+  COMMENT_UPDATED: "COMMENT_UPDATED",
+  COMMENT_DELETED: "COMMENT_DELETED",
+  INCIDENT_DELETED: "INCIDENT_DELETED",
+} as const;
+
+export type ActivityAction = (typeof ACTIVITY_ACTION)[keyof typeof ACTIVITY_ACTION];
+
+/**
  * Authenticated JWT payload / attached user context
  */
 export interface AuthUserPayload {
@@ -62,6 +104,8 @@ export interface AuthUserPayload {
   role: Role;
   email: string;
 }
+
+
 
 /**
  * Standard API Success Response Envelope
