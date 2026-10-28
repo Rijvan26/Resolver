@@ -10,6 +10,7 @@ export interface CreateIncidentDaoInput {
   organizationId: Types.ObjectId | string;
   createdBy: Types.ObjectId | string;
   assigneeId?: Types.ObjectId | string | null;
+  resolvedAt?: Date | null;
 }
 
 export interface FindIncidentsFilter {

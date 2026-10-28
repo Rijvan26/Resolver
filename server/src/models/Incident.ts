@@ -15,6 +15,7 @@ export interface IIncident extends Document {
   organizationId: Types.ObjectId;
   createdBy: Types.ObjectId;
   assigneeId?: Types.ObjectId | null;
+  resolvedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -71,6 +72,11 @@ const incidentSchema = new Schema<IIncident>(
       default: null,
       index: true,
     },
+    resolvedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -84,6 +90,7 @@ incidentSchema.index({ organizationId: 1, priority: 1 });
 incidentSchema.index({ organizationId: 1, assigneeId: 1 });
 incidentSchema.index({ organizationId: 1, createdAt: -1 });
 incidentSchema.index({ organizationId: 1, updatedAt: -1 });
+incidentSchema.index({ organizationId: 1, resolvedAt: 1 });
 
 export const Incident = model<IIncident>("Incident", incidentSchema);
 export default Incident;

@@ -59,6 +59,7 @@ const activitySchema = new Schema<IActivity>(
 
 activitySchema.index({ organizationId: 1, incidentId: 1, createdAt: -1 });
 activitySchema.index({ organizationId: 1, incidentId: 1, createdAt: 1 });
+activitySchema.index({ organizationId: 1, createdAt: -1 });
 
 export const Activity = model<IActivity>("Activity", activitySchema);
 export default Activity;

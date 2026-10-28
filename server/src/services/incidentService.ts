@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { incidentDao, FindIncidentsFilter, IncidentPaginationOptions } from "../dao/incidentDao";
 import { userDao } from "../dao/userDao";
 import { activityDao } from "../dao/activityDao";
-import { IncidentPriority, IncidentStatus, Role, ACTIVITY_ACTION } from "../types";
+import { IncidentPriority, IncidentStatus, INCIDENT_STATUS, Role, ACTIVITY_ACTION } from "../types";
 import { NotFoundError, ValidationError, ForbiddenError } from "../utils/errors";
 import {
   CreateIncidentInput,
@@ -29,6 +29,7 @@ export interface SafeIncidentDetails {
   createdBy: UserSummary | string;
   assignee?: UserSummary | null;
   assigneeId?: string | null;
+  resolvedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +97,7 @@ const formatIncident = (doc: IIncident): SafeIncidentDetails => {
     createdBy: creatorFormatted,
     assignee: assigneeFormatted,
     assigneeId: doc.assigneeId ? doc.assigneeId.toString() : null,
+    resolvedAt: doc.resolvedAt || null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -134,6 +136,7 @@ export class IncidentService {
       organizationId,
       createdBy: creatorUserId,
       assigneeId: input.assigneeId || null,
+      resolvedAt: input.status === INCIDENT_STATUS.RESOLVED ? new Date() : null,
     });
 
     // Record persistent audit entry for incident creation
@@ -232,7 +235,14 @@ export class IncidentService {
     const updateData: Record<string, unknown> = {};
     if (input.title !== undefined) updateData.title = input.title;
     if (input.description !== undefined) updateData.description = input.description;
-    if (input.status !== undefined) updateData.status = input.status;
+    if (input.status !== undefined) {
+      updateData.status = input.status;
+      if (input.status === INCIDENT_STATUS.RESOLVED && existing.status !== INCIDENT_STATUS.RESOLVED) {
+        updateData.resolvedAt = new Date();
+      } else if (input.status !== INCIDENT_STATUS.RESOLVED && existing.status === INCIDENT_STATUS.RESOLVED) {
+        updateData.resolvedAt = null;
+      }
+    }
     if (input.priority !== undefined) updateData.priority = input.priority;
 
     const updated = await incidentDao.updateByOrgAndId(

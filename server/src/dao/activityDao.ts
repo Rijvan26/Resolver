@@ -85,6 +85,35 @@ export class ActivityDao {
 
     return await Activity.countDocuments(query).exec();
   }
+
+  /**
+   * Find recent activities across an entire organization with populated actor and incident details.
+   */
+  async findRecentActivitiesByOrg(
+    organizationId: string | Types.ObjectId,
+    options: { skip?: number; limit?: number } = {}
+  ): Promise<IActivity[]> {
+    let cursor = Activity.find({ organizationId })
+      .sort({ createdAt: -1, _id: -1 })
+      .populate("actorId", "name email role")
+      .populate("incidentId", "title status priority");
+
+    if (options.skip !== undefined) {
+      cursor = cursor.skip(options.skip);
+    }
+    if (options.limit !== undefined) {
+      cursor = cursor.limit(options.limit);
+    }
+
+    return await cursor.exec();
+  }
+
+  /**
+   * Count total activities across an organization.
+   */
+  async countActivitiesByOrg(organizationId: string | Types.ObjectId): Promise<number> {
+    return await Activity.countDocuments({ organizationId }).exec();
+  }
 }
 
 export const activityDao = new ActivityDao();
