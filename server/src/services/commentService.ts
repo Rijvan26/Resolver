@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { commentDao, CommentPaginationOptions } from "../dao/commentDao";
 import { incidentDao } from "../dao/incidentDao";
 import { activityDao } from "../dao/activityDao";
+import { notificationEventService } from "./notificationEventService";
 import { IComment } from "../models/Comment";
 import { ACTIVITY_ACTION, ROLES, Role } from "../types";
 import { NotFoundError, ForbiddenError } from "../utils/errors";
@@ -102,6 +103,32 @@ export class CommentService {
       action: ACTIVITY_ACTION.COMMENT_ADDED,
       metadata: { commentId: created._id },
     });
+
+    // Dispatch comment added notification to assignee and creator
+    try {
+      const currentAssigneeId = incident.assigneeId
+        ? (incident.assigneeId as unknown as { _id?: Types.ObjectId })._id
+          ? (incident.assigneeId as unknown as { _id: Types.ObjectId })._id.toString()
+          : incident.assigneeId.toString()
+        : null;
+
+      const incidentCreatorId = (incident.createdBy as unknown as { _id?: Types.ObjectId })._id
+        ? (incident.createdBy as unknown as { _id: Types.ObjectId })._id.toString()
+        : incident.createdBy.toString();
+
+      await notificationEventService.handleCommentAdded({
+        organizationId,
+        incidentId,
+        incidentTitle: incident.title,
+        actorId: userId,
+        commentId: created._id.toString(),
+        commentContent: input.content,
+        assigneeId: currentAssigneeId,
+        createdBy: incidentCreatorId,
+      });
+    } catch (notifErr) {
+      console.error("⚠️ [CommentService] Failed to dispatch comment notification:", notifErr);
+    }
 
     const populated = await commentDao.findByOrgAndId(organizationId, created._id, incidentId);
     return formatComment(populated || created);

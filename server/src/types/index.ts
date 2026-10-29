@@ -96,6 +96,18 @@ export const ACTIVITY_ACTION = {
 export type ActivityAction = (typeof ACTIVITY_ACTION)[keyof typeof ACTIVITY_ACTION];
 
 /**
+ * In-App Notification Types
+ */
+export const NOTIFICATION_TYPES = {
+  INCIDENT_ASSIGNED: "INCIDENT_ASSIGNED",
+  INCIDENT_STATUS_CHANGED: "INCIDENT_STATUS_CHANGED",
+  INCIDENT_PRIORITY_CHANGED: "INCIDENT_PRIORITY_CHANGED",
+  INCIDENT_COMMENT_ADDED: "INCIDENT_COMMENT_ADDED",
+} as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
+
+/**
  * Authenticated JWT payload / attached user context
  */
 export interface AuthUserPayload {

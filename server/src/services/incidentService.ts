@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { incidentDao, FindIncidentsFilter, IncidentPaginationOptions } from "../dao/incidentDao";
 import { userDao } from "../dao/userDao";
 import { activityDao } from "../dao/activityDao";
+import { notificationEventService } from "./notificationEventService";
 import { IncidentPriority, IncidentStatus, INCIDENT_STATUS, Role, ACTIVITY_ACTION } from "../types";
 import { NotFoundError, ValidationError, ForbiddenError } from "../utils/errors";
 import {
@@ -153,6 +154,22 @@ export class IncidentService {
       },
     });
 
+    // Notify initial assignee if assigned upon creation
+    if (created.assigneeId) {
+      try {
+        await notificationEventService.handleIncidentAssigned({
+          organizationId,
+          incidentId: created._id.toString(),
+          incidentTitle: created.title,
+          actorId: creatorUserId,
+          newAssigneeId: created.assigneeId.toString(),
+          oldAssigneeId: null,
+        });
+      } catch (notifErr) {
+        console.error("⚠️ [IncidentService] Failed to dispatch incident assignment notification:", notifErr);
+      }
+    }
+
     // Retrieve populated document
     const incident = await incidentDao.findByOrgAndId(organizationId, created._id);
     return formatIncident(incident || created);
@@ -255,7 +272,11 @@ export class IncidentService {
       throw new NotFoundError("Incident not found in organization");
     }
 
-    const actorId = userId || existing.createdBy.toString();
+    const existingCreatorId = (existing.createdBy as unknown as { _id?: Types.ObjectId })._id
+      ? (existing.createdBy as unknown as { _id: Types.ObjectId })._id.toString()
+      : existing.createdBy.toString();
+
+    const actorId = userId || existingCreatorId;
 
     // Audit status change
     if (input.status !== undefined && input.status !== existing.status) {
@@ -269,6 +290,28 @@ export class IncidentService {
           after: { status: input.status },
         },
       });
+
+      // Dispatch status changed notification
+      try {
+        const currentAssigneeId = existing.assigneeId
+          ? (existing.assigneeId as unknown as { _id?: Types.ObjectId })._id
+            ? (existing.assigneeId as unknown as { _id: Types.ObjectId })._id.toString()
+            : existing.assigneeId.toString()
+          : null;
+
+        await notificationEventService.handleIncidentStatusChanged({
+          organizationId,
+          incidentId,
+          incidentTitle: updated.title,
+          actorId,
+          newStatus: input.status,
+          oldStatus: existing.status,
+          assigneeId: currentAssigneeId,
+          createdBy: existingCreatorId,
+        });
+      } catch (notifErr) {
+        console.error("⚠️ [IncidentService] Failed to dispatch status changed notification:", notifErr);
+      }
     }
 
     // Audit priority change
@@ -283,6 +326,28 @@ export class IncidentService {
           after: { priority: input.priority },
         },
       });
+
+      // Dispatch priority changed notification
+      try {
+        const currentAssigneeId = existing.assigneeId
+          ? (existing.assigneeId as unknown as { _id?: Types.ObjectId })._id
+            ? (existing.assigneeId as unknown as { _id: Types.ObjectId })._id.toString()
+            : existing.assigneeId.toString()
+          : null;
+
+        await notificationEventService.handleIncidentPriorityChanged({
+          organizationId,
+          incidentId,
+          incidentTitle: updated.title,
+          actorId,
+          newPriority: input.priority,
+          oldPriority: existing.priority,
+          assigneeId: currentAssigneeId,
+          createdBy: existingCreatorId,
+        });
+      } catch (notifErr) {
+        console.error("⚠️ [IncidentService] Failed to dispatch priority changed notification:", notifErr);
+      }
     }
 
     // Audit details update (title or description)
@@ -359,16 +424,33 @@ export class IncidentService {
     const newAssigneeId = assigneeId ? assigneeId.toString() : null;
 
     if (oldAssigneeId !== newAssigneeId) {
+      const actorId = userId || existing.createdBy.toString();
       await activityDao.create({
         organizationId,
         incidentId,
-        actorId: userId || existing.createdBy.toString(),
+        actorId,
         action: ACTIVITY_ACTION.ASSIGNEE_CHANGED,
         metadata: {
           before: { assigneeId: oldAssigneeId },
           after: { assigneeId: newAssigneeId },
         },
       });
+
+      // Dispatch incident assignment notification to new assignee
+      if (newAssigneeId) {
+        try {
+          await notificationEventService.handleIncidentAssigned({
+            organizationId,
+            incidentId,
+            incidentTitle: updated.title,
+            actorId,
+            newAssigneeId,
+            oldAssigneeId,
+          });
+        } catch (notifErr) {
+          console.error("⚠️ [IncidentService] Failed to dispatch assignee changed notification:", notifErr);
+        }
+      }
     }
 
     return formatIncident(updated);

@@ -18,6 +18,13 @@ const envSchema = z.object({
   COOKIE_SECRET: z.string().min(16, "COOKIE_SECRET must be at least 16 characters long"),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   INVITATION_BASE_URL: z.string().default("http://localhost:5173/accept-invitation"),
+  SMTP_HOST: z.string().default("smtp-relay.brevo.com"),
+  SMTP_PORT: z.coerce.number().default(587),
+  BREVO_SMTP_USER: z.string().optional(),
+  BREVO_SMTP_PASS: z.string().optional(),
+  BREVO_API_KEY: z.string().optional(),
+  GOOGLE_USER: z.string().optional(),
+  EMAIL_FROM: z.string().default("Resolver Notifications <notifications@resolver.internal>"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

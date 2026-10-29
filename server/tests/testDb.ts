@@ -1,10 +1,19 @@
+import path from "path";
 import { MongoMemoryServer } from "mongodb-memory-server";
+
+if (!process.env.MONGOMS_DOWNLOAD_DIR) {
+  process.env.MONGOMS_DOWNLOAD_DIR = path.resolve(__dirname, "../node_modules/.cache/mongodb-memory-server");
+}
 import mongoose from "mongoose";
 
 let mongod: MongoMemoryServer | null = null;
 
 export const setupTestDb = async (): Promise<void> => {
-  mongod = await MongoMemoryServer.create();
+  mongod = await MongoMemoryServer.create({
+    instance: {
+      launchTimeout: 60000,
+    },
+  });
   const uri = mongod.getUri();
   await mongoose.connect(uri);
 };
