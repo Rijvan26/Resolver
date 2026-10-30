@@ -15,7 +15,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PriorityBadge } from "@/components/shared/PriorityBadge";
 import { RoleBadge } from "@/components/shared/RoleBadge";
 import { RoleGate } from "@/components/shared/RoleGate";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EditIncidentModal } from "@/features/incidents/components/EditIncidentModal";
 import { AssignIncidentModal } from "@/features/incidents/components/AssignIncidentModal";
 import { DeleteIncidentModal } from "@/features/incidents/components/DeleteIncidentModal";
+import { CommentList } from "@/features/incidents/components/CommentList";
+import { IncidentTimeline } from "@/features/incidents/components/IncidentTimeline";
 import { formatRelativeTime } from "@/features/dashboard/dashboardUtils";
 import { parseApiError } from "@/lib/apiErrors";
 import {
@@ -46,6 +48,7 @@ export const IncidentDetailsPage: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"comments" | "timeline">("comments");
   const [actionError, setActionError] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useGetIncidentQuery(incidentId || "", {
@@ -279,51 +282,42 @@ export const IncidentDetailsPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Phase 5 Integration Placeholder: Comments Section */}
-          <Card className="border-dashed border-slate-200 dark:border-slate-800">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                <MessageSquare className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-                <CardTitle className="text-sm">Comments & Team Collaboration</CardTitle>
+          {/* Tabbed Comments & Audit Timeline */}
+          <Card>
+            <div className="border-b border-slate-200 px-6 pt-3 dark:border-slate-800">
+              <div className="flex gap-6">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("comments")}
+                  className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
+                    activeTab === "comments"
+                      ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
+                      : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Discussion & Comments
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("timeline")}
+                  className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
+                    activeTab === "timeline"
+                      ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
+                      : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <History className="h-4 w-4" />
+                  Audit Timeline
+                </button>
               </div>
-              <CardDescription>
-                Discussion thread, status updates, and post-incident resolution notes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-xl bg-slate-50 p-6 text-center dark:bg-slate-900/50">
-                <MessageSquare className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Incident Discussion Thread
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Full threaded comments, markdown support, and internal notes will be available in Phase 5.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Phase 5 Integration Placeholder: Activity Timeline */}
-          <Card className="border-dashed border-slate-200 dark:border-slate-800">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                <History className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-                <CardTitle className="text-sm">Audit Trail & Activity Timeline</CardTitle>
-              </div>
-              <CardDescription>
-                Lifecycle transitions, assignments, and chronological event history
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-xl bg-slate-50 p-6 text-center dark:bg-slate-900/50">
-                <History className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Incident Audit Timeline
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Comprehensive audit logs and timeline playback will be available in Phase 5.
-                </p>
-              </div>
+            </div>
+            <CardContent className="pt-5">
+              {activeTab === "comments" ? (
+                <CommentList incidentId={incident.id} />
+              ) : (
+                <IncidentTimeline incidentId={incident.id} />
+              )}
             </CardContent>
           </Card>
         </div>

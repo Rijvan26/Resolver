@@ -56,3 +56,14 @@ export const updateIncidentFormSchema = z.object({
 
 export type UpdateIncidentFormValues = z.infer<typeof updateIncidentFormSchema>;
 
+export const commentFormSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(1, "Comment content cannot be empty")
+    .max(5000, "Comment cannot exceed 5000 characters"),
+});
+
+export type CommentFormValues = z.infer<typeof commentFormSchema>;
+
+
