@@ -291,3 +291,35 @@ export interface PaginatedRecentActivity {
   pagination: Pagination;
 }
 
+export interface IncidentsByStatusData {
+  statusCounts: Record<IncidentStatus, number>;
+  total: number;
+}
+
+export interface IncidentsByPriorityData {
+  priorityCounts: Record<IncidentPriority, number>;
+  total: number;
+}
+
+export interface IncidentTrendsData {
+  trends: DailyTrendEntry[];
+  startDate: string;
+  endDate: string;
+}
+
+export interface TeamWorkloadData {
+  teamWorkload: TeamMemberWorkload[];
+  totalMembers: number;
+}
+
+export interface DashboardDateRangeParams {
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface RecentActivityParams {
+  page?: number;
+  limit?: number;
+}
+
+
