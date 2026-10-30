@@ -141,6 +141,39 @@ export interface PaginatedIncidents {
   pagination: Pagination;
 }
 
+export type IncidentSortField = "createdAt" | "updatedAt" | "title" | "priority" | "status";
+export type IncidentSortOrder = "asc" | "desc";
+
+export interface ListIncidentsParams {
+  page?: number;
+  limit?: number;
+  status?: IncidentStatus;
+  priority?: IncidentPriority;
+  assigneeId?: string;
+  search?: string;
+  sortBy?: IncidentSortField;
+  sortOrder?: IncidentSortOrder;
+}
+
+export interface CreateIncidentPayload {
+  title: string;
+  description: string;
+  status?: IncidentStatus;
+  priority?: IncidentPriority;
+  assigneeId?: string | null;
+}
+
+export interface UpdateIncidentPayload {
+  title?: string;
+  description?: string;
+  status?: IncidentStatus;
+  priority?: IncidentPriority;
+}
+
+export interface UpdateAssigneePayload {
+  assigneeId: string | null;
+}
+
 export interface Comment {
   id: string;
   incidentId: string;
