@@ -53,10 +53,11 @@ describe("Brevo SMTP Configuration & Connectivity Verification", () => {
     emailDeliveryService.setSender(null);
     emailDeliveryService.initTransporter();
 
+    const recipient = config.GOOGLE_USER?.trim() || "khanrijvan2610@gmail.com";
     const sendResult = await emailDeliveryService.sendEmail({
-      to: "recipient@example.com",
-      subject: "Test Brevo Delivery",
-      text: "Testing Brevo SMTP integration with Resolver.",
+      to: recipient,
+      subject: "Test Brevo Delivery via Resolver Test Suite",
+      text: "Testing Brevo SMTP live integration with Resolver.",
     });
 
     // The service must return a structured result, never crash or leak secrets
@@ -64,7 +65,11 @@ describe("Brevo SMTP Configuration & Connectivity Verification", () => {
     expect(sendResult).toHaveProperty("status");
     expect(sendResult).toHaveProperty("attempts");
 
-    if (!sendResult.success) {
+    if (sendResult.success) {
+      expect(sendResult.status).toBe("SENT");
+      expect(sendResult.messageId).toBeDefined();
+      console.log("📬 Live Email Sent! Message ID:", sendResult.messageId);
+    } else {
       expect(sendResult.status).toBe("FAILED");
       expect(sendResult.attempts).toBe(3); // bounded at 3 retries
       expect(sendResult.error).toBeDefined();

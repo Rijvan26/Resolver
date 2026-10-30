@@ -37,9 +37,10 @@ export class AuthController {
       res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
         httpOnly: true,
         secure: config.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         signed: true,
         maxAge: COOKIE_MAX_AGE_MS,
+        path: "/",
       });
 
       const response: ApiSuccessResponse<{
@@ -75,9 +76,10 @@ export class AuthController {
       res.cookie(REFRESH_COOKIE_NAME, tokens.refreshToken, {
         httpOnly: true,
         secure: config.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         signed: true,
         maxAge: COOKIE_MAX_AGE_MS,
+        path: "/",
       });
 
       const response: ApiSuccessResponse<typeof tokens> = {
@@ -103,7 +105,13 @@ export class AuthController {
 
       await authService.logout(rawToken);
 
-      res.clearCookie(REFRESH_COOKIE_NAME);
+      res.clearCookie(REFRESH_COOKIE_NAME, {
+        httpOnly: true,
+        secure: config.NODE_ENV === "production",
+        sameSite: "lax",
+        signed: true,
+        path: "/",
+      });
 
       const response: ApiSuccessResponse<null> = {
         success: true,
