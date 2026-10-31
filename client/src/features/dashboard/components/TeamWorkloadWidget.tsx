@@ -88,7 +88,7 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
               Active unresolved incidents per eligible team member
             </CardDescription>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-slate-700 dark:text-slate-300 tabular-nums">
             {team.length} Members
           </span>
         </div>
@@ -137,7 +137,7 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
                     <div className="text-right shrink-0">
                       <div className="flex items-center gap-1.5 justify-end">
                         <span
-                          className={`text-sm font-bold ${
+                          className={`text-sm font-bold tabular-nums ${
                             isZero
                               ? "text-slate-400"
                               : isHighWorkload
@@ -149,7 +149,7 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
                         </span>
                         <span className="text-[10px] text-slate-400">active</span>
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
                         {item.open} open · {item.inProgress} in prog
                       </div>
                     </div>

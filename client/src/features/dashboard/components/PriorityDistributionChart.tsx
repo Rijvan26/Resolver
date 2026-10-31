@@ -130,7 +130,7 @@ export const PriorityDistributionChart: React.FC<PriorityDistributionChartProps>
             <CardDescription>Severity classification</CardDescription>
           </div>
           {criticalAndHighCount > 0 && (
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-rose-200/60 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 tabular-nums">
               {criticalAndHighCount} Critical/High
             </span>
           )}
@@ -174,7 +174,7 @@ export const PriorityDistributionChart: React.FC<PriorityDistributionChartProps>
                             <span className="font-semibold text-slate-900 dark:text-white">
                               {item.name}:
                             </span>{" "}
-                            <span className="font-bold">{count}</span> ({pct}%)
+                            <span className="font-bold tabular-nums">{count}</span> ({pct}%)
                           </div>
                         );
                       }
@@ -193,11 +193,11 @@ export const PriorityDistributionChart: React.FC<PriorityDistributionChartProps>
             {/* Custom summary chips */}
             <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
               {chartData.map((item) => (
-                <div key={item.priority} className="p-1 rounded-lg bg-slate-50 dark:bg-slate-800/40">
-                  <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                <div key={item.priority} className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40">
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     {item.name}
                   </div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white">
+                  <div className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
                     {item.count}
                   </div>
                 </div>

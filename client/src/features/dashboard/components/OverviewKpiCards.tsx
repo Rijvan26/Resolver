@@ -126,14 +126,14 @@ export const OverviewKpiCards: React.FC<OverviewKpiCardsProps> = ({
         {kpis.map((kpi, idx) => (
           <Card
             key={idx}
-            className={`p-4 transition-all duration-200 hover:shadow-md ${
+            className={`p-4 sm:p-5 transition-all duration-200 hover:shadow-xs ${
               kpi.isAlert
-                ? "border-rose-300 bg-rose-50/30 ring-1 ring-rose-400/30 dark:border-rose-900/60 dark:bg-rose-950/20"
+                ? "border-rose-300/80 bg-rose-50/30 ring-1 ring-rose-400/20 dark:border-rose-900/60 dark:bg-rose-950/20"
                 : "border-slate-200/80 dark:border-slate-800"
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 {kpi.title}
               </span>
               <div className="rounded-lg p-1.5 bg-slate-50 dark:bg-slate-800/60">
@@ -141,13 +141,13 @@ export const OverviewKpiCards: React.FC<OverviewKpiCardsProps> = ({
               </div>
             </div>
 
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className={`text-2xl font-bold tracking-tight ${kpi.color}`}>
+            <div className="mt-2.5 flex items-baseline gap-2">
+              <span className={`text-2xl sm:text-3xl font-bold tracking-tight tabular-nums ${kpi.color}`}>
                 {kpi.value.toLocaleString()}
               </span>
             </div>
 
-            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 truncate">
               {kpi.description}
             </p>
           </Card>
@@ -158,8 +158,8 @@ export const OverviewKpiCards: React.FC<OverviewKpiCardsProps> = ({
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 px-1">
           <TrendingUp className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
           <span>
-            Selected range activity: <strong>{data.createdInRange}</strong> created,{" "}
-            <strong>{data.resolvedInRange}</strong> resolved
+            Selected range activity: <strong className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{data.createdInRange}</strong> created,{" "}
+            <strong className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{data.resolvedInRange}</strong> resolved
           </span>
         </div>
       )}

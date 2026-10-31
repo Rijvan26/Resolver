@@ -106,21 +106,21 @@ export const DashboardPage: React.FC = () => {
     isOverviewError && isStatusError && isPriorityError && isTrendsError;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 pb-16">
       {/* Top Header section */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm dark:bg-brand-500">
-              <LayoutDashboard className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs dark:bg-brand-500">
+              <LayoutDashboard className="h-5 w-5" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               Incident Operations
             </h1>
           </div>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
             Real-time incident tracking, team workloads, and analytics for{" "}
-            <span className="font-semibold text-slate-800 dark:text-slate-200">
+            <span className="font-semibold text-slate-900 dark:text-slate-100">
               {organization?.name || "Your Organization"}
             </span>
           </p>

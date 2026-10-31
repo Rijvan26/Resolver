@@ -5,6 +5,7 @@ export const TAG_TYPES = [
   "Auth",
   "Organization",
   "Members",
+  "Invitations",
   "Incidents",
   "IncidentDetails",
   "Comments",

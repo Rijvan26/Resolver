@@ -105,16 +105,16 @@ export const IncidentTrendsChart: React.FC<IncidentTrendsChartProps> = ({
 
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
-              <span className="text-slate-600 dark:text-slate-400">Created:</span>
-              <span className="font-semibold text-slate-900 dark:text-white">
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
+              <span className="text-slate-500 dark:text-slate-400">Created:</span>
+              <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
                 {totalCreated.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              <span className="text-slate-600 dark:text-slate-400">Resolved:</span>
-              <span className="font-semibold text-slate-900 dark:text-white">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="text-slate-500 dark:text-slate-400">Resolved:</span>
+              <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
                 {totalResolved.toLocaleString()}
               </span>
             </div>

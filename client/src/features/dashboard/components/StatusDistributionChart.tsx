@@ -124,7 +124,7 @@ export const StatusDistributionChart: React.FC<StatusDistributionChartProps> = (
             </div>
             <CardDescription>Breakdown by lifecycle stage</CardDescription>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-slate-700 dark:text-slate-300 tabular-nums">
             Total: {total.toLocaleString()}
           </span>
         </div>
@@ -151,7 +151,7 @@ export const StatusDistributionChart: React.FC<StatusDistributionChartProps> = (
                             <span className="font-semibold text-slate-900 dark:text-white">
                               {item.name}:
                             </span>{" "}
-                            <span className="font-bold">{count}</span> ({pct}%)
+                            <span className="font-bold tabular-nums">{count}</span> ({pct}%)
                           </div>
                         );
                       }
@@ -183,14 +183,14 @@ export const StatusDistributionChart: React.FC<StatusDistributionChartProps> = (
                   <div key={item.status} className="flex items-center justify-between text-xs py-1">
                     <div className="flex items-center gap-2">
                       <span
-                        className="h-2.5 w-2.5 rounded-full shrink-0"
+                        className="h-2 w-2 rounded-full shrink-0"
                         style={{ backgroundColor: item.color }}
                       />
                       <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
                     </div>
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                    <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
                       {item.value}{" "}
-                      <span className="text-[10px] font-normal text-slate-400">({pct}%)</span>
+                      <span className="text-[11px] font-normal text-slate-400">({pct}%)</span>
                     </span>
                   </div>
                 );

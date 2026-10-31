@@ -10,6 +10,36 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
+/**
+ * Roles permitted to send invitations and their allowed target roles
+ */
+export const INVITATION_PERMISSIONS: Record<Role, Role[]> = {
+  SUPER_ADMIN: [ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  ADMIN: [ROLES.MANAGER, ROLES.DEVELOPER],
+  MANAGER: [],
+  DEVELOPER: [],
+};
+
+/**
+ * Roles permitted to assign new roles to members (actorRole -> allowed new roles)
+ */
+export const MEMBER_ROLE_ASSIGNMENT_PERMISSIONS: Record<Role, Role[]> = {
+  SUPER_ADMIN: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  ADMIN: [ROLES.MANAGER, ROLES.DEVELOPER],
+  MANAGER: [],
+  DEVELOPER: [],
+};
+
+/**
+ * Roles permitted to modify members (role or status) based on the target member's current role
+ */
+export const MEMBER_MODIFICATION_TARGET_PERMISSIONS: Record<Role, Role[]> = {
+  SUPER_ADMIN: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  ADMIN: [ROLES.MANAGER, ROLES.DEVELOPER],
+  MANAGER: [],
+  DEVELOPER: [],
+};
+
 export const INCIDENT_STATUS = {
   OPEN: "OPEN",
   IN_PROGRESS: "IN_PROGRESS",

@@ -14,7 +14,35 @@
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+    letter-spacing: -0.025em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: rgba(99, 102, 241, 0.22);
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background-color: rgba(129, 140, 248, 0.32);
+    color: inherit;
+  }
+
+  * {
+    caret-color: #6366f1;
+  }
+
+  .dark * {
+    caret-color: #818cf8;
   }
 }
 
