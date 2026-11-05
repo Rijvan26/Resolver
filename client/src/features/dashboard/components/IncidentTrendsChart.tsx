@@ -1,19 +1,14 @@
-import React from "react";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import React, { useMemo } from "react";
+import type { EChartsOption } from "echarts";
 import { DailyTrendEntry } from "@/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, AlertCircle, RotateCw } from "lucide-react";
+import { EChart } from "@/components/charts/EChart";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
+import { CHART_COLORS, getChartTheme } from "@/components/charts/chartTheme";
+import { formatDateShort, areaGradient } from "@/components/charts/chartUtils";
+import { useAppSelector } from "@/app/hooks";
 
 export interface IncidentTrendsChartProps {
   trends?: DailyTrendEntry[];
@@ -32,15 +27,122 @@ export const IncidentTrendsChart: React.FC<IncidentTrendsChartProps> = ({
   startDate,
   endDate,
 }) => {
+  const isDark = useAppSelector((s) => s.ui.theme === "dark");
+  const theme = useMemo(() => getChartTheme(isDark), [isDark]);
+
+  const totalCreated = trends.reduce((acc, curr) => acc + curr.created, 0);
+  const totalResolved = trends.reduce((acc, curr) => acc + curr.resolved, 0);
+  const hasData = trends.length > 0;
+
+  const chartOption = useMemo<EChartsOption>(() => {
+    const dates = trends.map((t) => formatDateShort(t.date));
+    const created = trends.map((t) => t.created);
+    const resolved = trends.map((t) => t.resolved);
+    const { _computed } = theme;
+
+    return {
+      legend: { show: false }, // Use custom HTML indicator pills in card header instead
+      grid: {
+        left: 12,
+        right: 16,
+        top: 20,
+        bottom: 24,
+        containLabel: true,
+      },
+      xAxis: {
+        type: "category",
+        data: dates,
+        boundaryGap: false,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: {
+          color: _computed.textColor,
+          fontSize: 10,
+          margin: 12,
+          hideOverlap: true,
+          fontFamily: "Inter, sans-serif",
+        },
+      },
+      yAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { lineStyle: { color: _computed.gridColor, type: "dashed" } },
+        axisLabel: {
+          color: _computed.textColor,
+          fontSize: 10,
+          margin: 10,
+          fontFamily: "Inter, sans-serif",
+        },
+      },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: {
+          type: "line",
+          lineStyle: { color: CHART_COLORS.accent, width: 1, type: "dashed" },
+        },
+        formatter: (params: unknown) => {
+          const p = params as { name: string; seriesName: string; value: number; color: string }[];
+          if (!p.length) return "";
+          return (
+            `<div style="font-weight:700;font-size:12px;margin-bottom:4px">${p[0].name}</div>` +
+            p
+              .map(
+                (item) =>
+                  `<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:4px">
+                    <span style="display:flex;align-items:center;gap:6px">
+                      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${item.color}"></span>
+                      <span style="color:rgba(255,255,255,0.8)">${item.seriesName}</span>
+                    </span>
+                    <span style="font-weight:600;font-variant-numeric:tabular-nums">${item.value}</span>
+                  </div>`
+              )
+              .join("")
+          );
+        },
+      },
+      series: [
+        {
+          name: "Created",
+          type: "line",
+          smooth: true,
+          data: created,
+          symbol: "circle",
+          symbolSize: 5,
+          showSymbol: false,
+          lineStyle: { color: CHART_COLORS.accent, width: 2.5 },
+          itemStyle: { color: CHART_COLORS.accent },
+          areaStyle: { color: areaGradient(CHART_COLORS.accent, 0.35, 0.0) },
+          emphasis: { focus: "series" },
+        },
+        {
+          name: "Resolved",
+          type: "line",
+          smooth: true,
+          data: resolved,
+          symbol: "circle",
+          symbolSize: 5,
+          showSymbol: false,
+          lineStyle: { color: CHART_COLORS.success, width: 2 },
+          itemStyle: { color: CHART_COLORS.success },
+          areaStyle: { color: areaGradient(CHART_COLORS.success, 0.25, 0.0) },
+          emphasis: { focus: "series" },
+        },
+      ],
+    };
+  }, [trends, theme]);
+
   if (isLoading) {
     return (
       <Card className="h-96">
         <CardHeader>
-          <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-4 w-72" />
+          <div className="h-5 w-48 bg-pill rounded animate-pulse" />
+          <div className="h-4 w-72 bg-pill rounded animate-pulse mt-1" />
         </CardHeader>
-        <CardContent className="h-72 flex items-center justify-center">
-          <Skeleton className="h-64 w-full" />
+        <CardContent>
+          <ChartSkeleton height={280} />
         </CardContent>
       </Card>
     );
@@ -54,39 +156,15 @@ export const IncidentTrendsChart: React.FC<IncidentTrendsChartProps> = ({
           <CardDescription>Daily creations vs. resolutions</CardDescription>
         </CardHeader>
         <CardContent className="h-64 flex flex-col items-center justify-center gap-2">
-          <AlertCircle className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-          <p className="text-xs text-rose-700 dark:text-rose-300">
-            Failed to load incident trend timeline.
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onRetry}
-            leftIcon={<RotateCw className="h-3.5 w-3.5" />}
-          >
+          <AlertCircle className="h-6 w-6 text-sev-p1" />
+          <p className="text-xs text-sev-p1">Failed to load incident trend timeline.</p>
+          <Button size="sm" variant="outline" onClick={onRetry} leftIcon={<RotateCw className="h-3.5 w-3.5" />}>
             Retry Trends
           </Button>
         </CardContent>
       </Card>
     );
   }
-
-  const formatXAxis = (dateStr: string) => {
-    try {
-      const parts = dateStr.split("-");
-      if (parts.length === 3) {
-        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      }
-      return dateStr;
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const totalCreated = trends.reduce((acc, curr) => acc + curr.created, 0);
-  const totalResolved = trends.reduce((acc, curr) => acc + curr.resolved, 0);
-  const hasData = trends.length > 0;
 
   return (
     <Card className="h-full">
@@ -105,18 +183,14 @@ export const IncidentTrendsChart: React.FC<IncidentTrendsChartProps> = ({
 
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-rose-500" />
-              <span className="text-slate-500 dark:text-slate-400">Created:</span>
-              <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
-                {totalCreated.toLocaleString()}
-              </span>
+              <span className="h-2 w-2 rounded-full bg-accent" />
+              <span className="text-muted-fg">Created:</span>
+              <span className="font-semibold text-main-fg tabular-nums">{totalCreated.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-slate-500 dark:text-slate-400">Resolved:</span>
-              <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
-                {totalResolved.toLocaleString()}
-              </span>
+              <span className="h-2 w-2 rounded-full bg-healthy" />
+              <span className="text-muted-fg">Resolved:</span>
+              <span className="font-semibold text-main-fg tabular-nums">{totalResolved.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -124,102 +198,11 @@ export const IncidentTrendsChart: React.FC<IncidentTrendsChartProps> = ({
 
       <CardContent>
         {!hasData ? (
-          <div className="flex h-64 items-center justify-center text-xs text-slate-400">
+          <div className="flex h-64 items-center justify-center text-xs text-muted-fg">
             No incident timeline events recorded for this period.
           </div>
         ) : (
-          <div className="h-72 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="createdGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="resolvedGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#94a3b8" opacity={0.2} />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={formatXAxis}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11, fill: "#64748b" }}
-                  interval="preserveStartEnd"
-                  minTickGap={25}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11, fill: "#64748b" }}
-                />
-                <Tooltip
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      const createdVal = payload[0]?.value ?? 0;
-                      const resolvedVal = payload[1]?.value ?? 0;
-                      return (
-                        <div className="rounded-xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-                          <p className="text-xs font-bold text-slate-900 dark:text-white">
-                            {formatXAxis(String(label))} ({label})
-                          </p>
-                          <div className="mt-2 space-y-1 text-xs">
-                            <div className="flex items-center justify-between gap-4">
-                              <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
-                                <span className="h-2 w-2 rounded-full bg-rose-500" />
-                                Created:
-                              </span>
-                              <span className="font-semibold text-slate-900 dark:text-white">
-                                {createdVal}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-4">
-                              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                                Resolved:
-                              </span>
-                              <span className="font-semibold text-slate-900 dark:text-white">
-                                {resolvedVal}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend
-                  verticalAlign="top"
-                  align="right"
-                  iconType="circle"
-                  wrapperStyle={{ paddingBottom: 10, fontSize: 12 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="created"
-                  name="Created"
-                  stroke="#f43f5e"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#createdGrad)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="resolved"
-                  name="Resolved"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#resolvedGrad)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <EChart option={chartOption} isDark={isDark} height={288} notMerge />
         )}
       </CardContent>
     </Card>
@@ -227,4 +210,3 @@ export const IncidentTrendsChart: React.FC<IncidentTrendsChartProps> = ({
 };
 
 export default IncidentTrendsChart;
-

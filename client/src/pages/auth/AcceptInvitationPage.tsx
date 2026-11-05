@@ -86,10 +86,10 @@ export const AcceptInvitationPage: React.FC = () => {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-500/20 dark:bg-brand-500">
             <ShieldAlert className="h-6 w-6" />
           </div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-main-fg">
             Accept Invitation
           </h1>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs text-muted-fg">
             Activate your account and join your team on Resolver
           </p>
         </div>
@@ -149,7 +149,7 @@ export const AcceptInvitationPage: React.FC = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
+                    className="text-muted-fg hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -175,7 +175,7 @@ export const AcceptInvitationPage: React.FC = () => {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     tabIndex={-1}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
+                    className="text-muted-fg hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
                     aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
                     {showConfirmPassword ? (
@@ -201,7 +201,7 @@ export const AcceptInvitationPage: React.FC = () => {
                 {isPending ? "Activating account..." : "Accept & Activate Account"}
               </Button>
 
-              <div className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-2 text-center text-xs text-muted-fg">
                 Already activated your account?{" "}
                 <Link
                   to="/login"

@@ -110,10 +110,10 @@ export const CreateIncidentPage: React.FC = () => {
           <AlertTriangle className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-main-fg">
             Report New Incident
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-muted-fg">
             Log an operational outage, service degradation, or security event
           </p>
         </div>
@@ -198,7 +198,7 @@ export const CreateIncidentPage: React.FC = () => {
             />
           </CardContent>
 
-          <CardFooter className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
+          <CardFooter className="flex items-center justify-between border-t border-border-color pt-4">
             <Link to="/incidents">
               <Button type="button" variant="outline" disabled={isPending}>
                 Cancel

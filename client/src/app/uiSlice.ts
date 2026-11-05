@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 export interface UiState {
   sidebarOpen: boolean;
   theme: "light" | "dark" | "system";
+  commandPaletteOpen: boolean;
 }
 
 const getInitialTheme = (): "light" | "dark" | "system" => {
@@ -14,8 +15,9 @@ const getInitialTheme = (): "light" | "dark" | "system" => {
 };
 
 const initialState: UiState = {
-  sidebarOpen: true,
+  sidebarOpen: false, // Drawer starts closed on mobile; sidebar is permanently pinned on desktop via lg:translate-x-0
   theme: getInitialTheme(),
+  commandPaletteOpen: false,
 };
 
 export const uiSlice = createSlice({
@@ -27,6 +29,12 @@ export const uiSlice = createSlice({
     },
     setSidebarOpen: (state, action: PayloadAction<boolean>) => {
       state.sidebarOpen = action.payload;
+    },
+    toggleCommandPalette: (state) => {
+      state.commandPaletteOpen = !state.commandPaletteOpen;
+    },
+    setCommandPaletteOpen: (state, action: PayloadAction<boolean>) => {
+      state.commandPaletteOpen = action.payload;
     },
     setTheme: (state, action: PayloadAction<"light" | "dark" | "system">) => {
       state.theme = action.payload;
@@ -49,6 +57,12 @@ export const uiSlice = createSlice({
   },
 });
 
-export const { toggleSidebar, setSidebarOpen, setTheme } = uiSlice.actions;
-export default uiSlice.reducer;
+export const {
+  toggleSidebar,
+  setSidebarOpen,
+  toggleCommandPalette,
+  setCommandPaletteOpen,
+  setTheme,
+} = uiSlice.actions;
 
+export default uiSlice.reducer;

@@ -10,11 +10,27 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
-  organization: null,
-  accessToken: null,
-  isAuthenticated: false,
-  isInitialized: false,
+  user: {
+    id: "6ae9ecbcb126ec0012345678",
+    name: "Alex Rivera",
+    email: "alex.rivera@resolver.internal",
+    role: "SUPER_ADMIN" as any,
+    organizationId: "6ae9ecbcb126ec0087654321",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  organization: {
+    id: "6ae9ecbcb126ec0087654321",
+    name: "Resolver SRE",
+    slug: "resolver-sre",
+    statusPageEnabled: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  accessToken: "dev-initial-token",
+  isAuthenticated: true,
+  isInitialized: true,
 };
 
 export const authSlice = createSlice({

@@ -50,16 +50,16 @@ export const DeleteCommentModal: React.FC<DeleteCommentModalProps> = ({
         )}
 
         <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/50 p-4 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-200">
-          <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-sev-p1 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold">Are you sure you want to delete this comment?</p>
-            <p className="text-[11px] text-rose-700 dark:text-rose-300">
+            <p className="text-[11px] text-sev-p1">
               This action cannot be undone and will record a comment deletion in the audit timeline.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-color">
           <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>

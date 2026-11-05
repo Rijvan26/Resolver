@@ -1,0 +1,105 @@
+:root {
+  /* Core Brand & Surfaces (Light) */
+  --color-page: #ECECE8;
+  --color-card: #FFFFFF;
+  --color-ink: #111113;
+  --color-sidebar: #111113;
+  --color-sidebar-icon: #A1A1AA;
+  --color-accent: #6A4CFF;
+  --color-accent-hover: #5838E6;
+  --color-accent-subtle: rgba(106, 76, 255, 0.12);
+  --color-border: #EEEEE9;
+  --color-pill: #F4F4F1;
+  --color-pill-hover: #EAEAE4;
+  --color-muted: #6B6B72;
+  --color-text-main: #111113;
+
+  /* Severity (Light) */
+  --color-sev-p1: #D92D3A;
+  --color-sev-p1-subtle: #FDF2F2;
+  --color-sev-p1-border: #F8B4B4;
+  --color-sev-p2: #E8590C;
+  --color-sev-p2-subtle: #FFF4ED;
+  --color-sev-p2-border: #FDC79F;
+  --color-sev-p3: #C98A00;
+  --color-sev-p3-subtle: #FEF9EE;
+  --color-sev-p3-border: #FCE8A6;
+  --color-sev-p4: #3E63DD;
+  --color-sev-p4-subtle: #EDF2FE;
+  --color-sev-p4-border: #B9CEFA;
+
+  /* Status and Functional Colors */
+  --color-success: #1F9D6B;
+  --color-success-text: #1F7A55;
+  --color-success-subtle: #EDFBF5;
+  --color-danger: #D92D3A;
+  --color-danger-text: #B3261E;
+  --color-danger-subtle: #FEF2F2;
+
+  /* Status Dot Colors */
+  --status-triggered: #D92D3A;
+  --status-investigating: #6A4CFF;
+  --status-acknowledged: #3E63DD;
+  --status-resolved: #1F9D6B;
+
+  /* Spacing and Radii */
+  --radius-card: 20px;
+  --radius-sidebar: 28px;
+  --radius-notch: 30px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.03), 0 1px 4px -1px rgba(0, 0, 0, 0.02);
+  --shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+  /* Core Brand & Surfaces (Dark) */
+  --color-page: #0E0E10;
+  --color-card: #18181B;
+  --color-ink: #FFFFFF;
+  --color-sidebar: #141416;
+  --color-accent: #8266FF;
+  --color-accent-hover: #967DFF;
+  --color-accent-subtle: rgba(130, 102, 255, 0.18);
+  --color-border: #27272A;
+  --color-pill: #222226;
+  --color-pill-hover: #2C2C32;
+  --color-muted: #9E9EA7;
+  --color-text-main: #F4F4F5;
+
+  /* Severity (Dark, brightened for >= 4.5:1 contrast) */
+  --color-sev-p1: #FF4D5E;
+  --color-sev-p1-subtle: rgba(255, 77, 94, 0.15);
+  --color-sev-p1-border: rgba(255, 77, 94, 0.35);
+  --color-sev-p2: #FF7A29;
+  --color-sev-p2-subtle: rgba(255, 122, 41, 0.15);
+  --color-sev-p2-border: rgba(255, 122, 41, 0.35);
+  --color-sev-p3: #E5A100;
+  --color-sev-p3-subtle: rgba(229, 161, 0, 0.15);
+  --color-sev-p3-border: rgba(229, 161, 0, 0.35);
+  --color-sev-p4: #5C82FF;
+  --color-sev-p4-subtle: rgba(92, 130, 255, 0.15);
+  --color-sev-p4-border: rgba(92, 130, 255, 0.35);
+
+  /* Status and Functional Colors */
+  --color-success: #2ECC71;
+  --color-success-text: #22C55E;
+  --color-success-subtle: rgba(46, 204, 113, 0.15);
+  --color-danger: #FF4D5E;
+  --color-danger-text: #FF6B7A;
+  --color-danger-subtle: rgba(255, 77, 94, 0.15);
+
+  /* Status Dot Colors */
+  --status-triggered: #FF4D5E;
+  --status-investigating: #8266FF;
+  --status-acknowledged: #5C82FF;
+  --status-resolved: #2ECC71;
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
+}
+

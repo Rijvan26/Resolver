@@ -1,52 +1,81 @@
+@import "./tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --color-background: 248 250 252;
-    --color-foreground: 15 23 42;
+    color-scheme: light;
   }
 
   .dark {
-    --color-background: 2 6 23;
-    --color-foreground: 248 250 252;
+    color-scheme: dark;
+  }
+
+  * {
+    border-color: var(--color-border);
+    outline-color: var(--color-accent);
   }
 
   body {
-    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-page);
+    color: var(--color-text-main);
+    font-size: 13.5px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    text-wrap: balance;
-    letter-spacing: -0.025em;
+  /* Page titles: 24px/700 with -0.02em tracking */
+  h1.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
   }
 
-  p {
-    text-wrap: pretty;
+  /* KPI numbers: 30-36px/700 */
+  .kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Labels: 12px/500 muted */
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-muted);
+    letter-spacing: -0.01em;
   }
 
   ::selection {
-    background-color: rgba(99, 102, 241, 0.22);
+    background-color: rgba(106, 76, 255, 0.25);
     color: inherit;
   }
 
   .dark ::selection {
-    background-color: rgba(129, 140, 248, 0.32);
+    background-color: rgba(130, 102, 255, 0.35);
     color: inherit;
   }
 
   * {
-    caret-color: #6366f1;
+    caret-color: var(--color-accent);
   }
 
-  .dark * {
-    caret-color: #818cf8;
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 }
 
-/* Custom subtle scrollbar */
+
+/* Custom subtle scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -57,19 +86,54 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(150, 150, 150, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(150, 150, 150, 0.45);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.4);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(71, 85, 105, 0.6);
+  background: rgba(255, 255, 255, 0.28);
 }
 
+/* Tabular figures for counters and timestamps */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Slow pulsing animation for P1 incidents */
+@keyframes p1-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-p1-pulse {
+    animation: p1-pulse 2.2s ease-in-out infinite;
+  }
+}
+
+@keyframes highlight-fade {
+  0% {
+    background-color: rgba(106, 76, 255, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.row-highlight {
+  animation: highlight-fade 2s ease-out forwards;
+}

@@ -36,10 +36,10 @@ export const CommentList: React.FC<CommentListProps> = ({ incidentId }) => {
   return (
     <div className="space-y-4">
       {/* Header bar */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between pb-2 border-b border-border-color">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-sm font-semibold text-main-fg">
             Discussion & Updates
           </h3>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -51,7 +51,7 @@ export const CommentList: React.FC<CommentListProps> = ({ incidentId }) => {
           <button
             type="button"
             onClick={toggleSortOrder}
-            className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+            className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-muted-fg dark:hover:text-slate-200 transition-colors"
           >
             <ArrowUpDown className="h-3 w-3" />
             <span>{sortOrder === "asc" ? "Oldest First" : "Newest First"}</span>
@@ -99,7 +99,7 @@ export const CommentList: React.FC<CommentListProps> = ({ incidentId }) => {
 
           {/* Pagination Controls */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div className="flex items-center justify-between pt-3 border-t border-border-color text-xs">
               <span className="text-slate-500">
                 Page {pagination.page} of {pagination.totalPages} ({pagination.total} comments)
               </span>

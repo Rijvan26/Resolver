@@ -95,7 +95,7 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
           ))}
         </Select>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pt-4 border-t border-border-color">
           {selectedAssignee ? (
             <Button
               type="button"

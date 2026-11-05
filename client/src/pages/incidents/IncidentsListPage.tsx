@@ -144,10 +144,10 @@ export const IncidentsListPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-main-fg">
             Incidents
           </h1>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs text-muted-fg">
             Track, triage, and resolve organizational incidents
           </p>
         </div>
@@ -214,16 +214,16 @@ export const IncidentsListPage: React.FC = () => {
           </div>
 
           {/* Secondary Sorting and Clear Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border-color text-xs">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-slate-500 dark:text-slate-400">Sort by:</span>
+              <span className="font-semibold text-muted-fg">Sort by:</span>
               <button
                 type="button"
                 onClick={() => handleSortToggle("createdAt")}
                 className={`flex items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors ${
                   sortByParam === "createdAt"
                     ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-muted-fg dark:hover:bg-slate-800"
                 }`}
               >
                 Created Date {sortByParam === "createdAt" && (sortOrderParam === "asc" ? "↑" : "↓")}
@@ -234,7 +234,7 @@ export const IncidentsListPage: React.FC = () => {
                 className={`flex items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors ${
                   sortByParam === "updatedAt"
                     ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-muted-fg dark:hover:bg-slate-800"
                 }`}
               >
                 Updated Date {sortByParam === "updatedAt" && (sortOrderParam === "asc" ? "↑" : "↓")}
@@ -245,7 +245,7 @@ export const IncidentsListPage: React.FC = () => {
                 className={`flex items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors ${
                   sortByParam === "priority"
                     ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-muted-fg dark:hover:bg-slate-800"
                 }`}
               >
                 Priority {sortByParam === "priority" && (sortOrderParam === "asc" ? "↑" : "↓")}
@@ -256,7 +256,7 @@ export const IncidentsListPage: React.FC = () => {
                 className={`flex items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors ${
                   sortByParam === "status"
                     ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-muted-fg dark:hover:bg-slate-800"
                 }`}
               >
                 Status {sortByParam === "status" && (sortOrderParam === "asc" ? "↑" : "↓")}
@@ -282,7 +282,7 @@ export const IncidentsListPage: React.FC = () => {
       {isLoading ? (
         <Card className="p-4 space-y-3">
           {Array.from({ length: 6 }).map((_, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+            <div key={idx} className="flex items-center justify-between p-3 border-b border-border-color last:border-0">
               <div className="space-y-1.5 flex-1">
                 <Skeleton className="h-4 w-1/3" />
                 <Skeleton className="h-3 w-1/2" />
@@ -298,11 +298,11 @@ export const IncidentsListPage: React.FC = () => {
       ) : isError ? (
         <Card className="border-rose-200 bg-rose-50/50 p-8 text-center dark:border-rose-900/50 dark:bg-rose-950/20">
           <div className="flex flex-col items-center justify-center gap-2">
-            <AlertTriangle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
-            <h3 className="text-base font-semibold text-rose-900 dark:text-rose-200">
+            <AlertTriangle className="h-8 w-8 text-sev-p1" />
+            <h3 className="text-base font-semibold text-sev-p1">
               Failed to load incidents
             </h3>
-            <p className="text-xs text-rose-700 dark:text-rose-300 max-w-sm">
+            <p className="text-xs text-sev-p1 max-w-sm">
               We were unable to retrieve incidents from the server. Please check your network and try again.
             </p>
             <Button
@@ -325,7 +325,7 @@ export const IncidentsListPage: React.FC = () => {
                 ? "No incidents matched your current search filters. Try clearing or relaxing your filters."
                 : "Your organization workspace has zero recorded incidents. Report an incident to start tracking."
             }
-            icon={<AlertTriangle className="h-8 w-8 text-slate-400" />}
+            icon={<AlertTriangle className="h-8 w-8 text-muted-fg" />}
             action={
               hasActiveFilters ? (
                 <Button variant="outline" size="sm" onClick={handleClearFilters}>
@@ -351,16 +351,16 @@ export const IncidentsListPage: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="border-b border-slate-200 bg-slate-50/75 dark:border-slate-800 dark:bg-slate-800/50">
                 <tr>
-                  <th className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Incident</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Priority</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Assignee</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Reporter</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Updated</th>
-                  <th className="py-3.5 px-4 text-right font-semibold text-slate-700 dark:text-slate-300">Action</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Incident</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Status</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Priority</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Assignee</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Reporter</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Updated</th>
+                  <th className="py-3.5 px-4 text-right font-semibold text-main-fg">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-border-color">
                 {incidents.map((incident) => {
                   const assignee = incident.assignee;
                   const creator =
@@ -370,15 +370,15 @@ export const IncidentsListPage: React.FC = () => {
                     <tr
                       key={incident.id}
                       onClick={() => navigate(`/incidents/${incident.id}`)}
-                      className="cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
+                      className="cursor-pointer hover:bg-pill-hover transition-colors"
                     >
                       <td className="py-3.5 px-4 max-w-sm">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-900 dark:text-white truncate">
+                          <span className="font-semibold text-main-fg truncate">
                             {incident.title}
                           </span>
                         </div>
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-fg">
                           {incident.description}
                         </p>
                       </td>
@@ -394,18 +394,18 @@ export const IncidentsListPage: React.FC = () => {
                             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                               {assignee.name.slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="text-slate-800 dark:text-slate-200 font-medium truncate max-w-[120px]">
+                            <span className="text-main-fg font-medium truncate max-w-[120px]">
                               {assignee.name}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-[11px] italic">Unassigned</span>
+                          <span className="text-muted-fg text-[11px] italic">Unassigned</span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-muted-fg">
                         {creator?.name || "System"}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-muted-fg">
                         {formatRelativeTime(incident.updatedAt || incident.createdAt)}
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap text-right">
@@ -433,7 +433,7 @@ export const IncidentsListPage: React.FC = () => {
                 className="p-4 cursor-pointer hover:shadow-md transition-shadow space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
+                  <h3 className="text-sm font-semibold text-main-fg line-clamp-1">
                     {incident.title}
                   </h3>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -442,11 +442,11 @@ export const IncidentsListPage: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                <p className="text-xs text-muted-fg line-clamp-2">
                   {incident.description}
                 </p>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500">
+                <div className="flex items-center justify-between pt-2 border-t border-border-color text-[11px] text-slate-500">
                   <div className="flex items-center gap-1.5">
                     <User className="h-3.5 w-3.5" />
                     <span>{incident.assignee?.name || "Unassigned"}</span>
@@ -462,7 +462,7 @@ export const IncidentsListPage: React.FC = () => {
 
           {/* Pagination Controls */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-2 pt-2">
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-muted-fg">
               <span>
                 Showing <strong>{incidents.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0}</strong> to{" "}
                 <strong>
@@ -495,7 +495,7 @@ export const IncidentsListPage: React.FC = () => {
               >
                 Previous
               </Button>
-              <span className="text-xs font-semibold px-2 text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-semibold px-2 text-main-fg">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <Button

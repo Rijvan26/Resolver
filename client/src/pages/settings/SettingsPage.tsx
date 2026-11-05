@@ -91,10 +91,10 @@ export const SettingsPage: React.FC = () => {
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-2xl font-bold tracking-tight text-main-fg">
           Organization Settings
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-muted-fg mt-1">
           Manage your organization details, public status page, and security profile
         </p>
       </div>
@@ -127,7 +127,7 @@ export const SettingsPage: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Organization Details Card */}
           <Card>
-            <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <CardHeader className="pb-4 border-b border-border-color">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
@@ -142,7 +142,7 @@ export const SettingsPage: React.FC = () => {
                 </div>
 
                 {!isPrivileged && (
-                  <span className="flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  <span className="flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-muted-fg">
                     <Lock className="h-3 w-3" /> Read Only
                   </span>
                 )}
@@ -152,7 +152,7 @@ export const SettingsPage: React.FC = () => {
             <CardContent className="p-6 space-y-5">
               {/* Org Name */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-semibold text-main-fg">
                   Organization Name
                 </label>
                 <Input
@@ -161,14 +161,14 @@ export const SettingsPage: React.FC = () => {
                   disabled={!isPrivileged || isUpdating}
                   placeholder="Acme Corporation"
                 />
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-muted-fg">
                   The display name of your organization visible to team members.
                 </p>
               </div>
 
               {/* Org Slug (Read-only) */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-semibold text-main-fg">
                   Organization Slug
                 </label>
                 <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export const SettingsPage: React.FC = () => {
                     className="bg-slate-50 font-mono text-xs dark:bg-slate-900"
                   />
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-muted-fg">
                   Unique immutable URL identifier assigned during organization creation.
                 </p>
               </div>
@@ -190,10 +190,10 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex items-start gap-3">
                     <Globe className="h-5 w-5 text-brand-600 dark:text-brand-400 mt-0.5 shrink-0" />
                     <div>
-                      <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
+                      <h4 className="text-xs font-semibold text-main-fg">
                         Public Status Page
                       </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
                         Allow stakeholders to view system incident status and live service health without signing in.
                       </p>
                     </div>
@@ -212,20 +212,20 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               {/* Read-Only Org Metadata */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-border-color text-xs">
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-0.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-0.5">
                     Organization ID
                   </span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300 select-all">
+                  <span className="font-mono text-main-fg select-all">
                     {organization?.id}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-0.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-0.5">
                     Created At
                   </span>
-                  <span className="text-slate-700 dark:text-slate-300">
+                  <span className="text-main-fg">
                     {organization?.createdAt
                       ? new Date(organization.createdAt).toLocaleString()
                       : "—"}
@@ -237,7 +237,7 @@ export const SettingsPage: React.FC = () => {
 
           {/* Current User Session Profile Card */}
           <Card>
-            <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+            <CardHeader className="pb-3 border-b border-border-color">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   <User className="h-4 w-4" />
@@ -253,21 +253,21 @@ export const SettingsPage: React.FC = () => {
             <CardContent className="p-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                     Name
                   </span>
-                  <span className="font-semibold text-slate-900 dark:text-white">
+                  <span className="font-semibold text-main-fg">
                     {user?.name}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                     Email
                   </span>
-                  <span className="text-slate-700 dark:text-slate-300">{user?.email}</span>
+                  <span className="text-main-fg">{user?.email}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                     Role Privilege
                   </span>
                   {user?.role && <RoleBadge role={user.role} size="sm" />}

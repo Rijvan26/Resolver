@@ -144,7 +144,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
           {...register("description")}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-color">
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>

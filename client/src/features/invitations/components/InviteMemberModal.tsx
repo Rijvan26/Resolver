@@ -116,7 +116,7 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
             </Alert>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-main-fg">
                 Invitation Link
               </label>
               <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-color">
               <Button
                 type="button"
                 variant="outline"
@@ -167,7 +167,7 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-main-fg">
                 Email Address
               </label>
               <Input
@@ -176,13 +176,13 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                 {...register("email")}
                 error={errors.email?.message}
                 disabled={isLoading}
-                leftIcon={<Mail className="h-4 w-4 text-slate-400" />}
+                leftIcon={<Mail className="h-4 w-4 text-muted-fg" />}
               />
             </div>
 
             {/* Role Field */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-main-fg">
                 Assigned Role
               </label>
               <Select
@@ -196,13 +196,13 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                   </option>
                 ))}
               </Select>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-muted-fg">
                 Select the organizational role for the invited member.
               </p>
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-color">
               <Button
                 type="button"
                 variant="outline"

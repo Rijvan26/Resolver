@@ -6,11 +6,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { useGetUnreadNotificationCountQuery } from "@/features/notifications/notificationsApi";
 import { useAppSelector } from "./hooks";
 
+import { DashboardPage } from "@/pages/dashboard/DashboardPage";
+
 // Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterOrgPage = lazy(() => import("@/pages/auth/RegisterOrgPage"));
 const AcceptInvitationPage = lazy(() => import("@/pages/auth/AcceptInvitationPage"));
-const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
 const IncidentsListPage = lazy(() => import("@/pages/incidents/IncidentsListPage"));
 const IncidentDetailsPage = lazy(() => import("@/pages/incidents/IncidentDetailsPage"));
 const CreateIncidentPage = lazy(() => import("@/pages/incidents/CreateIncidentPage"));
@@ -87,11 +88,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: (
-          <PageSuspense>
-            <DashboardPage />
-          </PageSuspense>
-        ),
+        element: <DashboardPage />,
       },
       {
         path: "incidents",

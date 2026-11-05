@@ -98,12 +98,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                <span className="text-xs font-semibold text-main-fg">
                   {author?.name || "Unknown User"}
                 </span>
                 {author?.role && <RoleBadge role={author.role} size="sm" />}
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-fg mt-0.5">
                 <span title={new Date(comment.createdAt).toLocaleString()}>
                   {formatRelativeTime(comment.createdAt)}
                 </span>
@@ -111,7 +111,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   <>
                     <span>•</span>
                     <span
-                      className="italic text-slate-400"
+                      className="italic text-muted-fg"
                       title={new Date(comment.updatedAt).toLocaleString()}
                     >
                       (edited)
@@ -129,7 +129,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <button
                   type="button"
                   onClick={handleStartEdit}
-                  className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+                  className="rounded p-1 text-muted-fg hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
                   title="Edit comment"
                   aria-label="Edit comment"
                 >
@@ -140,7 +140,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDeleteOpen(true)}
-                  className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors"
+                  className="rounded p-1 text-muted-fg hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors"
                   title="Delete comment"
                   aria-label="Delete comment"
                 >
@@ -170,7 +170,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 autoFocus
               />
               <div className="flex items-center justify-between gap-2 pt-1">
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-muted-fg">
                   {editContent.length} / 5000 characters
                 </span>
                 <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             </div>
           ) : (
-            <div className="whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+            <div className="whitespace-pre-wrap break-words text-xs leading-relaxed text-main-fg">
               {comment.content}
             </div>
           )}

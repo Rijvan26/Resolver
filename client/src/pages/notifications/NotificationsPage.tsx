@@ -125,21 +125,21 @@ export const NotificationsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+    <div className="space-y-6 max-w-4xl mx-auto pb-16">
       {/* Header Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-main-fg">
               Notifications
             </h1>
             {unreadCount > 0 && (
-              <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+              <span className="rounded-full border border-brand-200/60 bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:border-brand-800/40 dark:bg-brand-950 dark:text-brand-300 tabular-nums">
                 {unreadCount} unread
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-muted-fg mt-1">
             Stay informed on incident assignments, status transitions, and team discussions
           </p>
         </div>
@@ -148,12 +148,10 @@ export const NotificationsPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleMarkAllRead}
             disabled={unreadCount === 0 || isMarkingAll}
             isLoading={isMarkingAll}
-            leftIcon={<CheckCheck className="h-3.5 w-3.5" />}
-            className="text-xs"
+            leftIcon={<CheckCheck className="h-4 w-4" />}
           >
             Mark All as Read
           </Button>
@@ -176,10 +174,10 @@ export const NotificationsPage: React.FC = () => {
                 setFilter("all");
                 setPage(1);
               }}
-              className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${
                 filter === "all"
                   ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
               }`}
             >
               All Notifications
@@ -190,15 +188,15 @@ export const NotificationsPage: React.FC = () => {
                 setFilter("unread");
                 setPage(1);
               }}
-              className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${
                 filter === "unread"
                   ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
               }`}
             >
               Unread Only
               {unreadCount > 0 && (
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white dark:bg-brand-500">
+                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white dark:bg-brand-500 tabular-nums">
                   {unreadCount}
                 </span>
               )}
@@ -261,11 +259,11 @@ export const NotificationsPage: React.FC = () => {
                   {/* Details */}
                   <div className="flex-1 min-w-0 pr-6">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                      <span className="text-xs font-semibold text-main-fg">
                         {item.title}
                       </span>
                       <span
-                        className="text-[11px] text-slate-400"
+                        className="text-[11px] text-muted-fg"
                         title={new Date(item.createdAt).toLocaleString()}
                       >
                         • {formatRelativeTime(item.createdAt)}
@@ -283,7 +281,7 @@ export const NotificationsPage: React.FC = () => {
                           <span className="truncate max-w-[220px]">
                             {item.incident.title}
                           </span>
-                          <ArrowRight className="h-3 w-3 text-slate-400" />
+                          <ArrowRight className="h-3 w-3 text-muted-fg" />
                         </div>
 
                         {item.incident.status && (
@@ -302,7 +300,7 @@ export const NotificationsPage: React.FC = () => {
                       type="button"
                       onClick={(e) => handleMarkSingleRead(e, item.id)}
                       disabled={isMarkingSingle}
-                      className="shrink-0 rounded-lg p-1.5 text-slate-400 opacity-60 hover:opacity-100 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all"
+                      className="shrink-0 rounded-lg p-1.5 text-muted-fg opacity-60 hover:opacity-100 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all"
                       title="Mark as read"
                       aria-label="Mark as read"
                     >
@@ -314,7 +312,7 @@ export const NotificationsPage: React.FC = () => {
 
               {/* Pagination controls */}
               {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
+                <div className="flex items-center justify-between pt-4 border-t border-border-color text-xs">
                   <span className="text-slate-500">
                     Page {pagination.page} of {pagination.totalPages} ({pagination.total} notifications)
                   </span>

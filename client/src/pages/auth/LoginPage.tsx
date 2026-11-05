@@ -94,13 +94,13 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Brand header */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-500/20 dark:bg-brand-500">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-xs dark:bg-brand-500">
             <ShieldAlert className="h-6 w-6" />
           </div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-main-fg">
             Sign in to Resolver
           </h1>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1.5 text-sm text-muted-fg">
             Multi-Tenant Incident Management Platform
           </p>
         </div>
@@ -156,7 +156,7 @@ export const LoginPage: React.FC = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
+                    className="text-muted-fg hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -182,7 +182,7 @@ export const LoginPage: React.FC = () => {
                 {isPending ? "Signing in..." : "Sign In"}
               </Button>
 
-              <div className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-2 text-center text-xs text-muted-fg">
                 Need to register a new organization?{" "}
                 <Link
                   to="/register-organization"

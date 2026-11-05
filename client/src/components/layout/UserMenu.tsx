@@ -46,7 +46,7 @@ export const UserMenu: React.FC = () => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 rounded-full p-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+        className="flex items-center gap-1.5 sm:gap-2.5 rounded-full p-0.5 sm:p-1 transition-colors hover:bg-pill-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white shadow-xs ring-2 ring-white dark:bg-brand-500 dark:ring-slate-900">
           {initials || <User className="w-4 h-4" />}
@@ -55,21 +55,21 @@ export const UserMenu: React.FC = () => {
           <div className="text-sm font-medium leading-tight text-slate-800 dark:text-slate-100">
             {user.name}
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 leading-none mt-0.5">
+          <div className="text-xs text-muted-fg leading-none mt-0.5">
             {organization?.name || "Workspace"}
           </div>
         </div>
-        <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 md:block" />
+        <ChevronDown className="hidden h-3.5 w-3.5 text-muted-fg md:block" />
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in zoom-in-95 duration-100">
           {/* User info header */}
           <div className="border-b border-slate-100 p-3 dark:border-slate-800/80">
-            <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+            <div className="text-sm font-semibold text-main-fg truncate">
               {user.name}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+            <div className="text-xs text-muted-fg truncate mt-0.5">
               {user.email}
             </div>
             <div className="mt-2.5 flex items-center gap-2">
@@ -79,15 +79,15 @@ export const UserMenu: React.FC = () => {
 
           {/* Org context */}
           {organization && (
-            <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
-              <Building className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span className="font-medium text-slate-700 dark:text-slate-300 truncate">
+            <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-fg">
+              <Building className="h-3.5 w-3.5 text-muted-fg shrink-0" />
+              <span className="font-medium text-main-fg truncate">
                 {organization.name}
               </span>
             </div>
           )}
 
-          <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
+          <div className="my-1 border-t border-border-color" />
 
           {/* Actions */}
           <div className="space-y-0.5">
@@ -96,7 +96,7 @@ export const UserMenu: React.FC = () => {
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
             >
-              <Settings className="h-4 w-4 text-slate-400" />
+              <Settings className="h-4 w-4 text-muted-fg" />
               Settings
             </Link>
             <button

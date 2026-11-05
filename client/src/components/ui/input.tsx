@@ -18,14 +18,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-xs font-medium text-slate-700 dark:text-slate-300"
+            className="block text-xs font-medium text-main-fg"
           >
             {label}
           </label>
         )}
         <div className="relative rounded-lg">
           {leftIcon && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-fg">
               {leftIcon}
             </div>
           )}
@@ -42,14 +42,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-fg">
               {rightIcon}
             </div>
           )}
         </div>
         {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         {!error && helperText && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">{helperText}</p>
+          <p className="text-xs text-muted-fg">{helperText}</p>
         )}
       </div>
     );

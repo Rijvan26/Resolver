@@ -55,22 +55,22 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Dialog container */}
       <div
         className={cn(
-          "relative w-full rounded-2xl bg-white p-6 shadow-2xl transition-all dark:bg-slate-900 border border-slate-200 dark:border-slate-800 z-10",
+          "relative w-full rounded-2xl bg-white p-6 shadow-2xl transition-all dark:bg-slate-900 border border-border-color z-10",
           sizes[size]
         )}
       >
-        <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-start justify-between pb-4 border-b border-border-color">
           <div>
             {title && (
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
+              <h3 className="text-lg font-bold text-main-fg">{title}</h3>
             )}
             {description && (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{description}</p>
+              <p className="mt-1 text-xs text-muted-fg">{description}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="rounded-lg p-1.5 text-muted-fg hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <X className="w-5 h-5" />
           </button>

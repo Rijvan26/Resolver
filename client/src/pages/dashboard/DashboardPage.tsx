@@ -17,7 +17,6 @@ import { PriorityDistributionChart } from "@/features/dashboard/components/Prior
 import { TeamWorkloadWidget } from "@/features/dashboard/components/TeamWorkloadWidget";
 import { RecentActivityWidget } from "@/features/dashboard/components/RecentActivityWidget";
 import { Alert } from "@/components/ui/alert";
-import { LayoutDashboard } from "lucide-react";
 
 export const DashboardPage: React.FC = () => {
   const { organization } = useAppSelector((state) => state.auth);
@@ -106,21 +105,18 @@ export const DashboardPage: React.FC = () => {
     isOverviewError && isStatusError && isPriorityError && isTrendsError;
 
   return (
-    <div className="space-y-8 pb-16">
+    <div className="space-y-4 pb-16 min-w-0 max-w-full overflow-hidden">
       {/* Top Header section */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between min-w-0 max-w-full">
+        <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs dark:bg-brand-500">
-              <LayoutDashboard className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-bold tracking-tighter text-main-fg">
               Incident Operations
             </h1>
           </div>
-          <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1.5 text-sm text-muted-fg">
             Real-time incident tracking, team workloads, and analytics for{" "}
-            <span className="font-semibold text-slate-900 dark:text-slate-100">
+            <span className="font-semibold text-main-fg">
               {organization?.name || "Your Organization"}
             </span>
           </p>
@@ -158,32 +154,25 @@ export const DashboardPage: React.FC = () => {
           isError={isOverviewError}
           onRetry={refetchOverview}
           hasDateFilter={hasDateFilter}
-        />
-      </section>
-
-      {/* Section 2: Trends Chart (Full width) */}
-      <section aria-label="Incident Velocity Trends">
-        <IncidentTrendsChart
           trends={trendsData?.data?.trends}
-          startDate={trendsData?.data?.startDate}
-          endDate={trendsData?.data?.endDate}
-          isLoading={isTrendsLoading}
-          isError={isTrendsError}
-          onRetry={refetchTrends}
         />
       </section>
 
-      {/* Section 3: Distribution Breakdown (Status & Priority side by side) */}
+      {/* Section 2: Trends chart (2/3) + severity donut (1/3) */}
       <section
-        aria-label="Incident Distributions"
-        className="grid grid-cols-1 gap-6 lg:grid-cols-2"
+        aria-label="Incident Trends and Severity"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-3"
       >
-        <StatusDistributionChart
-          data={statusData?.data}
-          isLoading={isStatusLoading}
-          isError={isStatusError}
-          onRetry={refetchStatus}
-        />
+        <div className="xl:col-span-2">
+          <IncidentTrendsChart
+            trends={trendsData?.data?.trends}
+            startDate={trendsData?.data?.startDate}
+            endDate={trendsData?.data?.endDate}
+            isLoading={isTrendsLoading}
+            isError={isTrendsError}
+            onRetry={refetchTrends}
+          />
+        </div>
 
         <PriorityDistributionChart
           data={priorityData?.data}
@@ -193,11 +182,18 @@ export const DashboardPage: React.FC = () => {
         />
       </section>
 
-      {/* Section 4: Operational Breakdown (Team Workload & Activity Feed) */}
+      {/* Section 3: Status distribution, team workload and activity feed */}
       <section
         aria-label="Operations and Activity"
-        className="grid grid-cols-1 gap-6 lg:grid-cols-2"
+        className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3"
       >
+        <StatusDistributionChart
+          data={statusData?.data}
+          isLoading={isStatusLoading}
+          isError={isStatusError}
+          onRetry={refetchStatus}
+        />
+
         <TeamWorkloadWidget
           data={workloadData?.data}
           isLoading={isWorkloadLoading}

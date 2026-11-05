@@ -76,20 +76,20 @@ export const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
         {/* Member profile summary */}
         <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 text-xs dark:bg-slate-800/60">
           <div>
-            <div className="font-semibold text-slate-900 dark:text-white">
+            <div className="font-semibold text-main-fg">
               {member.name}
             </div>
             <div className="text-[11px] text-slate-500">{member.email}</div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400">Current:</span>
+            <span className="text-[11px] text-muted-fg">Current:</span>
             <RoleBadge role={member.role} size="sm" />
           </div>
         </div>
 
         {/* Role Select */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-semibold text-main-fg">
             Select New Role
           </label>
           <Select
@@ -108,7 +108,7 @@ export const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
         {/* Warning if demoting Super Admin */}
         {isDemotingSuperAdmin && (
           <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-4 w-4 text-sev-p3 shrink-0 mt-0.5" />
             <p className="text-[11px]">
               <strong>Caution:</strong> You are changing the role of a Super Admin. An organization must retain at least one active Super Admin at all times.
             </p>
@@ -119,7 +119,7 @@ export const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
           Role changes modify system permissions immediately, including incident creation, assignment rights, and administrative capabilities.
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-color">
           <Button
             type="button"
             variant="outline"

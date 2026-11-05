@@ -24,7 +24,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-xs font-medium text-slate-700 dark:text-slate-300"
+            className="block text-xs font-medium text-main-fg"
           >
             {label}
           </label>
@@ -53,7 +53,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                 ))
               : children}
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-muted-fg">
             <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -65,7 +65,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </div>
         {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         {!error && helperText && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">{helperText}</p>
+          <p className="text-xs text-muted-fg">{helperText}</p>
         )}
       </div>
     );

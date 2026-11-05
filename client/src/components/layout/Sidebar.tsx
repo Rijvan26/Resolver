@@ -1,17 +1,16 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { setSidebarOpen } from "@/app/uiSlice";
+import { setSidebarOpen, setCommandPaletteOpen } from "@/app/uiSlice";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
+  LayoutGrid,
   AlertTriangle,
   Users,
   Bell,
   Settings,
-  ShieldAlert,
-  Building,
   X,
+  Search,
 } from "lucide-react";
 
 export interface NavItem {
@@ -25,154 +24,276 @@ export interface SidebarProps {
   unreadNotificationCount?: number;
 }
 
+/**
+ * Signature Notch Tab SVG
+ * Exact inverse fillets (20px concave corners) where the tab meets the 72px sidebar,
+ * with a 28px rounded pill cap on the left, protruding 16px past the right edge into the page.
+ * Uses reactive fill color: #ECECE8 in light theme, #0E0E10 in dark theme.
+ */
+const NotchTabSvg: React.FC<{ isDark: boolean }> = ({ isDark }) => (
+  <svg
+    className="absolute pointer-events-none select-none transition-colors duration-200"
+    style={{
+      top: -20,
+      left: 0,
+      width: 92,
+      height: 96,
+      zIndex: 1,
+    }}
+    viewBox="0 0 92 96"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <path
+      d="M 72 0 A 20 20 0 0 0 52 20 L 36 20 A 28 28 0 0 0 36 76 L 52 76 A 20 20 0 0 0 72 96 L 92 96 L 92 0 Z"
+      fill={isDark ? "#0E0E10" : "#ECECE8"}
+    />
+  </svg>
+);
+
 export const Sidebar: React.FC<SidebarProps> = ({ unreadNotificationCount = 0 }) => {
   const dispatch = useAppDispatch();
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
+  const theme = useAppSelector((state) => state.ui.theme);
   const { organization } = useAppSelector((state) => state.auth);
   const location = useLocation();
+
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const navItems: NavItem[] = [
     {
       title: "Dashboard",
       path: "/dashboard",
-      icon: <LayoutDashboard className="w-4 h-4 shrink-0" />,
+      icon: <LayoutGrid className="w-5 h-5 shrink-0" />,
     },
     {
       title: "Incidents",
       path: "/incidents",
-      icon: <AlertTriangle className="w-4 h-4 shrink-0" />,
+      icon: <AlertTriangle className="w-5 h-5 shrink-0" />,
     },
     {
       title: "Team Members",
       path: "/members",
-      icon: <Users className="w-4 h-4 shrink-0" />,
+      icon: <Users className="w-5 h-5 shrink-0" />,
     },
     {
       title: "Notifications",
       path: "/notifications",
-      icon: <Bell className="w-4 h-4 shrink-0" />,
+      icon: <Bell className="w-5 h-5 shrink-0" />,
       badge: unreadNotificationCount > 0 ? unreadNotificationCount : undefined,
     },
     {
       title: "Settings",
       path: "/settings",
-      icon: <Settings className="w-4 h-4 shrink-0" />,
+      icon: <Settings className="w-5 h-5 shrink-0" />,
     },
   ];
 
-  const handleNavClick = () => {
-    // On small screens, close sidebar when clicking a link
-    if (window.innerWidth < 1024) {
-      dispatch(setSidebarOpen(false));
-    }
+  const handleClose = () => {
+    dispatch(setSidebarOpen(false));
+  };
+
+  const handleOpenSearch = () => {
+    handleClose();
+    dispatch(setCommandPaletteOpen(true));
   };
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* ====================================================================
+          MOBILE DRAWER BACKDROP & FLYOUT
+          ==================================================================== */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden transition-opacity"
-          onClick={() => dispatch(setSidebarOpen(false))}
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden transition-opacity"
+          onClick={handleClose}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar container */}
+      {/* Mobile Drawer (width 260px, spacious, clear text labels + icons) */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200/80 bg-white transition-all duration-300 dark:border-slate-800/80 dark:bg-slate-900 lg:static lg:z-auto",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:w-0 lg:overflow-hidden lg:border-none"
+          "fixed top-0 bottom-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-white shadow-2xl transition-transform duration-300 ease-out lg:hidden",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
         )}
       >
-        {/* Brand header */}
-        <div className="flex h-16 items-center justify-between px-5 border-b border-slate-100 dark:border-slate-800/80">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-xs dark:bg-brand-500">
-              <ShieldAlert className="h-4.5 w-4.5" />
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between border-b border-white/10 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-white font-bold text-lg shadow-sm">
+              R
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                Resolver
-              </span>
-              <span className="rounded-md border border-brand-200/60 bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 dark:border-brand-800/40 dark:bg-brand-950 dark:text-brand-300">
-                Ops
-              </span>
+            <div>
+              <div className="text-sm font-bold tracking-tight text-white">Resolver</div>
+              <div className="text-xs text-sidebar-icon truncate max-w-[130px]">
+                {organization?.name || "Incident Ops"}
+              </div>
             </div>
           </div>
           <button
-            onClick={() => dispatch(setSidebarOpen(false))}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 lg:hidden"
-            aria-label="Close Sidebar"
+            onClick={handleClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-icon hover:bg-white/10 hover:text-white transition-colors"
+            aria-label="Close menu"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Organization identity pill */}
-        {organization && (
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/60 dark:bg-slate-950/30">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-200/70 text-slate-700 dark:bg-slate-800 dark:text-slate-300 shrink-0">
-                <Building className="h-3.5 w-3.5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate leading-tight">
-                  {organization.name}
-                </div>
-                <div className="text-[11px] font-mono text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                  {organization.slug}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Mobile Search bar right inside drawer */}
+        <div className="p-3 pb-1">
+          <button
+            type="button"
+            onClick={handleOpenSearch}
+            className="flex w-full items-center gap-2.5 rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-xs text-sidebar-icon hover:bg-white/10 hover:text-white transition-colors text-left"
+          >
+            <Search className="h-4 w-4 shrink-0 text-sidebar-icon" />
+            <span className="flex-1 truncate">Search incidents, services...</span>
+            <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-white/60">
+              Ctrl K
+            </kbd>
+          </button>
+        </div>
 
-        {/* Navigation list */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        {/* Navigation list with high-contrast active styling in BOTH light & dark modes */}
+        <nav className="flex-1 space-y-1.5 p-3 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+            const isActive =
+              location.pathname === item.path ||
+              location.pathname.startsWith(`${item.path}/`);
 
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                onClick={handleNavClick}
+                onClick={handleClose}
                 className={cn(
-                  "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all group",
+                  "flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-brand-50 text-brand-700 font-semibold shadow-xs dark:bg-brand-950/70 dark:text-brand-300"
-                    : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100"
+                    ? "bg-accent text-white font-semibold shadow-md"
+                    : "text-sidebar-icon hover:bg-white/10 hover:text-white"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "transition-colors",
-                      isActive
-                        ? "text-brand-600 dark:text-brand-400"
-                        : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
-                    )}
-                  >
+                  <span className={cn(isActive ? "text-white" : "text-sidebar-icon")}>
                     {item.icon}
                   </span>
-                  <span>{item.title}</span>
+                  <span className={cn(isActive ? "text-white font-semibold" : "text-sidebar-icon")}>
+                    {item.title}
+                  </span>
                 </div>
+
                 {item.badge !== undefined && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-xs tabular-nums">
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-sev-p1 px-1.5 text-xs font-bold text-white tabular-nums">
                     {item.badge}
                   </span>
                 )}
               </NavLink>
             );
           })}
-        </div>
+        </nav>
 
-        {/* Sidebar Footer */}
-        <div className="border-t border-slate-100 p-4 dark:border-slate-800/80 text-xs text-slate-400 text-center">
-          Resolver Platform <span className="font-mono text-[11px] opacity-75">v1.0</span>
+        {/* Footer info in drawer */}
+        <div className="border-t border-white/10 p-4 text-xs text-sidebar-icon">
+          <span className="font-semibold text-white/80">Resolver SRE</span> · v2.4.0
+        </div>
+      </aside>
+
+      {/* ====================================================================
+          DESKTOP FLOATING SIDEBAR (72px black pill, signature notch tab)
+          ==================================================================== */}
+      <aside
+        className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:flex-col lg:justify-center lg:py-4 lg:pl-4 lg:pr-0 select-none z-30"
+        aria-label="Primary Navigation"
+      >
+        {/* Floating rounded black pill container (72px wide) */}
+        <div className="relative flex h-[calc(100vh-32px)] w-[72px] flex-col items-center rounded-sidebar bg-sidebar py-5">
+          {/* Logo tile: 40px rounded violet square with bold white "R" */}
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white font-bold text-lg shadow-sm"
+            title={organization ? `${organization.name} (${organization.slug})` : "Resolver"}
+          >
+            R
+          </div>
+
+          {/* Navigation rail */}
+          <nav className="mt-8 flex flex-1 flex-col items-center w-full gap-3">
+            {navItems.map((item) => {
+              const isActive =
+                location.pathname === item.path ||
+                location.pathname.startsWith(`${item.path}/`);
+
+              if (isActive) {
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    title={item.title}
+                    aria-label={item.title}
+                    className={cn(
+                      "relative flex h-14 w-full items-center justify-start",
+                      item.path === "/settings" && "mt-auto"
+                    )}
+                  >
+                    {/* The signature notch tab SVG extending seamlessly into the page */}
+                    <NotchTabSvg isDark={isDark} />
+
+                    {/*
+                      Active icon:
+                      - Light theme: dark ink (#111113) on warm grey (#ECECE8)
+                      - Dark theme: crisp white (#FFFFFF) on dark page (#0E0E10)
+                    */}
+                    <span
+                      className={cn(
+                        "relative z-10 flex h-14 w-[72px] items-center justify-center transition-transform hover:scale-105",
+                        isDark ? "text-white" : "text-ink"
+                      )}
+                      style={{ color: isDark ? "#FFFFFF" : "#111113" }}
+                    >
+                      {item.icon}
+                    </span>
+
+                    {/* Badge */}
+                    {item.badge !== undefined && (
+                      <span className="absolute left-11 top-2 z-20 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sev-p1 px-1 text-[10px] font-bold text-white tabular-nums shadow-sm">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              }
+
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  title={item.title}
+                  aria-label={item.title}
+                  className={cn(
+                    "relative flex h-12 w-12 items-center justify-center rounded-full text-sidebar-icon transition-all duration-150 hover:bg-white/10 hover:text-white",
+                    item.path === "/settings" && "mt-auto"
+                  )}
+                >
+                  {item.icon}
+
+                  {item.badge !== undefined && (
+                    <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sev-p1 px-1 text-[10px] font-bold text-white tabular-nums shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
         </div>
       </aside>
     </>
   );
 };
 
+export default Sidebar;

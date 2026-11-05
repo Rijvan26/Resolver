@@ -16,7 +16,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             htmlFor={textareaId}
-            className="block text-xs font-medium text-slate-700 dark:text-slate-300"
+            className="block text-xs font-medium text-main-fg"
           >
             {label}
           </label>
@@ -36,7 +36,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         </div>
         {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         {!error && helperText && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">{helperText}</p>
+          <p className="text-xs text-muted-fg">{helperText}</p>
         )}
       </div>
     );

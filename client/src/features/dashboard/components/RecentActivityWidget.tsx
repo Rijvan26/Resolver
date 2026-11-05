@@ -64,8 +64,8 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
           <CardDescription>Organization audit timeline</CardDescription>
         </CardHeader>
         <CardContent className="h-64 flex flex-col items-center justify-center gap-2">
-          <AlertCircle className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-          <p className="text-xs text-rose-700 dark:text-rose-300">
+          <AlertCircle className="h-6 w-6 text-sev-p1" />
+          <p className="text-xs text-sev-p1">
             Failed to load recent activity stream.
           </p>
           <Button
@@ -95,7 +95,7 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
             </div>
             <CardDescription>Real-time audit log across all incidents</CardDescription>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-main-fg tabular-nums">
             {pagination.total} Total Events
           </span>
         </div>
@@ -103,7 +103,7 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
 
       <CardContent className="flex-1">
         {activities.length === 0 ? (
-          <div className="flex h-56 items-center justify-center text-xs text-slate-400">
+          <div className="flex h-56 items-center justify-center text-xs text-muted-fg">
             No recent activity recorded for this organization yet.
           </div>
         ) : (
@@ -115,22 +115,22 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
               return (
                 <div key={item.id} className="relative group">
                   {/* Timeline point */}
-                  <div className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white dark:bg-slate-900 ring-2 ring-slate-200 dark:ring-slate-700 group-hover:ring-brand-500 transition-colors">
+                  <div className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-card-bg ring-2 ring-slate-200 dark:ring-slate-700 group-hover:ring-brand-500 transition-colors">
                     <span className="h-2 w-2 rounded-full bg-brand-600 dark:bg-brand-400" />
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 hover:bg-slate-50 transition-colors dark:border-slate-800/80 dark:bg-slate-900/40 dark:hover:bg-slate-900/80">
                     <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        <span className="text-xs font-semibold text-main-fg">
                           {item.actor.name}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-muted-fg">
                           {formattedAction}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                      <div className="flex items-center gap-1 text-[11px] text-muted-fg tabular-nums">
                         <Clock className="h-3 w-3" />
                         <span>{relativeTime}</span>
                       </div>
@@ -162,8 +162,8 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
       </CardContent>
 
       {pagination.totalPages > 1 && (
-        <CardFooter className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+        <CardFooter className="flex items-center justify-between border-t border-border-color pt-3">
+          <span className="text-xs text-muted-fg">
             Page {pagination.page} of {pagination.totalPages}
           </span>
           <div className="flex items-center gap-1">

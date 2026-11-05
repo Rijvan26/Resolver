@@ -57,10 +57,10 @@ export const ChangeMemberStatusModal: React.FC<ChangeMemberStatusModalProps> = (
 
         {willDeactivate ? (
           <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/50 p-4 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-200">
-            <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-sev-p1 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-semibold">Are you sure you want to deactivate this account?</p>
-              <p className="text-[11px] text-rose-700 dark:text-rose-300">
+              <p className="text-[11px] text-sev-p1">
                 <strong>{member.name}</strong> ({member.email}) will immediately lose access to this organization and cannot log in or participate in incident workflows.
               </p>
               {member.role === ROLES.SUPER_ADMIN && (
@@ -72,17 +72,17 @@ export const ChangeMemberStatusModal: React.FC<ChangeMemberStatusModalProps> = (
           </div>
         ) : (
           <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200">
-            <UserCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <UserCheck className="h-5 w-5 text-healthy-text shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-semibold">Reactivate this account?</p>
-              <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
+              <p className="text-[11px] text-healthy-text">
                 <strong>{member.name}</strong> will regain access to log in and collaborate on organization incidents.
               </p>
             </div>
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-color">
           <Button
             type="button"
             variant="outline"

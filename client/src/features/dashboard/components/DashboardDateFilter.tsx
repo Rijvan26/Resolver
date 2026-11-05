@@ -56,28 +56,30 @@ export const DashboardDateFilter: React.FC<DashboardDateFilterProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Preset selector buttons */}
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          {presets.map((preset) => {
-            const isActive = value.preset === preset.id;
-            return (
-              <button
-                key={preset.id}
-                onClick={() => handleSelectPreset(preset.id)}
-                type="button"
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-all select-none",
-                  isActive
-                    ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                )}
-              >
-                {preset.label}
-              </button>
-            );
-          })}
+    <div className="flex flex-col gap-3 min-w-0 max-w-full overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 min-w-0 max-w-full">
+        {/* Preset selector buttons (horizontally scrollable on small mobile) */}
+        <div className="flex items-center overflow-x-auto max-w-full min-w-0 py-0.5 scrollbar-none">
+          <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            {presets.map((preset) => {
+              const isActive = value.preset === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => handleSelectPreset(preset.id)}
+                  type="button"
+                  className={cn(
+                    "rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none whitespace-nowrap",
+                    isActive
+                      ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
+                      : "text-slate-600 hover:text-slate-900 dark:text-muted-fg dark:hover:text-white"
+                  )}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Refresh action */}
@@ -97,7 +99,7 @@ export const DashboardDateFilter: React.FC<DashboardDateFilterProps> = ({
       {/* Custom date range inputs */}
       {value.preset === "custom" && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60 animate-in fade-in slide-in-from-top-1 duration-150">
-          <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+          <Calendar className="h-4 w-4 text-muted-fg shrink-0" />
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">From:</label>
             <input
@@ -120,7 +122,7 @@ export const DashboardDateFilter: React.FC<DashboardDateFilterProps> = ({
             Apply Range
           </Button>
 
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="text-[11px] text-muted-fg">
             (Maximum 90 days)
           </span>
 

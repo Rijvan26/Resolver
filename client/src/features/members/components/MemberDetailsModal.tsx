@@ -74,13 +74,13 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                  <h4 className="text-sm font-bold text-main-fg truncate">
                     {member.name}
                   </h4>
                   <RoleBadge role={member.role} size="sm" />
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
-                  <Mail className="h-3.5 w-3.5 text-slate-400" />
+                  <Mail className="h-3.5 w-3.5 text-muted-fg" />
                   <span>{member.email}</span>
                 </div>
               </div>
@@ -105,37 +105,37 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
             {/* Properties List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                   User ID
                 </span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px] select-all">
+                <span className="font-mono text-main-fg text-[11px] select-all">
                   {member.id}
                 </span>
               </div>
 
               <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                   Organization ID
                 </span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px] select-all">
+                <span className="font-mono text-main-fg text-[11px] select-all">
                   {member.organizationId}
                 </span>
               </div>
 
               <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                   Joined Organization
                 </span>
-                <span className="text-slate-700 dark:text-slate-300">
+                <span className="text-main-fg">
                   {new Date(member.createdAt).toLocaleString()}
                 </span>
               </div>
 
               <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                   Last Updated
                 </span>
-                <span className="text-slate-700 dark:text-slate-300">
+                <span className="text-main-fg">
                   {member.updatedAt
                     ? new Date(member.updatedAt).toLocaleString()
                     : new Date(member.createdAt).toLocaleString()}
@@ -144,7 +144,7 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
             </div>
 
             {/* Actions Footer */}
-            <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border-color">
               <div className="flex items-center gap-2">
                 {canModify && onChangeRole && (
                   <Button

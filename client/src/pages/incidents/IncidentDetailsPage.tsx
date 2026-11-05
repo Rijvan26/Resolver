@@ -196,18 +196,18 @@ export const IncidentDetailsPage: React.FC = () => {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-pill text-slate-600 dark:text-slate-300">
                 #{incident.id.slice(-8)}
               </span>
               <StatusBadge status={incident.status} size="md" />
               <PriorityBadge priority={incident.priority} size="md" />
             </div>
 
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-main-fg">
               {incident.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-fg">
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" />
                 <span>
@@ -230,7 +230,7 @@ export const IncidentDetailsPage: React.FC = () => {
           {/* Quick Lifecycle Controls */}
           <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-fg block mb-1">
                 Quick Status
               </label>
               <Select
@@ -247,7 +247,7 @@ export const IncidentDetailsPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-fg block mb-1">
                 Quick Priority
               </label>
               <Select
@@ -276,7 +276,7 @@ export const IncidentDetailsPage: React.FC = () => {
               <CardTitle className="text-base">Description & Impact</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-200">
+              <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap text-main-fg">
                 {incident.description}
               </div>
             </CardContent>
@@ -292,7 +292,7 @@ export const IncidentDetailsPage: React.FC = () => {
                   className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
                     activeTab === "comments"
                       ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
-                      : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                      : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
                   }`}
                 >
                   <MessageSquare className="h-4 w-4" />
@@ -304,7 +304,7 @@ export const IncidentDetailsPage: React.FC = () => {
                   className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
                     activeTab === "timeline"
                       ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
-                      : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                      : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
                   }`}
                 >
                   <History className="h-4 w-4" />
@@ -331,7 +331,7 @@ export const IncidentDetailsPage: React.FC = () => {
             <CardContent className="space-y-4 text-xs">
               {/* Assignee */}
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1.5">
                   Assigned Engineer
                 </span>
                 {assignee ? (
@@ -341,7 +341,7 @@ export const IncidentDetailsPage: React.FC = () => {
                         {assignee.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-semibold text-slate-900 dark:text-white truncate">
+                        <div className="font-semibold text-main-fg truncate">
                           {assignee.name}
                         </div>
                         <div className="text-[11px] text-slate-500 truncate">{assignee.email}</div>
@@ -358,7 +358,7 @@ export const IncidentDetailsPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-2.5 dark:border-slate-700">
-                    <span className="text-slate-400 italic">No engineer assigned</span>
+                    <span className="text-muted-fg italic">No engineer assigned</span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -372,12 +372,12 @@ export const IncidentDetailsPage: React.FC = () => {
               </div>
 
               {/* Reporter */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+              <div className="pt-2 border-t border-border-color">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
                   Reported By
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className="font-medium text-slate-800 dark:text-slate-200">
+                  <div className="font-medium text-main-fg">
                     {creator?.name || "System"}
                   </div>
                   {creator?.role && <RoleBadge role={creator.role} size="sm" />}
@@ -388,22 +388,22 @@ export const IncidentDetailsPage: React.FC = () => {
               </div>
 
               {/* Timestamps */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="pt-2 border-t border-border-color space-y-2">
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block">
                     Created
                   </span>
-                  <span className="text-slate-700 dark:text-slate-300">
+                  <span className="text-main-fg">
                     {new Date(incident.createdAt).toLocaleString()}
                   </span>
                 </div>
 
                 {incident.updatedAt && (
                   <div>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block">
                       Last Updated
                     </span>
-                    <span className="text-slate-700 dark:text-slate-300">
+                    <span className="text-main-fg">
                       {new Date(incident.updatedAt).toLocaleString()}
                     </span>
                   </div>
@@ -411,10 +411,10 @@ export const IncidentDetailsPage: React.FC = () => {
 
                 {incident.resolvedAt && (
                   <div>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block">
                       Resolved Date
                     </span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                    <span className="text-healthy-text font-medium">
                       {new Date(incident.resolvedAt).toLocaleString()}
                     </span>
                   </div>

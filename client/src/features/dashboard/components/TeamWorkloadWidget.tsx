@@ -55,8 +55,8 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
           <CardDescription>Unresolved incident assignments</CardDescription>
         </CardHeader>
         <CardContent className="h-64 flex flex-col items-center justify-center gap-2">
-          <AlertCircle className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-          <p className="text-xs text-rose-700 dark:text-rose-300">
+          <AlertCircle className="h-6 w-6 text-sev-p1" />
+          <p className="text-xs text-sev-p1">
             Failed to load team workload data.
           </p>
           <Button
@@ -88,7 +88,7 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
               Active unresolved incidents per eligible team member
             </CardDescription>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-slate-700 dark:text-slate-300 tabular-nums">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-main-fg tabular-nums">
             {team.length} Members
           </span>
         </div>
@@ -96,11 +96,11 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
 
       <CardContent className="flex-1">
         {team.length === 0 ? (
-          <div className="flex h-56 items-center justify-center text-xs text-slate-400">
+          <div className="flex h-56 items-center justify-center text-xs text-muted-fg">
             No active team members found in this organization.
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+          <div className="divide-y divide-border-color">
             {team.map((item) => {
               const initials = item.member.name
                 .split(" ")
@@ -123,12 +123,12 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                          <span className="text-xs font-semibold text-main-fg truncate">
                             {item.member.name}
                           </span>
                           <RoleBadge role={item.member.role} size="sm" />
                         </div>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate block">
+                        <span className="text-[11px] text-muted-fg truncate block">
                           {item.member.email}
                         </span>
                       </div>
@@ -139,24 +139,24 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
                         <span
                           className={`text-sm font-bold tabular-nums ${
                             isZero
-                              ? "text-slate-400"
+                              ? "text-muted-fg"
                               : isHighWorkload
-                              ? "text-rose-600 dark:text-rose-400"
-                              : "text-slate-900 dark:text-white"
+                              ? "text-sev-p1"
+                              : "text-main-fg"
                           }`}
                         >
                           {item.totalUnresolved}
                         </span>
-                        <span className="text-[10px] text-slate-400">active</span>
+                        <span className="text-[10px] text-muted-fg">active</span>
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                      <div className="text-[11px] text-muted-fg tabular-nums">
                         {item.open} open · {item.inProgress} in prog
                       </div>
                     </div>
                   </div>
 
                   {/* Workload Progress Bar */}
-                  <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div className="h-1.5 w-full rounded-full bg-pill overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
                         isZero

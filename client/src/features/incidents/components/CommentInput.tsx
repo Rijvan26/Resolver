@@ -64,7 +64,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({ incidentId }) => {
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] text-slate-400">
+        <span className="text-[10px] text-muted-fg">
           {content.length} / 5000 characters
         </span>
 

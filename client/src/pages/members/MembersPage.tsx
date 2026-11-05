@@ -182,14 +182,14 @@ export const MembersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-6 max-w-6xl mx-auto pb-16">
       {/* Header bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-main-fg">
             Team Members & Access
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-muted-fg mt-1">
             Manage organization members, assignments, invitations, and role-based permissions
           </p>
         </div>
@@ -197,10 +197,8 @@ export const MembersPage: React.FC = () => {
         {isPrivileged && (
           <Button
             variant="primary"
-            size="sm"
             onClick={() => setIsInviteOpen(true)}
             leftIcon={<UserPlus className="h-4 w-4" />}
-            className="text-xs"
           >
             Invite Member
           </Button>
@@ -214,15 +212,15 @@ export const MembersPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleTabChange("members")}
-              className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${
                 activeTab === "members"
                   ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
               }`}
             >
               <Users className="h-4 w-4" />
               Members
-              <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="ml-1 rounded-full border border-slate-200/60 bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600 dark:border-slate-700/60 dark:bg-slate-800 dark:text-slate-300 tabular-nums">
                 {totalMembers}
               </span>
             </button>
@@ -231,16 +229,16 @@ export const MembersPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleTabChange("invitations")}
-                className={`flex items-center gap-2 border-b-2 pb-3 text-xs font-semibold transition-colors ${
+                className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${
                   activeTab === "invitations"
                     ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
-                    : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                    : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
                 }`}
               >
                 <Mail className="h-4 w-4" />
                 Pending Invitations
                 {pendingInvitations.length > 0 && (
-                  <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                  <span className="ml-1 rounded-full border border-brand-200/60 bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700 dark:border-brand-800/40 dark:bg-brand-950 dark:text-brand-300 tabular-nums">
                     {pendingInvitations.length}
                   </span>
                 )}
@@ -260,7 +258,7 @@ export const MembersPage: React.FC = () => {
                     placeholder="Search members by name or email..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    leftIcon={<Search className="h-4 w-4 text-slate-400" />}
+                    leftIcon={<Search className="h-4 w-4 text-muted-fg" />}
                     className="text-xs h-9"
                   />
                 </div>
@@ -268,7 +266,7 @@ export const MembersPage: React.FC = () => {
                 {/* Filters */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="flex items-center gap-1.5">
-                    <Filter className="h-3.5 w-3.5 text-slate-400" />
+                    <Filter className="h-3.5 w-3.5 text-muted-fg" />
                     <Select
                       value={role || "ALL"}
                       onChange={(e) => handleRoleFilterChange(e.target.value)}
@@ -326,9 +324,9 @@ export const MembersPage: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
+                <div className="overflow-x-auto rounded-xl border border-border-color">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800">
+                    <thead className="bg-slate-50/80 text-xs font-semibold text-slate-700 dark:bg-slate-900/60 dark:text-slate-300 border-b border-border-color">
                       <tr>
                         <th className="py-3 px-4">Member</th>
                         <th className="py-3 px-4">Role</th>
@@ -337,7 +335,7 @@ export const MembersPage: React.FC = () => {
                         <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                    <tbody className="divide-y divide-border-color">
                       {members.map((member) => {
                         const isSelf = currentUser?.id === member.id;
                         const canModify = canModifyMember(member);
@@ -362,15 +360,15 @@ export const MembersPage: React.FC = () => {
                                   {initials}
                                 </div>
                                 <div className="min-w-0">
-                                  <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+                                  <div className="flex items-center gap-1.5 font-semibold text-sm text-main-fg">
                                     <span className="truncate">{member.name}</span>
                                     {isSelf && (
-                                      <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-muted-fg">
                                         You
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[11px] text-slate-500 truncate">
+                                  <div className="text-xs text-slate-500 truncate mt-0.5">
                                     {member.email}
                                   </div>
                                 </div>
@@ -385,10 +383,10 @@ export const MembersPage: React.FC = () => {
                             {/* Status */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
                               <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                   member.isActive
-                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                                    : "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/40"
+                                    : "bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/40"
                                 }`}
                               >
                                 <span
@@ -401,7 +399,7 @@ export const MembersPage: React.FC = () => {
                             </td>
 
                             {/* Joined Date */}
-                            <td className="py-3.5 px-4 whitespace-nowrap text-slate-500">
+                            <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 text-xs tabular-nums">
                               <span title={new Date(member.createdAt).toLocaleString()}>
                                 {formatRelativeTime(member.createdAt)}
                               </span>
@@ -413,7 +411,7 @@ export const MembersPage: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => setMemberForDetailsId(member.id)}
-                                  className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+                                  className="rounded p-1.5 text-muted-fg hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
                                   title="View details"
                                   aria-label="View details"
                                 >
@@ -425,7 +423,7 @@ export const MembersPage: React.FC = () => {
                                     <button
                                       type="button"
                                       onClick={() => setMemberForRole(member)}
-                                      className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors"
+                                      className="rounded p-1.5 text-muted-fg hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors"
                                       title="Change role"
                                       aria-label="Change role"
                                     >
@@ -435,7 +433,7 @@ export const MembersPage: React.FC = () => {
                                     <button
                                       type="button"
                                       onClick={() => setMemberForStatus(member)}
-                                      className={`rounded p-1.5 text-slate-400 transition-colors ${
+                                      className={`rounded p-1.5 text-muted-fg transition-colors ${
                                         member.isActive
                                           ? "hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
                                           : "hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
@@ -463,7 +461,7 @@ export const MembersPage: React.FC = () => {
 
               {/* Pagination controls */}
               {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                <div className="flex items-center justify-between pt-3 border-t border-border-color text-xs">
                   <span className="text-slate-500">
                     Page {pagination.page} of {pagination.totalPages} ({pagination.total} total members)
                   </span>
@@ -530,9 +528,9 @@ export const MembersPage: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
+                <div className="overflow-x-auto rounded-xl border border-border-color">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800">
+                    <thead className="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:text-muted-fg border-b border-border-color">
                       <tr>
                         <th className="py-3 px-4">Invited Email</th>
                         <th className="py-3 px-4">Role</th>
@@ -542,13 +540,13 @@ export const MembersPage: React.FC = () => {
                         <th className="py-3 px-4 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                    <tbody className="divide-y divide-border-color">
                       {pendingInvitations.map((inv) => (
                         <tr
                           key={inv.id}
                           className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition-colors"
                         >
-                          <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-white">
+                          <td className="py-3.5 px-4 font-medium text-main-fg">
                             {inv.email}
                           </td>
                           <td className="py-3.5 px-4 whitespace-nowrap">
@@ -564,7 +562,7 @@ export const MembersPage: React.FC = () => {
                           </td>
                           <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
                             <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-slate-400" />
+                              <Clock className="h-3 w-3 text-muted-fg" />
                               <span title={new Date(inv.expiresAt).toLocaleString()}>
                                 {formatRelativeTime(inv.expiresAt)}
                               </span>
