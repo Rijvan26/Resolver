@@ -25,6 +25,25 @@ const envSchema = z.object({
   BREVO_API_KEY: z.string().optional(),
   GOOGLE_USER: z.string().optional(),
   EMAIL_FROM: z.string().default("Resolver Notifications <notifications@resolver.internal>"),
+
+  // AI Phase 1 Configuration (SRS-AI-001)
+  AI_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val === "true" || val === "1")
+    .default(false),
+  AI_PROVIDER: z.enum(["fake", "groq", "gemini", "ollama"]).default("fake"),
+  AI_MODEL: z.string().default("llama-3.3-70b-versatile"),
+  GROQ_API_KEY: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
+  OLLAMA_HOST: z.string().default("http://localhost:11434"),
+  AI_TIMEOUT_MS: z.coerce.number().default(30000),
+  AI_DAILY_CAP: z.coerce.number().default(50),
+  AI_REDACT_IPS: z
+    .string()
+    .optional()
+    .transform((val) => val !== "false" && val !== "0")
+    .default(true),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -1,9 +1,12 @@
 import { Schema, model, Document, Types } from "mongoose";
+import "./Service";
 import {
   INCIDENT_STATUS,
   INCIDENT_PRIORITY,
   IncidentStatus,
   IncidentPriority,
+  IncidentAiSubdocument,
+  AI_STATUS,
 } from "../types";
 
 export interface IIncident extends Document {
@@ -15,6 +18,10 @@ export interface IIncident extends Document {
   organizationId: Types.ObjectId;
   createdBy: Types.ObjectId;
   assigneeId?: Types.ObjectId | null;
+  serviceId?: Types.ObjectId | null;
+  finalSeverity?: IncidentPriority | null;
+  aiAccepted?: boolean;
+  ai?: IncidentAiSubdocument;
   resolvedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -72,6 +79,45 @@ const incidentSchema = new Schema<IIncident>(
       default: null,
       index: true,
     },
+    serviceId: {
+      type: Schema.Types.ObjectId,
+      ref: "Service",
+      default: null,
+      index: true,
+    },
+    finalSeverity: {
+      type: String,
+      enum: [...Object.values(INCIDENT_PRIORITY), null],
+      default: null,
+    },
+    aiAccepted: {
+      type: Boolean,
+      default: false,
+    },
+    ai: {
+      type: {
+        severity: {
+          type: String,
+          enum: [...Object.values(INCIDENT_PRIORITY), null],
+          default: null,
+        },
+        reason: { type: String, default: null },
+        confidence: { type: Number, default: null },
+        model: { type: String, default: null },
+        provider: { type: String, default: null },
+        suggestedService: { type: String, default: null },
+        suggestedTeam: { type: String, default: null },
+        summary: { type: String, default: null },
+        summaryUpdatedAt: { type: Date, default: null },
+        status: {
+          type: String,
+          enum: Object.values(AI_STATUS),
+          default: AI_STATUS.NONE,
+        },
+      },
+      _id: false,
+      default: () => ({ status: AI_STATUS.NONE }),
+    },
     resolvedAt: {
       type: Date,
       default: null,
@@ -88,6 +134,7 @@ const incidentSchema = new Schema<IIncident>(
 incidentSchema.index({ organizationId: 1, status: 1 });
 incidentSchema.index({ organizationId: 1, priority: 1 });
 incidentSchema.index({ organizationId: 1, assigneeId: 1 });
+incidentSchema.index({ organizationId: 1, serviceId: 1 });
 incidentSchema.index({ organizationId: 1, createdAt: -1 });
 incidentSchema.index({ organizationId: 1, updatedAt: -1 });
 incidentSchema.index({ organizationId: 1, resolvedAt: 1 });

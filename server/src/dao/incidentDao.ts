@@ -1,6 +1,7 @@
 import { ClientSession, Types } from "mongoose";
 import { Incident, IIncident } from "../models/Incident";
-import { IncidentPriority, IncidentStatus } from "../types";
+import "../models/Service";
+import { IncidentPriority, IncidentStatus, IncidentAiSubdocument } from "../types";
 
 export interface CreateIncidentDaoInput {
   title: string;
@@ -10,6 +11,10 @@ export interface CreateIncidentDaoInput {
   organizationId: Types.ObjectId | string;
   createdBy: Types.ObjectId | string;
   assigneeId?: Types.ObjectId | string | null;
+  serviceId?: Types.ObjectId | string | null;
+  finalSeverity?: IncidentPriority | null;
+  aiAccepted?: boolean;
+  ai?: IncidentAiSubdocument;
   resolvedAt?: Date | null;
 }
 
@@ -51,6 +56,7 @@ export class IncidentDao {
     return await Incident.findOne({ _id: incidentId, organizationId })
       .populate("createdBy", "name email role")
       .populate("assigneeId", "name email role isActive")
+      .populate("serviceId", "name tier owningTeam runbookLinks")
       .exec();
   }
 
@@ -85,7 +91,8 @@ export class IncidentDao {
     let cursor = Incident.find(query)
       .sort({ [sortField]: sortDirection })
       .populate("createdBy", "name email role")
-      .populate("assigneeId", "name email role isActive");
+      .populate("assigneeId", "name email role isActive")
+      .populate("serviceId", "name tier owningTeam runbookLinks");
 
     if (options.skip !== undefined) {
       cursor = cursor.skip(options.skip);

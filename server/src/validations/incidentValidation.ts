@@ -45,6 +45,7 @@ export const createIncidentSchema = z
       ])
       .default(INCIDENT_PRIORITY.MEDIUM),
     assigneeId: objectIdSchema.nullable().optional(),
+    serviceId: objectIdSchema.nullable().optional(),
   })
   .strict();
 
@@ -84,6 +85,7 @@ export const updateIncidentSchema = z
         INCIDENT_PRIORITY.CRITICAL,
       ])
       .optional(),
+    serviceId: objectIdSchema.nullable().optional(),
   })
   .strict()
   .refine(
@@ -91,9 +93,10 @@ export const updateIncidentSchema = z
       data.title !== undefined ||
       data.description !== undefined ||
       data.status !== undefined ||
-      data.priority !== undefined,
+      data.priority !== undefined ||
+      data.serviceId !== undefined,
     {
-      message: "At least one valid field (title, description, status, priority) must be provided for update",
+      message: "At least one valid field (title, description, status, priority, serviceId) must be provided for update",
     }
   );
 

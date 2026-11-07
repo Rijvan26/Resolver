@@ -232,6 +232,60 @@ describe("Incident Management API (/api/v1/incidents)", () => {
       expect(res.body.error.code).toBe("VALIDATION_ERROR");
       expect(res.body.error.message).toContain("deactivated");
     });
+
+    it("should reject DEVELOPER attempts to create an incident with CRITICAL priority with 403", async () => {
+      const { token } = await setupOrgWithUser("Alpha Inc", "alpha-inc", ROLES.DEVELOPER);
+
+      const res = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          title: "Critical Attempt by Developer",
+          description: "Developers cannot declare P1 Critical",
+          priority: INCIDENT_PRIORITY.CRITICAL,
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+
+    it("should reject DEVELOPER attempts to create an incident in CLOSED status with 403", async () => {
+      const { token } = await setupOrgWithUser("Alpha Inc", "alpha-inc", ROLES.DEVELOPER);
+
+      const res = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          title: "Closed Attempt by Developer",
+          description: "Developers cannot create closed incidents",
+          status: INCIDENT_STATUS.CLOSED,
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+
+    it("should reject DEVELOPER attempts to assign an incident to SUPER_ADMIN with 403", async () => {
+      const { org, user: superAdmin } = await setupOrgWithUser("Alpha Inc", "alpha-inc", ROLES.SUPER_ADMIN);
+      const { token: devToken } = await createMember(
+        org._id.toString(),
+        ROLES.DEVELOPER,
+        "Dev Joe",
+        "joe@alpha.com"
+      );
+
+      const res = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({
+          title: "Assigning upward to superadmin",
+          description: "Developers should not be able to assign to superadmin",
+          assigneeId: superAdmin._id.toString(),
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
   });
 
   // ==========================================
@@ -461,8 +515,8 @@ describe("Incident Management API (/api/v1/incidents)", () => {
   // 4. Updating Incidents
   // ==========================================
   describe("PATCH /api/v1/incidents/:incidentId", () => {
-    it("should update incident title, description, status, and priority", async () => {
-      const { token } = await setupOrgWithUser("Update Corp", "update-corp", ROLES.DEVELOPER);
+    it("should allow ADMIN to update incident title, description, status, and priority", async () => {
+      const { token } = await setupOrgWithUser("Update Corp", "update-corp", ROLES.ADMIN);
 
       const createRes = await request(app)
         .post("/api/v1/incidents")
@@ -491,6 +545,83 @@ describe("Incident Management API (/api/v1/incidents)", () => {
       expect(res.body.data.status).toBe(INCIDENT_STATUS.RESOLVED);
       expect(res.body.data.priority).toBe(INCIDENT_PRIORITY.HIGH);
       expect(res.body.data.description).toBe("Initial description"); // unchanged
+    });
+
+    it("should reject DEVELOPER attempts to modify incident severity (priority) with 403", async () => {
+      const { org, token: adminToken } = await setupOrgWithUser("Update Corp", "update-corp", ROLES.ADMIN);
+      const { user: devUser, token: devToken } = await createMember(
+        org._id.toString(),
+        ROLES.DEVELOPER,
+        "Dev Guy",
+        "dev@update.com"
+      );
+
+      const createRes = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          title: "Incident created by admin",
+          description: "Details here",
+          priority: INCIDENT_PRIORITY.LOW,
+        });
+
+      const incidentId = createRes.body.data.id;
+
+      // Developer tries to change priority
+      const res = await request(app)
+        .patch(`/api/v1/incidents/${incidentId}`)
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({ priority: INCIDENT_PRIORITY.CRITICAL });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+
+    it("should reject DEVELOPER attempts to close an incident with 403", async () => {
+      const { token: devToken } = await setupOrgWithUser("Update Corp", "update-corp", ROLES.DEVELOPER);
+
+      const createRes = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({
+          title: "Dev created incident",
+          description: "Details here",
+          status: INCIDENT_STATUS.OPEN,
+        });
+
+      const incidentId = createRes.body.data.id;
+
+      // Developer tries to close incident
+      const res = await request(app)
+        .patch(`/api/v1/incidents/${incidentId}`)
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({ status: INCIDENT_STATUS.CLOSED });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+
+    it("should allow incident creator (DEVELOPER) to update status to RESOLVED", async () => {
+      const { token: devToken } = await setupOrgWithUser("Update Corp", "update-corp", ROLES.DEVELOPER);
+
+      const createRes = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({
+          title: "Dev created incident",
+          description: "Details here",
+          status: INCIDENT_STATUS.OPEN,
+        });
+
+      const incidentId = createRes.body.data.id;
+
+      const res = await request(app)
+        .patch(`/api/v1/incidents/${incidentId}`)
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({ status: INCIDENT_STATUS.RESOLVED });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe(INCIDENT_STATUS.RESOLVED);
     });
 
     it("should reject updating protected fields like organizationId or createdBy", async () => {
@@ -645,6 +776,65 @@ describe("Incident Management API (/api/v1/incidents)", () => {
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe("VALIDATION_ERROR");
       expect(res.body.error.message).toContain("organization");
+    });
+
+    it("should reject DEVELOPER attempts to reassign incident to SUPER_ADMIN with 403", async () => {
+      const { org, user: superAdmin, token: superAdminToken } = await setupOrgWithUser("Assign Corp", "assign-corp", ROLES.SUPER_ADMIN);
+      const { token: devToken } = await createMember(
+        org._id.toString(),
+        ROLES.DEVELOPER,
+        "Dev Guy",
+        "dev@assign.com"
+      );
+
+      const createRes = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({
+          title: "Dev created triage",
+          description: "Needs investigation",
+        });
+
+      const incidentId = createRes.body.data.id;
+
+      // Dev tries to reassign to superadmin
+      const res = await request(app)
+        .patch(`/api/v1/incidents/${incidentId}/assignee`)
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({ assigneeId: superAdmin._id.toString() });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+
+    it("should reject DEVELOPER attempts to reassign an incident already assigned to SUPER_ADMIN with 403", async () => {
+      const { org, user: superAdmin, token: superAdminToken } = await setupOrgWithUser("Assign Corp", "assign-corp", ROLES.SUPER_ADMIN);
+      const { user: dev1, token: devToken } = await createMember(
+        org._id.toString(),
+        ROLES.DEVELOPER,
+        "Dev One",
+        "dev1@assign.com"
+      );
+
+      const createRes = await request(app)
+        .post("/api/v1/incidents")
+        .set("Authorization", `Bearer ${superAdminToken}`)
+        .send({
+          title: "SuperAdmin incident",
+          description: "Assigned to superadmin initially",
+          assigneeId: superAdmin._id.toString(),
+        });
+
+      const incidentId = createRes.body.data.id;
+
+      // Dev tries to reassign it away from superadmin to self
+      const res = await request(app)
+        .patch(`/api/v1/incidents/${incidentId}/assignee`)
+        .set("Authorization", `Bearer ${devToken}`)
+        .send({ assigneeId: dev1._id.toString() });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
     });
   });
 

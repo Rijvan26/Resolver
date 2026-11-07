@@ -15,6 +15,7 @@ export class IncidentController {
       const result = await incidentService.createIncident(
         req.user!.organizationId,
         req.user!.userId,
+        req.user!.role,
         req.body
       );
 
@@ -88,7 +89,8 @@ export class IncidentController {
         req.user!.organizationId,
         incidentId,
         req.body,
-        req.user!.userId
+        req.user!.userId,
+        req.user!.role
       );
 
       const response: ApiSuccessResponse<typeof result> = {
@@ -115,7 +117,8 @@ export class IncidentController {
         req.user!.organizationId,
         incidentId,
         req.body.assigneeId,
-        req.user!.userId
+        req.user!.userId,
+        req.user!.role
       );
 
       const response: ApiSuccessResponse<typeof result> = {

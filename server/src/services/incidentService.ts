@@ -3,7 +3,22 @@ import { incidentDao, FindIncidentsFilter, IncidentPaginationOptions } from "../
 import { userDao } from "../dao/userDao";
 import { activityDao } from "../dao/activityDao";
 import { notificationEventService } from "./notificationEventService";
-import { IncidentPriority, IncidentStatus, INCIDENT_STATUS, Role, ACTIVITY_ACTION } from "../types";
+import {
+  IncidentPriority,
+  IncidentStatus,
+  INCIDENT_STATUS,
+  Role,
+  ROLES,
+  ACTIVITY_ACTION,
+  INCIDENT_PRIORITY_CREATION_PERMISSIONS,
+  INCIDENT_STATUS_CREATION_PERMISSIONS,
+  INCIDENT_PRIORITY_UPDATE_ROLES,
+  INCIDENT_CLOSE_ROLES,
+  INCIDENT_ASSIGNMENT_PERMISSIONS,
+  ServiceTier,
+  IncidentAiSubdocument,
+  AI_STATUS,
+} from "../types";
 import { NotFoundError, ValidationError, ForbiddenError } from "../utils/errors";
 import {
   CreateIncidentInput,
@@ -20,6 +35,14 @@ export interface UserSummary {
   isActive?: boolean;
 }
 
+export interface ServiceSummary {
+  id: string;
+  name: string;
+  tier: ServiceTier;
+  owningTeam: string;
+  runbookLinks?: string[];
+}
+
 export interface SafeIncidentDetails {
   id: string;
   title: string;
@@ -30,6 +53,11 @@ export interface SafeIncidentDetails {
   createdBy: UserSummary | string;
   assignee?: UserSummary | null;
   assigneeId?: string | null;
+  service?: ServiceSummary | null;
+  serviceId?: string | null;
+  finalSeverity?: IncidentPriority | null;
+  aiAccepted?: boolean;
+  ai?: IncidentAiSubdocument;
   resolvedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -88,6 +116,24 @@ const formatIncident = (doc: IIncident): SafeIncidentDetails => {
       }
     : null;
 
+  const populatedService = doc.serviceId as unknown as {
+    _id?: Types.ObjectId;
+    name?: string;
+    tier?: ServiceTier;
+    owningTeam?: string;
+    runbookLinks?: string[];
+  } | null;
+
+  const serviceFormatted: ServiceSummary | null = populatedService?._id
+    ? {
+        id: populatedService._id.toString(),
+        name: populatedService.name || "",
+        tier: populatedService.tier ?? 2,
+        owningTeam: populatedService.owningTeam || "",
+        runbookLinks: populatedService.runbookLinks || [],
+      }
+    : null;
+
   return {
     id: doc._id.toString(),
     title: doc.title,
@@ -98,6 +144,11 @@ const formatIncident = (doc: IIncident): SafeIncidentDetails => {
     createdBy: creatorFormatted,
     assignee: assigneeFormatted,
     assigneeId: doc.assigneeId ? doc.assigneeId.toString() : null,
+    service: serviceFormatted,
+    serviceId: doc.serviceId ? doc.serviceId.toString() : null,
+    finalSeverity: doc.finalSeverity || null,
+    aiAccepted: doc.aiAccepted ?? false,
+    ai: doc.ai || { status: AI_STATUS.NONE },
     resolvedAt: doc.resolvedAt || null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
@@ -112,9 +163,30 @@ export class IncidentService {
   async createIncident(
     organizationId: string,
     creatorUserId: string,
+    creatorRole: Role,
     input: CreateIncidentInput
   ): Promise<SafeIncidentDetails> {
-    // If an assignee is designated, verify they belong to caller's org and are active
+    // 1. Verify priority creation permission for caller's role
+    if (input.priority) {
+      const allowedPriorities = INCIDENT_PRIORITY_CREATION_PERMISSIONS[creatorRole] || [];
+      if (!allowedPriorities.includes(input.priority)) {
+        throw new ForbiddenError(
+          `Your role (${creatorRole}) does not have permission to declare incidents with ${input.priority} severity`
+        );
+      }
+    }
+
+    // 2. Verify status creation permission for caller's role
+    if (input.status) {
+      const allowedStatuses = INCIDENT_STATUS_CREATION_PERMISSIONS[creatorRole] || [];
+      if (!allowedStatuses.includes(input.status)) {
+        throw new ForbiddenError(
+          `Your role (${creatorRole}) does not have permission to create incidents in ${input.status} status`
+        );
+      }
+    }
+
+    // 3. If an assignee is designated, verify they belong to caller's org, are active, and verify assignment permission
     if (input.assigneeId) {
       const assignee = await userDao.findByOrgAndId(organizationId, input.assigneeId);
       if (!assignee) {
@@ -127,6 +199,13 @@ export class IncidentService {
           "Cannot assign incident to a deactivated user"
         );
       }
+
+      const allowedTargetRoles = INCIDENT_ASSIGNMENT_PERMISSIONS[creatorRole] || [];
+      if (!allowedTargetRoles.includes(assignee.role)) {
+        throw new ForbiddenError(
+          `Your role (${creatorRole}) does not have permission to assign incidents to a member with role (${assignee.role})`
+        );
+      }
     }
 
     const created = await incidentDao.create({
@@ -137,6 +216,7 @@ export class IncidentService {
       organizationId,
       createdBy: creatorUserId,
       assigneeId: input.assigneeId || null,
+      serviceId: input.serviceId || null,
       resolvedAt: input.status === INCIDENT_STATUS.RESOLVED ? new Date() : null,
     });
 
@@ -241,12 +321,71 @@ export class IncidentService {
     organizationId: string,
     incidentId: string,
     input: UpdateIncidentInput,
-    userId?: string
+    userId?: string,
+    actorRole?: Role
   ): Promise<SafeIncidentDetails> {
     // 1. Ensure incident exists in caller's organization
     const existing = await incidentDao.findByOrgAndId(organizationId, incidentId);
     if (!existing) {
       throw new NotFoundError("Incident not found in organization");
+    }
+
+    const existingCreatorId = (existing.createdBy as unknown as { _id?: Types.ObjectId })._id
+      ? (existing.createdBy as unknown as { _id: Types.ObjectId })._id.toString()
+      : existing.createdBy.toString();
+
+    const existingAssigneeId = existing.assigneeId
+      ? (existing.assigneeId as unknown as { _id?: Types.ObjectId })._id
+        ? (existing.assigneeId as unknown as { _id: Types.ObjectId })._id.toString()
+        : existing.assigneeId.toString()
+      : null;
+
+    const actorId = userId || existingCreatorId;
+
+    // RBAC: Verify actor permissions on field updates
+    if (actorRole) {
+      // 1. Priority (Severity) update check: only SUPER_ADMIN, ADMIN, MANAGER
+      if (input.priority !== undefined && input.priority !== existing.priority) {
+        if (!INCIDENT_PRIORITY_UPDATE_ROLES.includes(actorRole)) {
+          throw new ForbiddenError(
+            `Your role (${actorRole}) is not authorized to modify incident severity. Only incident managers and administrators can change priority.`
+          );
+        }
+      }
+
+      // 2. Status update check
+      if (input.status !== undefined && input.status !== existing.status) {
+        if (input.status === INCIDENT_STATUS.CLOSED && !INCIDENT_CLOSE_ROLES.includes(actorRole)) {
+          throw new ForbiddenError(
+            `Your role (${actorRole}) is not authorized to close incidents. Only incident managers and administrators can close incidents.`
+          );
+        }
+
+        if (actorRole === ROLES.DEVELOPER) {
+          const isAssignee = existingAssigneeId === actorId;
+          const isCreator = existingCreatorId === actorId;
+          if (!isAssignee && !isCreator) {
+            throw new ForbiddenError(
+              "You are not authorized to update the status of an incident you are not assigned to or did not create"
+            );
+          }
+        }
+      }
+
+      // 3. Title / Description update check
+      const titleChanged = input.title !== undefined && input.title !== existing.title;
+      const descChanged = input.description !== undefined && input.description !== existing.description;
+      if (titleChanged || descChanged) {
+        if (actorRole === ROLES.DEVELOPER) {
+          const isAssignee = existingAssigneeId === actorId;
+          const isCreator = existingCreatorId === actorId;
+          if (!isAssignee && !isCreator) {
+            throw new ForbiddenError(
+              "You are not authorized to modify details of an incident you are not assigned to or did not create"
+            );
+          }
+        }
+      }
     }
 
     const updateData: Record<string, unknown> = {};
@@ -261,6 +400,7 @@ export class IncidentService {
       }
     }
     if (input.priority !== undefined) updateData.priority = input.priority;
+    if (input.serviceId !== undefined) updateData.serviceId = input.serviceId;
 
     const updated = await incidentDao.updateByOrgAndId(
       organizationId,
@@ -271,12 +411,6 @@ export class IncidentService {
     if (!updated) {
       throw new NotFoundError("Incident not found in organization");
     }
-
-    const existingCreatorId = (existing.createdBy as unknown as { _id?: Types.ObjectId })._id
-      ? (existing.createdBy as unknown as { _id: Types.ObjectId })._id.toString()
-      : existing.createdBy.toString();
-
-    const actorId = userId || existingCreatorId;
 
     // Audit status change
     if (input.status !== undefined && input.status !== existing.status) {
@@ -383,7 +517,8 @@ export class IncidentService {
     organizationId: string,
     incidentId: string,
     assigneeId: string | null,
-    userId?: string
+    userId?: string,
+    actorRole?: Role
   ): Promise<SafeIncidentDetails> {
     // 1. Ensure incident exists in caller's organization
     const existing = await incidentDao.findByOrgAndId(organizationId, incidentId);
@@ -391,7 +526,34 @@ export class IncidentService {
       throw new NotFoundError("Incident not found in organization");
     }
 
-    // 2. If assigning to a user, verify assignee belongs to org and is active
+    const oldAssigneeId = existing.assigneeId
+      ? (existing.assigneeId as unknown as { _id?: Types.ObjectId })._id
+        ? (existing.assigneeId as unknown as { _id: Types.ObjectId })._id.toString()
+        : existing.assigneeId.toString()
+      : null;
+
+    const existingCreatorId = (existing.createdBy as unknown as { _id?: Types.ObjectId })._id
+      ? (existing.createdBy as unknown as { _id: Types.ObjectId })._id.toString()
+      : existing.createdBy.toString();
+
+    // 2. If actorRole is DEVELOPER, apply protection on existing assignment
+    if (actorRole === ROLES.DEVELOPER) {
+      if (oldAssigneeId) {
+        const currentAssigneeUser = await userDao.findByOrgAndId(organizationId, oldAssigneeId);
+        if (currentAssigneeUser && currentAssigneeUser.role !== ROLES.DEVELOPER) {
+          throw new ForbiddenError(
+            `Developers cannot reassign an incident assigned to a higher-privileged member (${currentAssigneeUser.role})`
+          );
+        }
+        if (oldAssigneeId !== userId && existingCreatorId !== userId) {
+          throw new ForbiddenError(
+            "You are not authorized to reassign an incident assigned to another engineer"
+          );
+        }
+      }
+    }
+
+    // 3. If assigning to a user, verify assignee belongs to org and is active, and verify actor's assignment permission
     if (assigneeId !== null) {
       const assignee = await userDao.findByOrgAndId(organizationId, assigneeId);
       if (!assignee) {
@@ -403,6 +565,15 @@ export class IncidentService {
         throw new ValidationError(
           "Cannot assign incident to a deactivated user"
         );
+      }
+
+      if (actorRole) {
+        const allowedTargetRoles = INCIDENT_ASSIGNMENT_PERMISSIONS[actorRole] || [];
+        if (!allowedTargetRoles.includes(assignee.role)) {
+          throw new ForbiddenError(
+            `Your role (${actorRole}) does not have permission to assign incidents to a member with role (${assignee.role})`
+          );
+        }
       }
     }
 
@@ -416,11 +587,6 @@ export class IncidentService {
       throw new NotFoundError("Incident not found in organization");
     }
 
-    const oldAssigneeId = existing.assigneeId
-      ? (existing.assigneeId as unknown as { _id?: Types.ObjectId })._id
-        ? (existing.assigneeId as unknown as { _id: Types.ObjectId })._id.toString()
-        : existing.assigneeId.toString()
-      : null;
     const newAssigneeId = assigneeId ? assigneeId.toString() : null;
 
     if (oldAssigneeId !== newAssigneeId) {
