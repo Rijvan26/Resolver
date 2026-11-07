@@ -58,6 +58,51 @@ export const INCIDENT_PRIORITY = {
 
 export type IncidentPriority = (typeof INCIDENT_PRIORITY)[keyof typeof INCIDENT_PRIORITY];
 
+/**
+ * Incident creation permissions by role
+ */
+export const INCIDENT_PRIORITY_CREATION_PERMISSIONS: Record<Role, IncidentPriority[]> = {
+  SUPER_ADMIN: [INCIDENT_PRIORITY.LOW, INCIDENT_PRIORITY.MEDIUM, INCIDENT_PRIORITY.HIGH, INCIDENT_PRIORITY.CRITICAL],
+  ADMIN: [INCIDENT_PRIORITY.LOW, INCIDENT_PRIORITY.MEDIUM, INCIDENT_PRIORITY.HIGH, INCIDENT_PRIORITY.CRITICAL],
+  MANAGER: [INCIDENT_PRIORITY.LOW, INCIDENT_PRIORITY.MEDIUM, INCIDENT_PRIORITY.HIGH, INCIDENT_PRIORITY.CRITICAL],
+  DEVELOPER: [INCIDENT_PRIORITY.LOW, INCIDENT_PRIORITY.MEDIUM, INCIDENT_PRIORITY.HIGH],
+};
+
+export const INCIDENT_STATUS_CREATION_PERMISSIONS: Record<Role, IncidentStatus[]> = {
+  SUPER_ADMIN: [INCIDENT_STATUS.OPEN, INCIDENT_STATUS.IN_PROGRESS, INCIDENT_STATUS.RESOLVED, INCIDENT_STATUS.CLOSED],
+  ADMIN: [INCIDENT_STATUS.OPEN, INCIDENT_STATUS.IN_PROGRESS, INCIDENT_STATUS.RESOLVED, INCIDENT_STATUS.CLOSED],
+  MANAGER: [INCIDENT_STATUS.OPEN, INCIDENT_STATUS.IN_PROGRESS, INCIDENT_STATUS.RESOLVED],
+  DEVELOPER: [INCIDENT_STATUS.OPEN, INCIDENT_STATUS.IN_PROGRESS],
+};
+
+/**
+ * Roles permitted to modify incident severity (priority) during update
+ */
+export const INCIDENT_PRIORITY_UPDATE_ROLES: Role[] = [
+  ROLES.SUPER_ADMIN,
+  ROLES.ADMIN,
+  ROLES.MANAGER,
+];
+
+/**
+ * Roles permitted to close an incident
+ */
+export const INCIDENT_CLOSE_ROLES: Role[] = [
+  ROLES.SUPER_ADMIN,
+  ROLES.ADMIN,
+  ROLES.MANAGER,
+];
+
+/**
+ * Roles an actor is permitted to assign an incident to
+ */
+export const INCIDENT_ASSIGNMENT_PERMISSIONS: Record<Role, Role[]> = {
+  SUPER_ADMIN: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  ADMIN: [ROLES.ADMIN, ROLES.MANAGER, ROLES.DEVELOPER],
+  MANAGER: [ROLES.MANAGER, ROLES.DEVELOPER],
+  DEVELOPER: [ROLES.DEVELOPER],
+};
+
 export const ACTIVITY_ACTION = {
   INCIDENT_CREATED: "INCIDENT_CREATED",
   STATUS_CHANGED: "STATUS_CHANGED",
@@ -71,6 +116,105 @@ export const ACTIVITY_ACTION = {
 } as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTION)[keyof typeof ACTIVITY_ACTION];
+
+/**
+ * Service Tier levels
+ */
+export const SERVICE_TIERS = [1, 2, 3] as const;
+export type ServiceTier = (typeof SERVICE_TIERS)[number];
+
+/**
+ * AI Suggestion and Lifecycle Types
+ */
+export const AI_STATUS = {
+  NONE: "none",
+  PENDING: "pending",
+  READY: "ready",
+  FAILED: "failed",
+  UNAVAILABLE: "unavailable",
+} as const;
+export type AiStatus = (typeof AI_STATUS)[keyof typeof AI_STATUS];
+
+export const AI_SUGGESTION_TYPE = {
+  TRIAGE: "triage",
+  SUMMARY: "summary",
+  POSTMORTEM: "postmortem",
+} as const;
+export type AiSuggestionType = (typeof AI_SUGGESTION_TYPE)[keyof typeof AI_SUGGESTION_TYPE];
+
+export const AI_USER_DECISION = {
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  EDITED: "edited",
+  DISMISSED: "dismissed",
+} as const;
+export type AiUserDecision = (typeof AI_USER_DECISION)[keyof typeof AI_USER_DECISION];
+
+export interface IncidentAiSubdocument {
+  severity?: IncidentPriority | null;
+  reason?: string | null;
+  confidence?: number | null;
+  model?: string | null;
+  provider?: string | null;
+  suggestedService?: string | null;
+  suggestedTeam?: string | null;
+  summary?: string | null;
+  summaryUpdatedAt?: string | null;
+  status: AiStatus;
+}
+
+export interface AiTriageOutput {
+  suggestedSeverity: string;
+  reason: string;
+  confidence: number;
+  suggestedService?: string | null;
+  suggestedTeam?: string | null;
+  ruleId?: string;
+}
+
+export interface AiSummaryOutput {
+  summary: string;
+  keyMetrics?: Record<string, unknown> | null;
+  impact?: string | null;
+}
+
+export interface AiPostmortemOutput {
+  title?: string;
+  rootCause: string;
+  impact?: string | null;
+  timelineSummary?: string | null;
+  actionItems?: string[];
+  lessonsLearned?: string[];
+}
+
+export interface AiSuggestion<T = Record<string, unknown>> {
+  _id: string;
+  incidentId: string;
+  organizationId: string;
+  type: AiSuggestionType;
+  inputHash: string;
+  output: T;
+  model: string;
+  provider: string;
+  latencyMs: number;
+  status: "ready" | "failed" | "unavailable";
+  userDecision: AiUserDecision;
+  editedOutput?: Record<string, unknown> | null;
+  decidedBy?: UserSummary | null;
+  decidedAt?: string | null;
+  createdAt: string;
+}
+
+export interface IncidentAiStatus {
+  ai: IncidentAiSubdocument;
+  finalSeverity?: IncidentPriority | null;
+  aiAccepted?: boolean;
+  suggestions: {
+    triage?: AiSuggestion<AiTriageOutput> | null;
+    summary?: AiSuggestion<AiSummaryOutput> | null;
+    postmortem?: AiSuggestion<AiPostmortemOutput> | null;
+  };
+}
 
 export const NOTIFICATION_TYPES = {
   INCIDENT_ASSIGNED: "INCIDENT_ASSIGNED",
@@ -151,6 +295,14 @@ export interface User {
   updatedAt?: string;
 }
 
+export interface ServiceSummary {
+  id: string;
+  name: string;
+  tier: ServiceTier;
+  owningTeam: string;
+  runbookLinks?: string[];
+}
+
 export interface Incident {
   id: string;
   title: string;
@@ -161,6 +313,11 @@ export interface Incident {
   createdBy: UserSummary;
   assignee?: UserSummary | null;
   assigneeId?: string | null;
+  service?: ServiceSummary | null;
+  serviceId?: string | null;
+  finalSeverity?: IncidentPriority | null;
+  aiAccepted?: boolean;
+  ai?: IncidentAiSubdocument;
   resolvedAt?: string | null;
   createdAt: string;
   updatedAt: string;

@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Incident, INCIDENT_STATUS, INCIDENT_PRIORITY } from "@/types";
+import { useAppSelector } from "@/app/hooks";
+import {
+  Incident,
+  INCIDENT_STATUS,
+  INCIDENT_PRIORITY,
+  ROLES,
+  INCIDENT_PRIORITY_UPDATE_ROLES,
+  INCIDENT_CLOSE_ROLES,
+} from "@/types";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,8 +32,19 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { user } = useAppSelector((state) => state.auth);
   const [serverError, setServerError] = useState<string | null>(null);
   const [updateIncident, { isLoading }] = useUpdateIncidentMutation();
+
+  const canChangePriority = Boolean(user && INCIDENT_PRIORITY_UPDATE_ROLES.includes(user.role));
+  const canCloseIncident = Boolean(user && INCIDENT_CLOSE_ROLES.includes(user.role));
+
+  const isAssignee = incident.assignee?.id === user?.id || incident.assigneeId === user?.id;
+  const creatorId = typeof incident.createdBy === "object" ? incident.createdBy.id : incident.createdBy;
+  const isCreator = creatorId === user?.id;
+
+  const canEditDetails = user?.role !== ROLES.DEVELOPER || isAssignee || isCreator;
+  const canEditStatus = user?.role !== ROLES.DEVELOPER || isAssignee || isCreator;
 
   const {
     register,
@@ -104,28 +123,31 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
         <Input
           label="Title"
           placeholder="Brief summary of the incident"
-          disabled={isPending}
+          disabled={isPending || !canEditDetails}
           error={errors.title?.message}
+          helperText={!canEditDetails ? "Only the assigned engineer, creator, or managers can edit title" : undefined}
           {...register("title")}
         />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Select
             label="Status"
-            disabled={isPending}
+            disabled={isPending || !canEditStatus}
             error={errors.status?.message}
+            helperText={!canEditStatus ? "Only the assigned engineer or managers can update status" : undefined}
             {...register("status")}
           >
             <option value={INCIDENT_STATUS.OPEN}>Open</option>
             <option value={INCIDENT_STATUS.IN_PROGRESS}>In Progress</option>
             <option value={INCIDENT_STATUS.RESOLVED}>Resolved</option>
-            <option value={INCIDENT_STATUS.CLOSED}>Closed</option>
+            {canCloseIncident && <option value={INCIDENT_STATUS.CLOSED}>Closed</option>}
           </Select>
 
           <Select
             label="Priority"
-            disabled={isPending}
+            disabled={isPending || !canChangePriority}
             error={errors.priority?.message}
+            helperText={!canChangePriority ? "Severity changes require Incident Manager or Admin role" : undefined}
             {...register("priority")}
           >
             <option value={INCIDENT_PRIORITY.LOW}>Low</option>
@@ -139,8 +161,9 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
           label="Description"
           placeholder="Detailed explanation, steps to reproduce, or incident timeline..."
           rows={5}
-          disabled={isPending}
+          disabled={isPending || !canEditDetails}
           error={errors.description?.message}
+          helperText={!canEditDetails ? "Only the assigned engineer, creator, or managers can edit description" : undefined}
           {...register("description")}
         />
 

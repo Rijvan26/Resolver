@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAppSelector } from "@/app/hooks";
 import {
   useGetIncidentQuery,
   useUpdateIncidentMutation,
@@ -10,6 +11,8 @@ import {
   IncidentStatus,
   IncidentPriority,
   ROLES,
+  INCIDENT_PRIORITY_UPDATE_ROLES,
+  INCIDENT_CLOSE_ROLES,
 } from "@/types";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PriorityBadge } from "@/components/shared/PriorityBadge";
@@ -26,6 +29,10 @@ import { AssignIncidentModal } from "@/features/incidents/components/AssignIncid
 import { DeleteIncidentModal } from "@/features/incidents/components/DeleteIncidentModal";
 import { CommentList } from "@/features/incidents/components/CommentList";
 import { IncidentTimeline } from "@/features/incidents/components/IncidentTimeline";
+import { useGetIncidentAiStatusQuery } from "@/features/incidents/aiApi";
+import { AiTriageCard } from "@/features/incidents/components/AiTriageCard";
+import { AiSummaryCard } from "@/features/incidents/components/AiSummaryCard";
+import { AiPostmortemCard } from "@/features/incidents/components/AiPostmortemCard";
 import { formatRelativeTime } from "@/features/dashboard/dashboardUtils";
 import { parseApiError } from "@/lib/apiErrors";
 import {
@@ -55,13 +62,44 @@ export const IncidentDetailsPage: React.FC = () => {
     skip: !incidentId,
   });
 
+  const { data: aiData } = useGetIncidentAiStatusQuery(incidentId || "", {
+    skip: !incidentId,
+  });
+  const aiStatus = aiData?.data;
+
   const [updateIncident, { isLoading: isUpdating }] = useUpdateIncidentMutation();
+  const { user } = useAppSelector((state) => state.auth);
 
   const incident = data?.data;
 
+  // RBAC permissions checks
+  const canChangePriority = Boolean(user && INCIDENT_PRIORITY_UPDATE_ROLES.includes(user.role));
+  const canCloseIncident = Boolean(user && INCIDENT_CLOSE_ROLES.includes(user.role));
+
+  const isAssignee = incident?.assignee?.id === user?.id || incident?.assigneeId === user?.id;
+  const creatorId = typeof incident?.createdBy === "object" ? incident?.createdBy.id : incident?.createdBy;
+  const isCreator = creatorId === user?.id;
+
+  const canChangeStatus = user?.role !== ROLES.DEVELOPER || isAssignee || isCreator;
+  const canEditIncident = user?.role !== ROLES.DEVELOPER || isAssignee || isCreator;
+
+  // Reassignment restrictions for developers
+  const isAssignedToHigherRole =
+    user?.role === ROLES.DEVELOPER &&
+    incident?.assignee &&
+    incident.assignee.role !== ROLES.DEVELOPER;
+
+  const isAssignedToOtherDev =
+    user?.role === ROLES.DEVELOPER &&
+    incident?.assignee &&
+    incident.assignee.id !== user?.id &&
+    !isCreator;
+
+  const canReassign = !isAssignedToHigherRole && !isAssignedToOtherDev;
+
   // Quick Status change handler
   const handleQuickStatusChange = async (newStatus: IncidentStatus) => {
-    if (!incident || incident.status === newStatus) return;
+    if (!incident || incident.status === newStatus || !canChangeStatus) return;
     setActionError(null);
 
     try {
@@ -77,7 +115,7 @@ export const IncidentDetailsPage: React.FC = () => {
 
   // Quick Priority change handler
   const handleQuickPriorityChange = async (newPriority: IncidentPriority) => {
-    if (!incident || incident.priority === newPriority) return;
+    if (!incident || incident.priority === newPriority || !canChangePriority) return;
     setActionError(null);
 
     try {
@@ -157,6 +195,8 @@ export const IncidentDetailsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => setIsEditOpen(true)}
+            disabled={!canEditIncident}
+            title={!canEditIncident ? "Only the assigned engineer, creator, or managers can edit details" : undefined}
             leftIcon={<Edit className="h-3.5 w-3.5" />}
           >
             Edit Incident
@@ -166,6 +206,14 @@ export const IncidentDetailsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => setIsAssignOpen(true)}
+            disabled={!canReassign}
+            title={
+              isAssignedToHigherRole
+                ? "Cannot reassign incident assigned to admin or manager"
+                : isAssignedToOtherDev
+                ? "Only the assigned engineer, creator, or managers can reassign"
+                : undefined
+            }
             leftIcon={<UserCheck className="h-3.5 w-3.5" />}
           >
             {assignee ? "Reassign" : "Assign"}
@@ -236,13 +284,14 @@ export const IncidentDetailsPage: React.FC = () => {
               <Select
                 value={incident.status}
                 onChange={(e) => handleQuickStatusChange(e.target.value as IncidentStatus)}
-                disabled={isUpdating}
+                disabled={isUpdating || !canChangeStatus}
+                title={!canChangeStatus ? "Only assigned engineer or managers can change status" : undefined}
                 className="text-xs h-8 py-1"
               >
                 <option value={INCIDENT_STATUS.OPEN}>Open</option>
                 <option value={INCIDENT_STATUS.IN_PROGRESS}>In Progress</option>
                 <option value={INCIDENT_STATUS.RESOLVED}>Resolved</option>
-                <option value={INCIDENT_STATUS.CLOSED}>Closed</option>
+                {canCloseIncident && <option value={INCIDENT_STATUS.CLOSED}>Closed</option>}
               </Select>
             </div>
 
@@ -253,7 +302,8 @@ export const IncidentDetailsPage: React.FC = () => {
               <Select
                 value={incident.priority}
                 onChange={(e) => handleQuickPriorityChange(e.target.value as IncidentPriority)}
-                disabled={isUpdating}
+                disabled={isUpdating || !canChangePriority}
+                title={!canChangePriority ? "Severity changes require Incident Manager or Admin role" : undefined}
                 className="text-xs h-8 py-1"
               >
                 <option value={INCIDENT_PRIORITY.LOW}>Low</option>
@@ -268,8 +318,19 @@ export const IncidentDetailsPage: React.FC = () => {
 
       {/* Main Grid: Description & Metadata */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column: Full Description & Placeholders */}
+        {/* Left Column: AI Assistant, Full Description & Discussion */}
         <div className="lg:col-span-2 space-y-6">
+          {/* AI Status Overview */}
+          <AiSummaryCard incidentId={incident.id} aiStatus={aiStatus} />
+
+          {/* AI Triage & Severity Recommendation */}
+          <AiTriageCard
+            incidentId={incident.id}
+            aiStatus={aiStatus}
+            canModifySeverity={canChangePriority}
+            currentPriority={incident.priority}
+          />
+
           {/* Description Section */}
           <Card>
             <CardHeader>
@@ -281,6 +342,13 @@ export const IncidentDetailsPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Postmortem Draft (Only for resolved/closed incidents) */}
+          <AiPostmortemCard
+            incidentId={incident.id}
+            incidentStatus={incident.status}
+            aiStatus={aiStatus}
+          />
 
           {/* Tabbed Comments & Audit Timeline */}
           <Card>
@@ -386,6 +454,38 @@ export const IncidentDetailsPage: React.FC = () => {
                   <div className="text-[11px] text-slate-500 mt-0.5">{creator.email}</div>
                 )}
               </div>
+
+              {/* Affected Service */}
+              {incident.service && (
+                <div className="pt-2 border-t border-border-color">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                    Affected Service
+                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-main-fg">
+                      {incident.service.name}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      Tier {incident.service.tier}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-muted-fg mt-0.5">
+                    Owning Team: {incident.service.owningTeam}
+                  </div>
+                  {incident.service.runbookLinks && incident.service.runbookLinks.length > 0 && (
+                    <div className="mt-1">
+                      <a
+                        href={incident.service.runbookLinks[0]}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-brand-600 hover:underline dark:text-brand-400 font-medium inline-flex items-center gap-1"
+                      >
+                        Service Runbook &rarr;
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Timestamps */}
               <div className="pt-2 border-t border-border-color space-y-2">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Incident } from "@/types";
+import { useAppSelector } from "@/app/hooks";
+import { Incident, ROLES, INCIDENT_ASSIGNMENT_PERMISSIONS } from "@/types";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { user } = useAppSelector((state) => state.auth);
   const [selectedAssignee, setSelectedAssignee] = useState<string>(
     incident.assignee?.id || incident.assigneeId || ""
   );
@@ -39,7 +41,29 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
     }
   }, [isOpen, incident]);
 
+  const allMembers = membersData?.data?.members || [];
+
+  // Filter eligible assignees based on current user's role hierarchy
+  const allowedRoles = user?.role ? INCIDENT_ASSIGNMENT_PERMISSIONS[user.role] || [] : [];
+  const eligibleMembers = allMembers.filter((m) => allowedRoles.includes(m.role));
+
+  // Check if current user is blocked from reassigning
+  const isAssignedToHigherRole =
+    user?.role === ROLES.DEVELOPER &&
+    incident.assignee &&
+    incident.assignee.role !== ROLES.DEVELOPER;
+
+  const currentCreatorId = typeof incident.createdBy === "object" ? incident.createdBy.id : incident.createdBy;
+  const isAssignedToOtherDev =
+    user?.role === ROLES.DEVELOPER &&
+    incident.assignee &&
+    incident.assignee.id !== user?.id &&
+    currentCreatorId !== user?.id;
+
+  const isReassignmentBlocked = Boolean(isAssignedToHigherRole || isAssignedToOtherDev);
+
   const handleSave = async () => {
+    if (isReassignmentBlocked) return;
     setServerError(null);
 
     try {
@@ -57,7 +81,6 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
     }
   };
 
-  const members = membersData?.data?.members || [];
   const isPending = isUpdating || isLoadingMembers;
 
   return (
@@ -75,6 +98,24 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
           </Alert>
         )}
 
+        {isAssignedToHigherRole && (
+          <Alert
+            variant="warning"
+            title="Reassignment Restricted"
+          >
+            This incident is assigned to {incident.assignee?.name} ({incident.assignee?.role}). As a developer, you cannot reassign incidents managed by administrators or managers.
+          </Alert>
+        )}
+
+        {isAssignedToOtherDev && (
+          <Alert
+            variant="warning"
+            title="Reassignment Restricted"
+          >
+            This incident is assigned to {incident.assignee?.name}. Only the assigned engineer, incident creator, or managers can reassign it.
+          </Alert>
+        )}
+
         <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
           <span className="font-semibold text-slate-800 dark:text-slate-100">Incident:</span>{" "}
           {incident.title}
@@ -84,11 +125,15 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
           label="Assignee"
           value={selectedAssignee}
           onChange={(e) => setSelectedAssignee(e.target.value)}
-          disabled={isPending}
-          helperText="Only active members of your organization can be assigned"
+          disabled={isPending || isReassignmentBlocked}
+          helperText={
+            user?.role === ROLES.DEVELOPER
+              ? "As a developer, you can only assign incidents to fellow developers"
+              : "Only active members of your organization can be assigned"
+          }
         >
           <option value="">-- Unassigned --</option>
-          {members.map((member) => (
+          {eligibleMembers.map((member) => (
             <option key={member.id} value={member.id}>
               {member.name} ({member.email}) — {member.role}
             </option>
@@ -102,7 +147,7 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => setSelectedAssignee("")}
-              disabled={isPending}
+              disabled={isPending || isReassignmentBlocked}
               leftIcon={<UserX className="h-4 w-4" />}
             >
               Clear Assignee
@@ -120,7 +165,7 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
               variant="primary"
               size="sm"
               isLoading={isPending}
-              disabled={isPending}
+              disabled={isPending || isReassignmentBlocked}
               onClick={handleSave}
               leftIcon={<UserCheck className="h-4 w-4" />}
             >

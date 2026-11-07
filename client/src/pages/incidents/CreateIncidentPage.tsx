@@ -2,9 +2,14 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAppSelector } from "@/app/hooks";
 import {
   INCIDENT_STATUS,
   INCIDENT_PRIORITY,
+  ROLES,
+  INCIDENT_ASSIGNMENT_PERMISSIONS,
+  INCIDENT_PRIORITY_CREATION_PERMISSIONS,
+  INCIDENT_STATUS_CREATION_PERMISSIONS,
 } from "@/types";
 import { useCreateIncidentMutation } from "@/features/incidents/incidentsApi";
 import { useGetMembersQuery } from "@/features/members/membersApi";
@@ -25,12 +30,30 @@ import {
 export const CreateIncidentPage: React.FC = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
+  const { user } = useAppSelector((state) => state.auth);
 
   const [createIncidentMutation, { isLoading }] = useCreateIncidentMutation();
 
   // Load eligible active members for initial assignment
   const { data: membersData } = useGetMembersQuery({ status: "active", limit: 100 });
-  const members = membersData?.data?.members || [];
+  const allMembers = membersData?.data?.members || [];
+
+  // Filter assignable members based on current user's role hierarchy
+  const allowedAssigneeRoles = user?.role
+    ? INCIDENT_ASSIGNMENT_PERMISSIONS[user.role] || []
+    : [];
+  const assignableMembers = allMembers.filter((m) =>
+    allowedAssigneeRoles.includes(m.role)
+  );
+
+  // Allowed priorities and statuses for user's role
+  const allowedPriorities = user?.role
+    ? INCIDENT_PRIORITY_CREATION_PERMISSIONS[user.role] || []
+    : [INCIDENT_PRIORITY.LOW, INCIDENT_PRIORITY.MEDIUM, INCIDENT_PRIORITY.HIGH];
+
+  const allowedStatuses = user?.role
+    ? INCIDENT_STATUS_CREATION_PERMISSIONS[user.role] || []
+    : [INCIDENT_STATUS.OPEN, INCIDENT_STATUS.IN_PROGRESS];
 
   const {
     register,
@@ -150,12 +173,25 @@ export const CreateIncidentPage: React.FC = () => {
                 label="Priority Severity"
                 disabled={isPending}
                 error={errors.priority?.message}
+                helperText={
+                  !allowedPriorities.includes(INCIDENT_PRIORITY.CRITICAL)
+                    ? "Critical (P1) declaration requires Incident Manager or Admin role"
+                    : undefined
+                }
                 {...register("priority")}
               >
-                <option value={INCIDENT_PRIORITY.LOW}>Low — Minor inconvenience</option>
-                <option value={INCIDENT_PRIORITY.MEDIUM}>Medium — Moderate impact</option>
-                <option value={INCIDENT_PRIORITY.HIGH}>High — Significant degradation</option>
-                <option value={INCIDENT_PRIORITY.CRITICAL}>Critical — Service outage / blocker</option>
+                {allowedPriorities.includes(INCIDENT_PRIORITY.LOW) && (
+                  <option value={INCIDENT_PRIORITY.LOW}>Low — Minor inconvenience</option>
+                )}
+                {allowedPriorities.includes(INCIDENT_PRIORITY.MEDIUM) && (
+                  <option value={INCIDENT_PRIORITY.MEDIUM}>Medium — Moderate impact</option>
+                )}
+                {allowedPriorities.includes(INCIDENT_PRIORITY.HIGH) && (
+                  <option value={INCIDENT_PRIORITY.HIGH}>High — Significant degradation</option>
+                )}
+                {allowedPriorities.includes(INCIDENT_PRIORITY.CRITICAL) && (
+                  <option value={INCIDENT_PRIORITY.CRITICAL}>Critical — Service outage / blocker</option>
+                )}
               </Select>
 
               <Select
@@ -164,10 +200,18 @@ export const CreateIncidentPage: React.FC = () => {
                 error={errors.status?.message}
                 {...register("status")}
               >
-                <option value={INCIDENT_STATUS.OPEN}>Open (Needs triage)</option>
-                <option value={INCIDENT_STATUS.IN_PROGRESS}>In Progress (Active investigation)</option>
-                <option value={INCIDENT_STATUS.RESOLVED}>Resolved (Mitigated)</option>
-                <option value={INCIDENT_STATUS.CLOSED}>Closed</option>
+                {allowedStatuses.includes(INCIDENT_STATUS.OPEN) && (
+                  <option value={INCIDENT_STATUS.OPEN}>Open (Needs triage)</option>
+                )}
+                {allowedStatuses.includes(INCIDENT_STATUS.IN_PROGRESS) && (
+                  <option value={INCIDENT_STATUS.IN_PROGRESS}>In Progress (Active investigation)</option>
+                )}
+                {allowedStatuses.includes(INCIDENT_STATUS.RESOLVED) && (
+                  <option value={INCIDENT_STATUS.RESOLVED}>Resolved (Mitigated)</option>
+                )}
+                {allowedStatuses.includes(INCIDENT_STATUS.CLOSED) && (
+                  <option value={INCIDENT_STATUS.CLOSED}>Closed</option>
+                )}
               </Select>
             </div>
 
@@ -176,11 +220,15 @@ export const CreateIncidentPage: React.FC = () => {
               label="Assign Lead Engineer (Optional)"
               disabled={isPending}
               error={errors.assigneeId?.message}
-              helperText="You can also assign or reassign later"
+              helperText={
+                user?.role === ROLES.DEVELOPER
+                  ? "As a developer, you may assign to fellow developers or leave unassigned"
+                  : "You can also assign or reassign later"
+              }
               {...register("assigneeId")}
             >
               <option value="">-- Leave Unassigned for now --</option>
-              {members.map((member) => (
+              {assignableMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name} ({member.email}) — {member.role}
                 </option>
