@@ -26,6 +26,9 @@ const envSchema = z.object({
   GOOGLE_USER: z.string().optional(),
   EMAIL_FROM: z.string().default("Resolver Notifications <notifications@resolver.internal>"),
 
+  // Redis & BullMQ Configuration
+  REDIS_URL: z.string().default("redis://localhost:6379"),
+
   // AI Phase 1 Configuration (SRS-AI-001)
   AI_ENABLED: z
     .string()
@@ -33,7 +36,7 @@ const envSchema = z.object({
     .transform((val) => val === "true" || val === "1")
     .default(false),
   AI_PROVIDER: z.enum(["fake", "groq", "gemini", "ollama"]).default("fake"),
-  AI_MODEL: z.string().default("llama-3.3-70b-versatile"),
+  AI_MODEL: z.string().default("qwen/qwen3.8-27b"),
   GROQ_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
   OLLAMA_HOST: z.string().default("http://localhost:11434"),

@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser(config.COOKIE_SECRET));
 
 import apiRoutes from "./routes";
+import { createBullBoardRouter } from "./services/ai/queue/board";
 
 // Health check endpoints
 const healthHandler = (_req: Request, res: Response) => {
@@ -46,6 +47,9 @@ app.get("/api/v1/health", healthHandler);
 
 // API route mounting
 app.use("/api/v1", apiRoutes);
+
+// Bull Board Admin Dashboard (Protected: SUPER_ADMIN and ADMIN only)
+app.use(createBullBoardRouter());
 
 // 404 Catch-all handler for undefined routes
 app.use((req: Request, _res: Response, next) => {

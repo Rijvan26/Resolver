@@ -3,6 +3,7 @@ import { incidentDao, FindIncidentsFilter, IncidentPaginationOptions } from "../
 import { userDao } from "../dao/userDao";
 import { activityDao } from "../dao/activityDao";
 import { notificationEventService } from "./notificationEventService";
+import { addAiJob } from "./ai/queue/bullmq";
 import {
   IncidentPriority,
   IncidentStatus,
@@ -248,6 +249,19 @@ export class IncidentService {
       } catch (notifErr) {
         console.error("⚠️ [IncidentService] Failed to dispatch incident assignment notification:", notifErr);
       }
+    }
+
+    // Enqueue background AI triage job (fail-open: never blocks or crashes incident creation)
+    try {
+      await addAiJob({
+        jobType: "triage",
+        incidentId: created._id.toString(),
+        organizationId,
+        userId: creatorUserId,
+        serviceId: created.serviceId ? created.serviceId.toString() : null,
+      });
+    } catch (aiQueueErr) {
+      console.warn("⚠️ [IncidentService] AI triage dispatch failed (failing open):", aiQueueErr);
     }
 
     // Retrieve populated document

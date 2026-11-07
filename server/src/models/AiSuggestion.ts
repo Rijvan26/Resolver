@@ -50,7 +50,6 @@ const aiSuggestionSchema = new Schema<IAiSuggestion>(
     inputHash: {
       type: String,
       required: [true, "Input hash is required"],
-      index: true,
     },
     output: {
       type: Schema.Types.Mixed,

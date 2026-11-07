@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { incidentController } from "../controllers/incidentController";
 import { commentController } from "../controllers/commentController";
+import { aiController } from "../controllers/aiController";
 import { authenticate } from "../middleware/authenticate";
 import { authorize } from "../middleware/authorize";
 import { validate } from "../middleware/validate";
@@ -19,6 +20,10 @@ import {
   listCommentsQuerySchema,
 } from "../validations/commentValidation";
 import { listTimelineQuerySchema } from "../validations/activityValidation";
+import {
+  incidentAiParamsSchema,
+  triggerTriageBodySchema,
+} from "../validations/aiValidation";
 import { ROLES } from "../types";
 
 const router = Router();
@@ -160,6 +165,55 @@ router.get(
   validate(incidentOnlyParamSchema, "params"),
   validate(listTimelineQuerySchema, "query"),
   incidentController.getIncidentTimeline
+);
+
+// ========================================================
+// AI Assistant Sub-Resource Endpoints (SRS-AI-001)
+// ========================================================
+
+/**
+ * @route   POST /api/v1/incidents/:incidentId/ai/triage
+ * @desc    Trigger AI triage suggestion for an incident
+ * @access  Authenticated
+ */
+router.post(
+  "/:incidentId/ai/triage",
+  validate(incidentAiParamsSchema, "params"),
+  validate(triggerTriageBodySchema, "body"),
+  aiController.triggerTriage
+);
+
+/**
+ * @route   POST /api/v1/incidents/:incidentId/ai/summary
+ * @desc    Generate or refresh AI status summary
+ * @access  Authenticated
+ */
+router.post(
+  "/:incidentId/ai/summary",
+  validate(incidentAiParamsSchema, "params"),
+  aiController.triggerSummary
+);
+
+/**
+ * @route   POST /api/v1/incidents/:incidentId/ai/postmortem
+ * @desc    Generate blameless postmortem draft (resolved/closed only)
+ * @access  Authenticated
+ */
+router.post(
+  "/:incidentId/ai/postmortem",
+  validate(incidentAiParamsSchema, "params"),
+  aiController.triggerPostmortem
+);
+
+/**
+ * @route   GET /api/v1/incidents/:incidentId/ai
+ * @desc    Get active AI state and latest suggestions for incident
+ * @access  Authenticated
+ */
+router.get(
+  "/:incidentId/ai",
+  validate(incidentAiParamsSchema, "params"),
+  aiController.getIncidentAiStatus
 );
 
 export default router;
