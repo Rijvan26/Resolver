@@ -15,6 +15,7 @@ export interface ListCommentsParams {
 export interface CreateCommentPayload {
   incidentId: string;
   content: string;
+  parentId?: string | null;
 }
 
 export interface UpdateCommentPayload {
@@ -45,15 +46,26 @@ export const commentsApi = api.injectEndpoints({
           : [{ type: "Comments", id: incidentId }],
     }),
 
+    listReplies: builder.query<ApiSuccessResponse<Comment[]>, { incidentId: string; commentId: string }>({
+      query: ({ incidentId, commentId }) => ({
+        url: `/incidents/${incidentId}/comments/${commentId}/replies`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, { commentId }) => [
+        { type: "Comments", id: `replies-${commentId}` },
+      ],
+    }),
+
     createComment: builder.mutation<ApiSuccessResponse<Comment>, CreateCommentPayload>({
-      query: ({ incidentId, content }) => ({
+      query: ({ incidentId, content, parentId }) => ({
         url: `/incidents/${incidentId}/comments`,
         method: "POST",
-        body: { content },
+        body: { content, ...(parentId ? { parentId } : {}) },
       }),
-      invalidatesTags: (_result, _error, { incidentId }) => [
+      invalidatesTags: (_result, _error, { incidentId, parentId }) => [
         { type: "Comments", id: incidentId },
         { type: "Timeline", id: incidentId },
+        ...(parentId ? [{ type: "Comments" as const, id: `replies-${parentId}` }] : []),
       ],
     }),
 
@@ -85,6 +97,7 @@ export const commentsApi = api.injectEndpoints({
 
 export const {
   useListCommentsQuery,
+  useListRepliesQuery,
   useCreateCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,

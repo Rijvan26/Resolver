@@ -139,6 +139,9 @@ export const AI_SUGGESTION_TYPE = {
   TRIAGE: "triage",
   SUMMARY: "summary",
   POSTMORTEM: "postmortem",
+  DUPLICATE: "duplicate",
+  CLARIFY: "clarify",
+  STATUS_DRAFT: "statusDraft",
 } as const;
 export type AiSuggestionType = (typeof AI_SUGGESTION_TYPE)[keyof typeof AI_SUGGESTION_TYPE];
 
@@ -205,14 +208,40 @@ export interface AiSuggestion<T = Record<string, unknown>> {
   createdAt: string;
 }
 
+export interface AiDuplicateMatch {
+  incidentId: string;
+  title: string;
+  similarityScore: number;
+  reason: string;
+}
+
+export interface AiDuplicateOutput {
+  candidateIncidentIds: string[];
+  bestMatchIncidentId: string;
+  bestMatchTitle: string;
+  bestMatchScore: number;
+  reason: string;
+  matches: AiDuplicateMatch[];
+}
+
+export interface AiStatusDraftOutput {
+  audience: "internal" | "customer";
+  draftText: string;
+  summary?: string | null;
+}
+
 export interface IncidentAiStatus {
   ai: IncidentAiSubdocument;
   finalSeverity?: IncidentPriority | null;
   aiAccepted?: boolean;
+  linkedIncidentIds?: string[];
+  duplicateOf?: string | null;
   suggestions: {
     triage?: AiSuggestion<AiTriageOutput> | null;
     summary?: AiSuggestion<AiSummaryOutput> | null;
     postmortem?: AiSuggestion<AiPostmortemOutput> | null;
+    duplicate?: AiSuggestion<AiDuplicateOutput> | null;
+    statusDraft?: AiSuggestion<AiStatusDraftOutput> | null;
   };
 }
 
@@ -367,6 +396,7 @@ export interface Comment {
   organizationId: string;
   author: UserSummary;
   content: string;
+  parentId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

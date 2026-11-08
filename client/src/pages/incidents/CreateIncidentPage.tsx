@@ -13,6 +13,7 @@ import {
 } from "@/types";
 import { useCreateIncidentMutation } from "@/features/incidents/incidentsApi";
 import { useGetMembersQuery } from "@/features/members/membersApi";
+import { useClarifyReportMutation } from "@/features/incidents/aiApi";
 import { incidentFormSchema, IncidentFormValues } from "@/features/incidents/schemas";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,9 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  Sparkles,
+  HelpCircle,
+  X,
 } from "lucide-react";
 
 export const CreateIncidentPage: React.FC = () => {
@@ -58,6 +62,7 @@ export const CreateIncidentPage: React.FC = () => {
   const {
     register,
     handleSubmit,
+    getValues,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<IncidentFormValues>({
@@ -71,6 +76,41 @@ export const CreateIncidentPage: React.FC = () => {
     },
     mode: "onBlur",
   });
+
+  const [clarifyReport, { isLoading: isClarifying }] = useClarifyReportMutation();
+  const [clarifyQuestions, setClarifyQuestions] = useState<string[]>([]);
+  const [clarifyFeedback, setClarifyFeedback] = useState<string | null>(null);
+  const [showClarify, setShowClarify] = useState<boolean>(false);
+
+  const handleCheckClarity = async () => {
+    setClarifyFeedback(null);
+    const titleVal = getValues("title");
+    const descVal = getValues("description");
+
+    try {
+      const res = await clarifyReport({
+        title: titleVal,
+        description: descVal,
+      }).unwrap();
+
+      if (res.data?.vague && res.data.questions.length > 0) {
+        setClarifyQuestions(res.data.questions);
+        setShowClarify(true);
+      } else {
+        setClarifyQuestions([]);
+        setClarifyFeedback(
+          res.data?.vague
+            ? (res.data.reason || "Report is a bit brief. Adding symptoms or error codes can speed up triage.")
+            : "Report looks clear and contains good diagnostic detail!"
+        );
+        setShowClarify(true);
+      }
+    } catch {
+      // Fail-open: form works completely without AI
+      setClarifyFeedback("Clarity assistant unavailable right now. You can proceed with standard submission.");
+      setShowClarify(true);
+    }
+  };
 
   const onSubmit = async (values: IncidentFormValues) => {
     setServerError(null);
@@ -235,15 +275,77 @@ export const CreateIncidentPage: React.FC = () => {
               ))}
             </Select>
 
-            {/* Description */}
-            <Textarea
-              label="Description & Impact"
-              placeholder="Describe the symptoms, affected services, error messages, or steps to reproduce..."
-              rows={6}
-              disabled={isPending}
-              error={errors.description?.message}
-              {...register("description")}
-            />
+            {/* Description with Inline Clarification Assistant (FR-05) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-main-fg">
+                  Description & Impact
+                </label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCheckClarity}
+                  disabled={isPending || isClarifying}
+                  className="h-6 px-2 text-[11px] text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                >
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {isClarifying ? "Checking clarity..." : "Help me describe this"}
+                </Button>
+              </div>
+
+              <Textarea
+                placeholder="Describe the symptoms, affected services, error messages, or steps to reproduce..."
+                rows={6}
+                disabled={isPending}
+                error={errors.description?.message}
+                {...register("description")}
+              />
+
+              {/* Inline Report Clarification Suggestions */}
+              {showClarify && (
+                <div className="rounded-lg border border-indigo-200/90 bg-indigo-50/70 p-3.5 text-xs text-indigo-950 dark:border-indigo-900/80 dark:bg-indigo-950/40 dark:text-indigo-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-semibold text-xs">
+                      <HelpCircle className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <span>Report Clarification Guidance</span>
+                      <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                        Optional
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowClarify(false)}
+                      className="h-6 w-6 p-0 text-indigo-700 hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900"
+                      title="Hide guidance"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+
+                  {clarifyQuestions.length > 0 ? (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] text-indigo-900/90 dark:text-indigo-200/90">
+                        Answering these points can help responders diagnose and mitigate the incident faster:
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-[11px] font-medium text-indigo-950 dark:text-indigo-100">
+                        {clarifyQuestions.map((q, idx) => (
+                          <li key={idx} className="leading-relaxed">
+                            {q}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-indigo-900 dark:text-indigo-200">
+                      {clarifyFeedback}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </CardContent>
 
           <CardFooter className="flex items-center justify-between border-t border-border-color pt-4">

@@ -4,13 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
 import { parseApiError } from "@/lib/apiErrors";
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 
 export interface CommentInputProps {
   incidentId: string;
+  parentId?: string;
+  placeholder?: string;
+  submitButtonText?: string;
+  autoFocus?: boolean;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export const CommentInput: React.FC<CommentInputProps> = ({ incidentId }) => {
+export const CommentInput: React.FC<CommentInputProps> = ({
+  incidentId,
+  parentId,
+  placeholder = "Write a comment or provide an incident update...",
+  submitButtonText = "Comment",
+  autoFocus = false,
+  onSuccess,
+  onCancel,
+}) => {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +47,11 @@ export const CommentInput: React.FC<CommentInputProps> = ({ incidentId }) => {
     setError(null);
 
     try {
-      await createComment({ incidentId, content: trimmed }).unwrap();
+      await createComment({ incidentId, content: trimmed, parentId }).unwrap();
       setContent("");
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err: unknown) {
       const parsed = parseApiError(err);
       setError(parsed.message);
@@ -56,10 +73,11 @@ export const CommentInput: React.FC<CommentInputProps> = ({ incidentId }) => {
             setContent(e.target.value);
             if (error) setError(null);
           }}
-          placeholder="Write a comment or provide an incident update..."
-          rows={3}
+          placeholder={placeholder}
+          rows={parentId ? 2 : 3}
           disabled={isLoading}
-          className="text-xs resize-y min-h-[80px]"
+          autoFocus={autoFocus}
+          className="text-xs resize-y min-h-[60px]"
         />
       </div>
 
@@ -68,21 +86,35 @@ export const CommentInput: React.FC<CommentInputProps> = ({ incidentId }) => {
           {content.length} / 5000 characters
         </span>
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="sm"
-          isLoading={isLoading}
-          disabled={isLoading || !content.trim()}
-          leftIcon={<Send className="h-3.5 w-3.5" />}
-          className="text-xs"
-        >
-          {isLoading ? "Posting..." : "Comment"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              disabled={isLoading}
+              className="text-xs h-7 px-2"
+            >
+              <X className="h-3 w-3 mr-1" /> Cancel
+            </Button>
+          )}
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            isLoading={isLoading}
+            disabled={isLoading || !content.trim()}
+            leftIcon={<Send className="h-3.5 w-3.5" />}
+            className="text-xs h-7 px-2.5"
+          >
+            {isLoading ? "Posting..." : submitButtonText}
+          </Button>
+        </div>
       </div>
     </form>
   );
 };
 
 export default CommentInput;
-

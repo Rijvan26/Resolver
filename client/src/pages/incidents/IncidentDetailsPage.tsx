@@ -33,6 +33,10 @@ import { useGetIncidentAiStatusQuery } from "@/features/incidents/aiApi";
 import { AiTriageCard } from "@/features/incidents/components/AiTriageCard";
 import { AiSummaryCard } from "@/features/incidents/components/AiSummaryCard";
 import { AiPostmortemCard } from "@/features/incidents/components/AiPostmortemCard";
+import { AiSimilarIncidentsCard } from "@/features/incidents/components/AiSimilarIncidentsCard";
+import { AiDuplicateBanner } from "@/features/incidents/components/AiDuplicateBanner";
+import { AiSeverityMismatchBanner } from "@/features/incidents/components/AiSeverityMismatchBanner";
+import { AiStatusDraftCard } from "@/features/incidents/components/AiStatusDraftCard";
 import { formatRelativeTime } from "@/features/dashboard/dashboardUtils";
 import { parseApiError } from "@/lib/apiErrors";
 import {
@@ -239,6 +243,20 @@ export const IncidentDetailsPage: React.FC = () => {
         </Alert>
       )}
 
+      {/* AI Duplicate Detection Banner (FR-06) */}
+      <AiDuplicateBanner
+        incidentId={incident.id}
+        duplicateSuggestion={aiStatus?.suggestions?.duplicate}
+        duplicateOf={aiStatus?.duplicateOf}
+        linkedIncidentIds={aiStatus?.linkedIncidentIds}
+      />
+
+      {/* AI Severity Mismatch Warning Banner (FR-12) */}
+      <AiSeverityMismatchBanner
+        reportedSeverity={incident.priority}
+        rulesSeverity={aiStatus?.ai?.severity || aiStatus?.suggestions?.triage?.output?.suggestedSeverity}
+      />
+
       {/* Incident Header Card */}
       <Card className="p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -329,6 +347,15 @@ export const IncidentDetailsPage: React.FC = () => {
             aiStatus={aiStatus}
             canModifySeverity={canChangePriority}
             currentPriority={incident.priority}
+          />
+
+          {/* Similar Past Incidents (FR-07) */}
+          <AiSimilarIncidentsCard incidentId={incident.id} />
+
+          {/* AI Status Update Draft (FR-09) */}
+          <AiStatusDraftCard
+            incidentId={incident.id}
+            statusDraftSuggestion={aiStatus?.suggestions?.statusDraft}
           />
 
           {/* Description Section */}

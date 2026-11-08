@@ -23,8 +23,48 @@ export interface TriggerTriagePayload {
 export interface RecordDecisionPayload {
   suggestionId: string;
   incidentId: string;
-  decision: AiUserDecision;
+  decision: AiUserDecision | "link";
+  targetIncidentId?: string;
   editedOutput?: Record<string, unknown>;
+}
+
+export interface SimilarIncidentItem {
+  incidentId: string;
+  title: string;
+  service: string | null;
+  finalSeverity: string | null;
+  resolutionNotes: string | null;
+  similarityScore: number;
+  link: string;
+}
+
+export interface SimilarIncidentsResponse {
+  available: boolean;
+  reason?: string;
+  similarIncidents: SimilarIncidentItem[];
+}
+
+export interface ClarifyReportPayload {
+  title: string;
+  description: string;
+  serviceId?: string | null;
+}
+
+export interface ClarifyReportResponse {
+  vague: boolean;
+  questions: string[];
+  reason?: string | null;
+}
+
+export interface TriggerStatusDraftPayload {
+  incidentId: string;
+  audience: "internal" | "customer";
+}
+
+export interface AiStatusDraftOutput {
+  audience: "internal" | "customer";
+  draftText: string;
+  summary?: string | null;
 }
 
 export const aiApi = api.injectEndpoints({
@@ -98,6 +138,44 @@ export const aiApi = api.injectEndpoints({
         "Dashboard",
       ],
     }),
+
+    getSimilarIncidents: builder.query<
+      ApiSuccessResponse<SimilarIncidentsResponse>,
+      string
+    >({
+      query: (incidentId) => ({
+        url: `/incidents/${incidentId}/ai/similar`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, incidentId) => [
+        { type: "IncidentAi", id: `similar-${incidentId}` },
+      ],
+    }),
+
+    clarifyReport: builder.mutation<
+      ApiSuccessResponse<ClarifyReportResponse>,
+      ClarifyReportPayload
+    >({
+      query: (body) => ({
+        url: "/reports/ai/clarify",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    triggerStatusDraft: builder.mutation<
+      ApiSuccessResponse<AiSuggestion<AiStatusDraftOutput> | null>,
+      TriggerStatusDraftPayload
+    >({
+      query: ({ incidentId, audience }) => ({
+        url: `/incidents/${incidentId}/ai/status-draft`,
+        method: "POST",
+        body: { audience },
+      }),
+      invalidatesTags: (_result, _error, { incidentId }) => [
+        { type: "IncidentAi", id: incidentId },
+      ],
+    }),
   }),
 });
 
@@ -107,5 +185,8 @@ export const {
   useTriggerSummaryMutation,
   useTriggerPostmortemMutation,
   useRecordDecisionMutation,
+  useGetSimilarIncidentsQuery,
+  useClarifyReportMutation,
+  useTriggerStatusDraftMutation,
 } = aiApi;
 

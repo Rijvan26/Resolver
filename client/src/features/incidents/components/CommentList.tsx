@@ -24,7 +24,9 @@ export const CommentList: React.FC<CommentListProps> = ({ incidentId }) => {
     sortOrder,
   });
 
-  const comments = data?.data?.comments || [];
+  const allComments = data?.data?.comments || [];
+  // Render top-level comments at the root (replies are displayed nested in their parent thread)
+  const comments = allComments.filter((c) => !c.parentId);
   const pagination = data?.data?.pagination;
   const totalComments = pagination?.total || 0;
 

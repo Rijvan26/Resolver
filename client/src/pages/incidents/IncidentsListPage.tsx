@@ -14,6 +14,7 @@ import {
 } from "@/types";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PriorityBadge } from "@/components/shared/PriorityBadge";
+import { AiSeverityMismatchPill } from "@/features/incidents/components/AiSeverityMismatchBanner";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -386,7 +387,13 @@ export const IncidentsListPage: React.FC = () => {
                         <StatusBadge status={incident.status} size="sm" />
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <PriorityBadge priority={incident.priority} size="sm" />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <PriorityBadge priority={incident.priority} size="sm" />
+                          <AiSeverityMismatchPill
+                            reportedSeverity={incident.priority}
+                            rulesSeverity={incident.ai?.severity}
+                          />
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {assignee ? (
@@ -436,9 +443,13 @@ export const IncidentsListPage: React.FC = () => {
                   <h3 className="text-sm font-semibold text-main-fg line-clamp-1">
                     {incident.title}
                   </h3>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                     <StatusBadge status={incident.status} size="sm" />
                     <PriorityBadge priority={incident.priority} size="sm" />
+                    <AiSeverityMismatchPill
+                      reportedSeverity={incident.priority}
+                      rulesSeverity={incident.ai?.severity}
+                    />
                   </div>
                 </div>
 
