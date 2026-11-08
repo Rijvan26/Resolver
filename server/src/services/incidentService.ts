@@ -3,7 +3,8 @@ import { incidentDao, FindIncidentsFilter, IncidentPaginationOptions } from "../
 import { userDao } from "../dao/userDao";
 import { activityDao } from "../dao/activityDao";
 import { notificationEventService } from "./notificationEventService";
-import { addAiJob } from "./ai/queue/bullmq";
+import { addAiJob, addEmbedJob } from "./ai/queue/bullmq";
+import { incidentEmbeddingDao } from "../dao/incidentEmbeddingDao";
 import {
   IncidentPriority,
   IncidentStatus,
@@ -264,6 +265,16 @@ export class IncidentService {
       console.warn("⚠️ [IncidentService] AI triage dispatch failed (failing open):", aiQueueErr);
     }
 
+    // Enqueue background embedding job (fail-open)
+    try {
+      await addEmbedJob({
+        incidentId: created._id.toString(),
+        organizationId,
+      });
+    } catch (embedQueueErr) {
+      console.warn("⚠️ [IncidentService] AI embed dispatch failed (failing open):", embedQueueErr);
+    }
+
     // Retrieve populated document
     const incident = await incidentDao.findByOrgAndId(organizationId, created._id);
     return formatIncident(incident || created);
@@ -520,6 +531,18 @@ export class IncidentService {
       });
     }
 
+    // Re-embed incident if title, description, or status changed (fail-open)
+    if (titleChanged || descChanged || input.status !== undefined) {
+      try {
+        await addEmbedJob({
+          incidentId: updated._id.toString(),
+          organizationId,
+        });
+      } catch (embedQueueErr) {
+        console.warn("⚠️ [IncidentService] AI embed update dispatch failed (failing open):", embedQueueErr);
+      }
+    }
+
     return formatIncident(updated);
   }
 
@@ -662,6 +685,13 @@ export class IncidentService {
     });
 
     await incidentDao.deleteByOrgAndId(organizationId, incidentId);
+
+    // Clean up embedding associated with deleted incident
+    try {
+      await incidentEmbeddingDao.deleteByIncidentId(incidentId);
+    } catch (embedDeleteErr) {
+      console.warn("⚠️ [IncidentService] Failed to clean up embedding on incident deletion:", embedDeleteErr);
+    }
   }
 }
 

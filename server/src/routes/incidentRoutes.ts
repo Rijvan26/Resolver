@@ -206,6 +206,17 @@ router.post(
 );
 
 /**
+ * @route   GET /api/v1/incidents/:incidentId/ai/similar
+ * @desc    Get top similar past resolved/closed incidents (FR-07)
+ * @access  Authenticated
+ */
+router.get(
+  "/:incidentId/ai/similar",
+  validate(incidentAiParamsSchema, "params"),
+  aiController.getSimilarIncidents
+);
+
+/**
  * @route   GET /api/v1/incidents/:incidentId/ai
  * @desc    Get active AI state and latest suggestions for incident
  * @access  Authenticated

@@ -22,7 +22,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ai:backfill": "tsx scripts/backfillEmbeddings.ts"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

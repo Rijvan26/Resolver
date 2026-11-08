@@ -22,6 +22,8 @@ export interface IIncident extends Document {
   finalSeverity?: IncidentPriority | null;
   aiAccepted?: boolean;
   ai?: IncidentAiSubdocument;
+  linkedIncidentIds?: Types.ObjectId[];
+  duplicateOf?: Types.ObjectId | null;
   resolvedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -117,6 +119,16 @@ const incidentSchema = new Schema<IIncident>(
       },
       _id: false,
       default: () => ({ status: AI_STATUS.NONE }),
+    },
+    linkedIncidentIds: {
+      type: [Schema.Types.ObjectId],
+      ref: "Incident",
+      default: [],
+    },
+    duplicateOf: {
+      type: Schema.Types.ObjectId,
+      ref: "Incident",
+      default: null,
     },
     resolvedAt: {
       type: Date,

@@ -58,14 +58,17 @@ export const triggerTriageBodySchema = z
  */
 export const recordDecisionBodySchema = z
   .object({
-    decision: z.enum([
-      AI_USER_DECISION.ACCEPTED,
-      AI_USER_DECISION.EDITED,
-      AI_USER_DECISION.DISMISSED,
-    ]),
+    decision: z.preprocess(
+      (val) => (val === "link" ? AI_USER_DECISION.ACCEPTED : val),
+      z.enum([
+        AI_USER_DECISION.ACCEPTED,
+        AI_USER_DECISION.EDITED,
+        AI_USER_DECISION.DISMISSED,
+      ])
+    ),
+    targetIncidentId: z.string().optional(),
     editedOutput: z.record(z.string(), z.unknown()).optional(),
-  })
-  .strict();
+  });
 
 /**
  * Validates query parameters for AI audit log listing and metrics (FR-14)
@@ -78,6 +81,7 @@ export const listAuditLogQuerySchema = z.object({
       AI_SUGGESTION_TYPE.TRIAGE,
       AI_SUGGESTION_TYPE.SUMMARY,
       AI_SUGGESTION_TYPE.POSTMORTEM,
+      AI_SUGGESTION_TYPE.DUPLICATE,
     ])
     .optional(),
   decision: z

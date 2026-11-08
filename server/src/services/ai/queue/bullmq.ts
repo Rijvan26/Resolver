@@ -134,3 +134,92 @@ export async function addAiJob(jobData: AiJobData): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * ============================================================================
+ * BullMQ Queue: `ai-embed` (Phase 2 Embeddings)
+ * ============================================================================
+ * Manages background vector embedding generation for incidents.
+ *
+ * Architecture:
+ * 1. Dedicated Queue (`ai-embed`): Isolated from chat inference (`ai-jobs`)
+ *    so embedding backfills or spike bursts never delay incident triage.
+ * 2. Concurrency 1: Strictly processes 1 embedding at a time to prevent
+ *    saturating CPU or hitting provider rate limits.
+ * 3. 2 Retries with exponential backoff: Safely recovers from network jitter.
+ * 4. Fail-Open: If Redis is offline or an embedding error occurs, incident
+ *    creation and updates succeed completely without blocking.
+ * ============================================================================
+ */
+
+export const AI_EMBED_QUEUE_NAME = "ai-embed";
+
+export interface EmbedJobData {
+  incidentId: string;
+  organizationId: string;
+  force?: boolean;
+}
+
+let embedQueue: Queue<EmbedJobData> | null = null;
+
+/**
+ * Returns the singleton BullMQ Queue instance for `ai-embed`
+ */
+export function getEmbedQueue(): Queue<EmbedJobData> {
+  if (embedQueue) {
+    return embedQueue;
+  }
+
+  const redis = getRedisClient();
+
+  const queueOptions: QueueOptions = {
+    connection: redis,
+    defaultJobOptions: {
+      attempts: 2,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
+      },
+      removeOnComplete: { count: 100 },
+      removeOnFail: { count: 100 },
+    },
+  };
+
+  embedQueue = new Queue<EmbedJobData>(AI_EMBED_QUEUE_NAME, queueOptions);
+
+  embedQueue.on("error", (err) => {
+    if (config.NODE_ENV !== "test") {
+      console.warn("⚠️ [BullMQ:EmbedQueue] Queue background error (failing open):", err.message);
+    }
+  });
+
+  return embedQueue;
+}
+
+/**
+ * Enqueue an incident embedding job safely (fail-open).
+ */
+export async function addEmbedJob(jobData: EmbedJobData): Promise<string | null> {
+  const { incidentId } = jobData;
+
+  // If AI is globally disabled in config, skip embedding queue
+  if (!config.AI_ENABLED) {
+    return null;
+  }
+
+  try {
+    const queue = getEmbedQueue();
+    const jobName = `embed:${incidentId}`;
+    const job = await queue.add(jobName, jobData, {
+      jobId: `embed-${incidentId}-${Date.now()}`,
+    });
+
+    return job.id || null;
+  } catch (queueErr: unknown) {
+    // Fail-open: Never disrupt core incident operations
+    console.warn(
+      `⚠️ [BullMQ:Embed] Failed to enqueue embedding job (Redis offline or broker error). Failing open: ${(queueErr as Error)?.message || queueErr}`
+    );
+    return null;
+  }
+}

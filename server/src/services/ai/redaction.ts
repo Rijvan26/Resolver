@@ -158,4 +158,5 @@ export function redact(text: string, options?: RedactionOptions): string {
   return sanitized;
 }
 
+export const redactSensitiveData = redact;
 export default redact;

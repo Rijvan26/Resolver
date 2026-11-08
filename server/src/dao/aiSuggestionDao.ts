@@ -28,6 +28,14 @@ export interface AuditLogPaginationOptions {
   sortOrder?: "asc" | "desc";
 }
 
+export interface DuplicateMetrics {
+  total: number;
+  linked: number;
+  dismissed: number;
+  pending: number;
+  falseLinkRate: number; // percentage of duplicate suggestions dismissed (false positive matches)
+}
+
 export interface AuditMetrics {
   totalSuggestions: number;
   acceptedCount: number;
@@ -36,6 +44,7 @@ export interface AuditMetrics {
   pendingCount: number;
   agreementRate: number;
   avgLatencyMs: number;
+  duplicateMetrics?: DuplicateMetrics;
 }
 
 export class AiSuggestionDao {
@@ -244,6 +253,51 @@ export class AiSuggestionDao {
           pendingCount: {
             $sum: { $cond: [{ $eq: ["$userDecision", "pending"] }, 1, 0] },
           },
+          duplicateTotal: {
+            $sum: { $cond: [{ $eq: ["$type", "duplicate"] }, 1, 0] },
+          },
+          duplicateLinked: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$type", "duplicate"] },
+                    { $eq: ["$userDecision", "accepted"] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          duplicateDismissed: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$type", "duplicate"] },
+                    { $eq: ["$userDecision", "dismissed"] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          duplicatePending: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$type", "duplicate"] },
+                    { $eq: ["$userDecision", "pending"] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
           avgLatencyMs: { $avg: "$latencyMs" },
         },
       },
@@ -258,12 +312,25 @@ export class AiSuggestionDao {
         pendingCount: 0,
         agreementRate: 0,
         avgLatencyMs: 0,
+        duplicateMetrics: {
+          total: 0,
+          linked: 0,
+          dismissed: 0,
+          pending: 0,
+          falseLinkRate: 0,
+        },
       };
     }
 
     const totalDecided = metrics.acceptedCount + metrics.editedCount + metrics.dismissedCount;
     const agreementRate =
       totalDecided > 0 ? Math.round((metrics.acceptedCount / totalDecided) * 1000) / 10 : 0;
+
+    const dupDecided = (metrics.duplicateLinked || 0) + (metrics.duplicateDismissed || 0);
+    const falseLinkRate =
+      dupDecided > 0
+        ? Math.round(((metrics.duplicateDismissed || 0) / dupDecided) * 1000) / 10
+        : 0;
 
     return {
       totalSuggestions: metrics.totalSuggestions,
@@ -273,6 +340,13 @@ export class AiSuggestionDao {
       pendingCount: metrics.pendingCount,
       agreementRate,
       avgLatencyMs: Math.round(metrics.avgLatencyMs || 0),
+      duplicateMetrics: {
+        total: metrics.duplicateTotal || 0,
+        linked: metrics.duplicateLinked || 0,
+        dismissed: metrics.duplicateDismissed || 0,
+        pending: metrics.duplicatePending || 0,
+        falseLinkRate,
+      },
     };
   }
 }

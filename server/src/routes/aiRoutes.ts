@@ -74,6 +74,12 @@ router.post(
 );
 
 router.get(
+  "/incidents/:id/similar",
+  validate(incidentAiParamsSchema, "params"),
+  aiController.getSimilarIncidents
+);
+
+router.get(
   "/incidents/:id",
   validate(incidentAiParamsSchema, "params"),
   aiController.getIncidentAiStatus

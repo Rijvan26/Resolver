@@ -1,8 +1,18 @@
 import { Worker, Job } from "bullmq";
 import { getRedisClient } from "./connection";
-import { AI_QUEUE_NAME, AiJobData } from "./bullmq";
+import {
+  AI_QUEUE_NAME,
+  AiJobData,
+  AI_EMBED_QUEUE_NAME,
+  EmbedJobData,
+} from "./bullmq";
 import { config } from "../../../config/config";
 import { aiService, hashInput, normalizePriority } from "../aiService";
+import { incidentDao } from "../../../dao/incidentDao";
+import { serviceDao } from "../../../dao/serviceDao";
+import { incidentEmbeddingDao } from "../../../dao/incidentEmbeddingDao";
+import { buildIncidentEmbeddingText } from "../embeddings/incidentEmbedText";
+import { getEmbeddingProvider } from "../embeddings";
 
 export { hashInput, normalizePriority };
 
@@ -120,7 +130,137 @@ export function startAiWorker(): Worker<AiJobData> | null {
 }
 
 /**
- * Stop the worker during graceful server shutdown
+ * ============================================================================
+ * BullMQ Worker: `ai-embed` (Embedding Worker)
+ * ============================================================================
+ * Consumes incident embedding tasks from the `ai-embed` queue.
+ *
+ * Performance and Safety Controls:
+ * 1. Concurrency 1: Strictly processes one embedding at a time, ensuring zero
+ *    CPU choking on resource-constrained dual-core systems.
+ * 2. Rate Limiting: Capped at 30 jobs/minute to respect API quotas.
+ * 3. Text Hashing & Idempotency: Compares SHA-256 hash of the sanitized text
+ *    against existing embedding in MongoDB. If unchanged, skips re-embedding!
+ * ============================================================================
+ */
+
+let embedWorker: Worker<EmbedJobData> | null = null;
+
+/**
+ * Process an incident embedding job
+ */
+export async function processEmbedJob(data: EmbedJobData): Promise<void> {
+  const incident = await incidentDao.findByOrgAndId(data.organizationId, data.incidentId);
+  if (!incident) {
+    return;
+  }
+
+  let serviceName: string | null = null;
+  if (incident.serviceId) {
+    try {
+      const service = await serviceDao.findById(incident.serviceId);
+      if (service) {
+        serviceName = service.name;
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+  }
+
+  const { text, textHash } = buildIncidentEmbeddingText({
+    title: incident.title,
+    serviceName,
+    description: incident.description,
+    resolutionNotes: incident.ai?.summary || null,
+  });
+
+  // Skip re-embedding if textHash has not changed (unless forced)
+  if (!data.force) {
+    const existing = await incidentEmbeddingDao.findByIncidentId(incident._id);
+    if (existing && existing.textHash === textHash) {
+      return; // Text unchanged, no re-embedding needed!
+    }
+  }
+
+  const provider = getEmbeddingProvider();
+  const result = await provider.embed([text]);
+
+  if (!result.vectors || result.vectors.length === 0 || !result.vectors[0]) {
+    throw new Error("Embedding provider returned empty vector array");
+  }
+
+  await incidentEmbeddingDao.upsert({
+    incidentId: incident._id,
+    organizationId: incident.organizationId,
+    vector: result.vectors[0],
+    model: result.model,
+    provider: result.provider,
+    dim: result.dim,
+    textHash,
+  });
+
+  // Step 3 (FR-06): Find likely duplicates among OPEN incidents on creation
+  try {
+    await aiService.detectDuplicates(incident._id, incident.organizationId);
+  } catch (dupErr) {
+    // Fail-open: duplicate check error never fails the embedding job
+    if (config.NODE_ENV !== "test") {
+      console.warn("⚠️ [BullMQ:EmbedWorker] Duplicate check failed (fail-open):", dupErr);
+    }
+  }
+}
+
+/**
+ * Start the background BullMQ Embedding Worker
+ */
+export function startEmbedWorker(): Worker<EmbedJobData> | null {
+  if (embedWorker) {
+    return embedWorker;
+  }
+
+  try {
+    const redis = getRedisClient();
+
+    embedWorker = new Worker<EmbedJobData>(
+      AI_EMBED_QUEUE_NAME,
+      async (job: Job<EmbedJobData>) => {
+        await processEmbedJob(job.data);
+      },
+      {
+        connection: redis,
+        concurrency: 1, // Concurrency 1: strictly single-threaded execution for weak CPU
+        limiter: {
+          max: 30,
+          duration: 60000, // 30 jobs/minute rate limiter
+        },
+      }
+    );
+
+    embedWorker.on("completed", (job) => {
+      if (config.NODE_ENV !== "test") {
+        console.log(`✅ [BullMQ:EmbedWorker] Embedded incident ${job.data.incidentId}`);
+      }
+    });
+
+    embedWorker.on("failed", (job, err) => {
+      console.warn(`⚠️ [BullMQ:EmbedWorker] Job ${job?.id} failed:`, err.message);
+    });
+
+    embedWorker.on("error", (err) => {
+      if (config.NODE_ENV !== "test") {
+        console.warn("⚠️ [BullMQ:EmbedWorker] Worker Redis error (failing open):", err.message);
+      }
+    });
+
+    return embedWorker;
+  } catch (err: unknown) {
+    console.warn("⚠️ [BullMQ:EmbedWorker] Could not start embed worker (failing open):", (err as Error)?.message || err);
+    return null;
+  }
+}
+
+/**
+ * Stop workers during graceful server shutdown
  */
 export async function stopAiWorker(): Promise<void> {
   if (aiWorker) {
@@ -130,6 +270,16 @@ export async function stopAiWorker(): Promise<void> {
       // Ignore close errors
     } finally {
       aiWorker = null;
+    }
+  }
+
+  if (embedWorker) {
+    try {
+      await embedWorker.close();
+    } catch {
+      // Ignore close errors
+    } finally {
+      embedWorker = null;
     }
   }
 }

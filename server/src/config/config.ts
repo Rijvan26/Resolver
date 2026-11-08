@@ -29,7 +29,7 @@ const envSchema = z.object({
   // Redis & BullMQ Configuration
   REDIS_URL: z.string().default("redis://localhost:6379"),
 
-  // AI Phase 1 Configuration (SRS-AI-001)
+  // AI Phase 1 & 2 Configuration (SRS-AI-001)
   AI_ENABLED: z
     .string()
     .optional()
@@ -47,6 +47,20 @@ const envSchema = z.object({
     .optional()
     .transform((val) => val !== "false" && val !== "0")
     .default(true),
+
+  // Embedding Configuration (Phase 2)
+  EMBEDDING_PROVIDER: z.enum(["fake", "gemini", "ollama"]).default("fake"),
+  EMBEDDING_MODEL: z.string().default("gemini-embedding-001"),
+  EMBEDDING_DIM: z.coerce.number().default(768),
+  EMBEDDING_BATCH_SIZE: z.coerce.number().default(10),
+
+  // Similar Incidents Configuration (FR-07)
+  AI_SIMILAR_THRESHOLD: z.coerce.number().default(0.6),
+  AI_SIMILAR_SERVICE_BOOST: z.coerce.number().default(0.05),
+
+  // Duplicate Detection Configuration (FR-06)
+  AI_DUPLICATE_THRESHOLD: z.coerce.number().default(0.70),
+  AI_DUPLICATE_WINDOW_HOURS: z.coerce.number().default(24),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -308,6 +308,38 @@ export class AiController {
       next(error);
     }
   }
+
+  /**
+   * GET /api/v1/incidents/:id/ai/similar
+   * Return top 3 similar past resolved/closed incidents.
+   * If embeddings are missing or provider down, returns { available: false, similarIncidents: [] }.
+   * No LLM call needed.
+   */
+  async getSimilarIncidents(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const incidentId = (req.params.incidentId || req.params.id) as string;
+      const organizationId = req.user!.organizationId;
+
+      const incident = await incidentDao.findByOrgAndId(organizationId, incidentId);
+      if (!incident) {
+        throw new NotFoundError("Incident not found");
+      }
+
+      const result = await aiService.findSimilarIncidents(incidentId, organizationId);
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.available
+          ? "Similar incidents retrieved successfully"
+          : "Similar incidents unavailable",
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const aiController = new AiController();
