@@ -340,6 +340,92 @@ export class AiController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/v1/reports/ai/clarify
+   * Evaluates draft report vagueness using cheap rules first; calls LLM only if vague.
+   * Rate limited per user. Returns { vague: boolean, questions: string[] }.
+   */
+  async clarifyReport(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { title, description, serviceId } = req.body;
+      const organizationId = req.user!.organizationId;
+      const userId = req.user!.userId;
+
+      const result = await aiService.clarifyReport({
+        title: title || "",
+        description: description || "",
+        serviceId,
+        organizationId,
+        userId,
+      });
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.vague
+          ? "Report clarification suggestions generated"
+          : "Report is adequately detailed",
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/incidents/:id/ai/status-draft
+   * Generate status update draft for 'internal' or 'customer' audience.
+   * Dispatches via BullMQ queue (or runs synchronously in test/sync mode).
+   * Drafts are NEVER sent automatically (Hard Rule #1).
+   */
+  async triggerStatusDraft(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const incidentId = (req.params.incidentId || req.params.id) as string;
+      const organizationId = req.user!.organizationId;
+      const audience = (req.body?.audience || "internal") as "internal" | "customer";
+
+      const incident = await incidentDao.findByOrgAndId(organizationId, incidentId);
+      if (!incident) {
+        throw new NotFoundError("Incident not found");
+      }
+
+      const runSync = req.query.sync === "true" || config.NODE_ENV === "test";
+
+      if (!runSync) {
+        const jobId = await addAiJob({
+          jobType: "statusDraft",
+          incidentId,
+          organizationId,
+          audience,
+        });
+
+        if (jobId) {
+          const response: ApiSuccessResponse<{ jobId: string; queued: boolean }> = {
+            success: true,
+            message: "Status draft job queued successfully",
+            data: { jobId, queued: true },
+          };
+          res.status(202).json(response);
+          return;
+        }
+      }
+
+      // Synchronous execution / fail-open fallback
+      const suggestion = await aiService.generateStatusDraft(incidentId, organizationId, audience);
+
+      const response: ApiSuccessResponse<typeof suggestion> = {
+        success: true,
+        message: suggestion ? "Status draft generated" : "Status draft unavailable (AI disabled)",
+        data: suggestion,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const aiController = new AiController();

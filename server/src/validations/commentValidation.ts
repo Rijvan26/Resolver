@@ -22,6 +22,7 @@ export const createCommentSchema = z
       .trim()
       .min(1, "Comment content cannot be empty")
       .max(5000, "Comment content cannot exceed 5000 characters"),
+    parentId: objectIdSchema.optional().nullable(),
   })
   .strict();
 

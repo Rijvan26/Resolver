@@ -19,6 +19,7 @@ export interface SafeCommentDetails {
   organizationId: string;
   author: UserSummary;
   content: string;
+  parentId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +67,7 @@ const formatComment = (doc: IComment): SafeCommentDetails => {
     organizationId: doc.organizationId.toString(),
     author: authorFormatted,
     content: doc.content,
+    parentId: doc.parentId ? doc.parentId.toString() : null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -75,6 +77,7 @@ export class CommentService {
   /**
    * Add a comment to an incident.
    * Ensures incident exists in caller's organization.
+   * If parentId is provided, ensures parent comment exists on this incident.
    * Generates a COMMENT_ADDED audit record on success.
    */
   async createComment(
@@ -88,11 +91,19 @@ export class CommentService {
       throw new NotFoundError("Incident not found in organization");
     }
 
+    if (input.parentId) {
+      const parent = await commentDao.findByOrgAndId(organizationId, input.parentId, incidentId);
+      if (!parent) {
+        throw new NotFoundError("Parent comment not found to reply to");
+      }
+    }
+
     const created = await commentDao.create({
       incidentId,
       organizationId,
       authorId: userId,
       content: input.content,
+      parentId: input.parentId || null,
     });
 
     // Record persistent audit entry
@@ -101,7 +112,7 @@ export class CommentService {
       incidentId,
       actorId: userId,
       action: ACTIVITY_ACTION.COMMENT_ADDED,
-      metadata: { commentId: created._id },
+      metadata: { commentId: created._id, parentId: input.parentId || null },
     });
 
     // Dispatch comment added notification to assignee and creator
@@ -271,6 +282,28 @@ export class CommentService {
       action: ACTIVITY_ACTION.COMMENT_DELETED,
       metadata: { commentId: comment._id },
     });
+  }
+
+  /**
+   * List all replies for a specific comment thread.
+   */
+  async listReplies(
+    organizationId: string,
+    incidentId: string,
+    commentId: string
+  ): Promise<SafeCommentDetails[]> {
+    const incident = await incidentDao.findByOrgAndId(organizationId, incidentId);
+    if (!incident) {
+      throw new NotFoundError("Incident not found in organization");
+    }
+
+    const parent = await commentDao.findByOrgAndId(organizationId, commentId, incidentId);
+    if (!parent) {
+      throw new NotFoundError("Comment not found in incident");
+    }
+
+    const replies = await commentDao.findReplies(organizationId, commentId);
+    return replies.map(formatComment);
   }
 }
 

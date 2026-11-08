@@ -23,6 +23,7 @@ import { listTimelineQuerySchema } from "../validations/activityValidation";
 import {
   incidentAiParamsSchema,
   triggerTriageBodySchema,
+  statusDraftBodySchema,
 } from "../validations/aiValidation";
 import { ROLES } from "../types";
 
@@ -129,6 +130,17 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/incidents/:incidentId/comments/:commentId/replies
+ * @desc    List replies for a comment thread
+ * @access  Authenticated (All active members)
+ */
+router.get(
+  "/:incidentId/comments/:commentId/replies",
+  validate(commentParamsSchema, "params"),
+  commentController.listReplies
+);
+
+/**
  * @route   PATCH /api/v1/incidents/:incidentId/comments/:commentId
  * @desc    Update a comment (Author only)
  * @access  Authenticated (Original comment author)
@@ -203,6 +215,18 @@ router.post(
   "/:incidentId/ai/postmortem",
   validate(incidentAiParamsSchema, "params"),
   aiController.triggerPostmortem
+);
+
+/**
+ * @route   POST /api/v1/incidents/:incidentId/ai/status-draft
+ * @desc    Generate status update draft for internal or customer audience (FR-09)
+ * @access  Authenticated
+ */
+router.post(
+  "/:incidentId/ai/status-draft",
+  validate(incidentAiParamsSchema, "params"),
+  validate(statusDraftBodySchema, "body"),
+  aiController.triggerStatusDraft
 );
 
 /**

@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from "mongoose";
 
-export interface IIncidentEmbedding extends Document {
+export interface IIncidentEmbedding {
   _id: Types.ObjectId;
   incidentId: Types.ObjectId;
   organizationId: Types.ObjectId;

@@ -26,7 +26,7 @@ import { AlertRuleInput } from "../rulesEngine";
 
 export const AI_QUEUE_NAME = "ai-jobs";
 
-export type AiJobType = "triage" | "summary" | "postmortem";
+export type AiJobType = "triage" | "summary" | "postmortem" | "statusDraft";
 
 export interface AiJobData {
   jobType: AiJobType;
@@ -35,6 +35,7 @@ export interface AiJobData {
   userId?: string;
   serviceId?: string | null;
   alert?: AlertRuleInput | null;
+  audience?: "internal" | "customer";
   customInstructions?: string;
 }
 

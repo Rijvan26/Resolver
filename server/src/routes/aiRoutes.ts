@@ -10,6 +10,8 @@ import {
   incidentAiParamsSchema,
   triggerTriageBodySchema,
   listAuditLogQuerySchema,
+  clarifyReportBodySchema,
+  statusDraftBodySchema,
 } from "../validations/aiValidation";
 
 const router = Router();
@@ -71,6 +73,19 @@ router.post(
   "/incidents/:id/postmortem",
   validate(incidentAiParamsSchema, "params"),
   aiController.triggerPostmortem
+);
+
+router.post(
+  "/reports/clarify",
+  validate(clarifyReportBodySchema, "body"),
+  aiController.clarifyReport
+);
+
+router.post(
+  "/incidents/:id/status-draft",
+  validate(incidentAiParamsSchema, "params"),
+  validate(statusDraftBodySchema, "body"),
+  aiController.triggerStatusDraft
 );
 
 router.get(

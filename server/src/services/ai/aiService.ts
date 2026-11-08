@@ -13,10 +13,15 @@ import {
   triageOutputSchema,
   summaryOutputSchema,
   postmortemOutputSchema,
+  clarifyOutputSchema,
+  statusDraftOutputSchema,
   TriageOutput,
   SummaryOutput,
   PostmortemOutput,
+  ClarifyOutput,
+  StatusDraftOutput,
 } from "./prompts";
+import { isReportVague } from "./vaguenessRules";
 import {
   AI_STATUS,
   AI_SUGGESTION_TYPE,
@@ -601,12 +606,14 @@ export class AiService {
       throw new NotFoundError("Incident not found");
     }
 
-    const [latestTriage, latestSummary, latestPostmortem, latestDuplicate] = await Promise.all([
-      aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.TRIAGE),
-      aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.SUMMARY),
-      aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.POSTMORTEM),
-      aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.DUPLICATE),
-    ]);
+    const [latestTriage, latestSummary, latestPostmortem, latestDuplicate, latestStatusDraft] =
+      await Promise.all([
+        aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.TRIAGE),
+        aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.SUMMARY),
+        aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.POSTMORTEM),
+        aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.DUPLICATE),
+        aiSuggestionDao.findLatestByIncidentAndType(incidentId, AI_SUGGESTION_TYPE.STATUS_DRAFT),
+      ]);
 
     return {
       ai: incident.ai || { status: AI_STATUS.NONE },
@@ -619,6 +626,7 @@ export class AiService {
         summary: latestSummary,
         postmortem: latestPostmortem,
         duplicate: latestDuplicate,
+        statusDraft: latestStatusDraft,
       },
     };
   }
@@ -753,9 +761,9 @@ export class AiService {
 
         // Check for same-service match
         const candServiceIdStr = past.serviceId
-          ? (typeof past.serviceId === "object" && "_id" in past.serviceId
-              ? (past.serviceId as { _id: Types.ObjectId })._id.toString()
-              : past.serviceId.toString())
+          ? (typeof past.serviceId === "object" && "_id" in (past.serviceId as object)
+              ? ((past.serviceId as { _id: Types.ObjectId })._id).toString()
+              : String(past.serviceId))
           : null;
 
         const isSameService = Boolean(targetServiceIdStr && candServiceIdStr && targetServiceIdStr === candServiceIdStr);
@@ -963,6 +971,176 @@ export class AiService {
         },
         model: targetEmb.model || "embeddings",
         provider: targetEmb.provider || "embeddings",
+      });
+
+      return suggestion;
+    } catch {
+      return null; // Fail-open
+    }
+  }
+
+  /**
+   * FR-05: Report Clarification
+   * Evaluates draft report vagueness using cheap rules first.
+   * Calls external LLM ONLY if vague and AI is enabled.
+   * Redacts before calling external provider.
+   * Validates output with Zod (max 3 questions).
+   * Fail-open: returns non-vague or empty questions without failing draft submission.
+   */
+  async clarifyReport(params: {
+    title: string;
+    description: string;
+    serviceId?: string | null;
+    organizationId: string | Types.ObjectId;
+    userId?: string;
+  }): Promise<{ vague: boolean; questions: string[]; reason?: string | null }> {
+    // 1. CHEAP DETERMINISTIC RULES FIRST (Hard Rule #3)
+    const vagueness = isReportVague({
+      title: params.title,
+      description: params.description,
+      serviceId: params.serviceId,
+    });
+
+    if (!vagueness.isVague) {
+      return {
+        vague: false,
+        questions: [],
+      };
+    }
+
+    // 2. If AI is disabled or provider offline, return vague flag with heuristic reason (no LLM)
+    if (!config.AI_ENABLED) {
+      return {
+        vague: true,
+        questions: [],
+        reason: vagueness.reason,
+      };
+    }
+
+    // 3. REDACT INPUT BEFORE CALLING EXTERNAL LLM (Hard Rule #4)
+    const cleanTitle = redact(params.title || "");
+    const cleanDesc = redact(params.description || "");
+
+    let serviceName: string | null = null;
+    if (params.serviceId) {
+      try {
+        const svc = await serviceDao.findByOrgAndId(params.organizationId, params.serviceId);
+        serviceName = svc?.name || null;
+      } catch {
+        // Ignore service lookup failure
+      }
+    }
+
+    try {
+      const provider = getAiProvider();
+      const prompt = PROMPTS.clarify.user({
+        title: cleanTitle,
+        description: cleanDesc,
+        serviceName,
+      });
+
+      const result = await provider.generateJson<ClarifyOutput>({
+        system: PROMPTS.clarify.system,
+        prompt,
+        schema: clarifyOutputSchema,
+      });
+
+      const questions = result.data.questions.slice(0, 3);
+
+      return {
+        vague: true,
+        questions,
+        reason: vagueness.reason,
+      };
+    } catch {
+      // Fail-open: return heuristic result without throwing
+      return {
+        vague: true,
+        questions: [],
+        reason: vagueness.reason,
+      };
+    }
+  }
+
+  /**
+   * FR-09: Generate Status Draft
+   * Generates draft update for either 'internal' or 'customer' audience.
+   * Customer audience prompt strictly enforces:
+   *   - No internal hostnames, IPs, or employee names
+   *   - No root-cause speculation
+   *   - No promised ETAs unless given in the data
+   *   - "unknown" where data is missing
+   * Drafts are NEVER sent automatically (Hard Rule #1).
+   * Stored in ai_suggestions with userDecision = 'pending'.
+   */
+  async generateStatusDraft(
+    incidentId: string | Types.ObjectId,
+    organizationId: string | Types.ObjectId,
+    audience: "internal" | "customer" = "internal"
+  ): Promise<IAiSuggestion | null> {
+    const incidentObjId = new Types.ObjectId(incidentId);
+    const orgObjId = new Types.ObjectId(organizationId);
+
+    const incident = await incidentDao.findByOrgAndId(orgObjId, incidentObjId);
+    if (!incident) {
+      throw new NotFoundError("Incident not found");
+    }
+
+    if (!config.AI_ENABLED) {
+      return null;
+    }
+
+    // 1. Fetch recent activity timeline and comments
+    const [recentActivities, recentComments, serviceDoc] = await Promise.all([
+      activityDao.findActivitiesByIncident(orgObjId, incidentObjId, { limit: 10 }),
+      commentDao.findCommentsByIncident(orgObjId, incidentObjId, { limit: 5 }),
+      incident.serviceId ? serviceDao.findByOrgAndId(orgObjId, incident.serviceId) : null,
+    ]);
+
+    const timelineNotes = [
+      ...recentActivities.map((a) => `${a.action}: ${JSON.stringify(a.metadata || {})}`),
+      ...recentComments.map((c) => `Comment: ${c.content}`),
+    ];
+
+    // 2. Redact sensitive data (Hard Rule #4)
+    const sanitizedTitle = redact(incident.title);
+    const sanitizedDesc = redact(incident.description);
+    const sanitizedTimeline = timelineNotes.map((note) => redact(note)).join("\n");
+
+    const inputHash = hashInput(
+      `statusDraft::${incidentId.toString()}::${audience}::${sanitizedTimeline}`
+    );
+
+    const promptTemplate =
+      audience === "customer" ? PROMPTS.statusDraft.customer : PROMPTS.statusDraft.internal;
+
+    const prompt = promptTemplate.user({
+      title: sanitizedTitle,
+      priority: incident.priority,
+      status: incident.status,
+      serviceName: serviceDoc?.name || null,
+      description: sanitizedDesc,
+      timelineSummary: sanitizedTimeline,
+    });
+
+    try {
+      const provider = getAiProvider();
+      const result = await provider.generateJson<StatusDraftOutput>({
+        system: promptTemplate.system,
+        prompt,
+        schema: statusDraftOutputSchema,
+      });
+
+      const suggestion = await aiSuggestionDao.create({
+        incidentId: incidentObjId.toString(),
+        organizationId: orgObjId.toString(),
+        type: AI_SUGGESTION_TYPE.STATUS_DRAFT,
+        inputHash,
+        output: result.data as unknown as Record<string, unknown>,
+        model: result.model,
+        provider: result.provider,
+        latencyMs: result.latencyMs,
+        status: "ready",
       });
 
       return suggestion;

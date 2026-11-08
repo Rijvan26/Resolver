@@ -5,6 +5,7 @@ export interface IComment extends Document {
   incidentId: Types.ObjectId;
   organizationId: Types.ObjectId;
   authorId: Types.ObjectId;
+  parentId?: Types.ObjectId | null;
   content: string;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +31,12 @@ const commentSchema = new Schema<IComment>(
       required: [true, "Author reference is required"],
       index: true,
     },
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
+      index: true,
+    },
     content: {
       type: String,
       required: [true, "Comment content is required"],
@@ -46,6 +53,8 @@ const commentSchema = new Schema<IComment>(
 
 commentSchema.index({ organizationId: 1, incidentId: 1, createdAt: 1 });
 commentSchema.index({ organizationId: 1, incidentId: 1, _id: 1 });
+commentSchema.index({ organizationId: 1, incidentId: 1, parentId: 1, createdAt: 1 });
+commentSchema.index({ organizationId: 1, parentId: 1, createdAt: 1 });
 
 export const Comment = model<IComment>("Comment", commentSchema);
 export default Comment;

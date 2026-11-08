@@ -71,6 +71,30 @@ export class FakeProvider implements AiProvider {
             "Automated failover successfully avoided data loss",
           ],
         };
+      } else if (
+        promptLower.includes("draft") ||
+        systemLower.includes("draft") ||
+        promptLower.includes("status update") ||
+        systemLower.includes("status update")
+      ) {
+        const isCustomer = promptLower.includes("customer") || systemLower.includes("customer");
+        payload = {
+          audience: isCustomer ? "customer" : "internal",
+          draftText: isCustomer
+            ? "We are currently investigating a service issue. Our engineering team is actively working to identify and resolve the problem. We will provide updates as new information becomes available."
+            : "Engineering has identified service disruption and responders are actively mitigating. Telemetry shows elevated error rates. Further investigation is underway.",
+          summary: isCustomer
+            ? "Service issue under investigation"
+            : "Active investigation and triage in progress",
+        };
+      } else if (promptLower.includes("clarif") || systemLower.includes("clarif")) {
+        payload = {
+          questions: [
+            "What specific error messages or HTTP status codes are clients receiving?",
+            "Which endpoints or user workflows are most heavily impacted?",
+            "When did the elevated error rate begin and how many users are affected?",
+          ],
+        };
       } else if (promptLower.includes("summary") || systemLower.includes("summary")) {
         payload = {
           summary: "Incident caused by temporary network latency between API gateway and replica cluster. All nodes verified healthy.",

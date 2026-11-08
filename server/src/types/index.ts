@@ -166,6 +166,8 @@ export const AI_SUGGESTION_TYPE = {
   SUMMARY: "summary",
   POSTMORTEM: "postmortem",
   DUPLICATE: "duplicate",
+  CLARIFY: "clarify",
+  STATUS_DRAFT: "statusDraft",
 } as const;
 export type AiSuggestionType = (typeof AI_SUGGESTION_TYPE)[keyof typeof AI_SUGGESTION_TYPE];
 

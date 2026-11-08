@@ -99,3 +99,23 @@ export const listAuditLogQuerySchema = z.object({
 });
 
 export type ListAuditLogQueryInput = z.infer<typeof listAuditLogQuerySchema>;
+
+/**
+ * Validates request payload for Report Clarification (FR-05)
+ */
+export const clarifyReportBodySchema = z.object({
+  title: z.string().default(""),
+  description: z.string().default(""),
+  serviceId: z.string().optional().nullable(),
+});
+
+export type ClarifyReportBodyInput = z.infer<typeof clarifyReportBodySchema>;
+
+/**
+ * Validates request payload for Incident Status Draft (FR-09)
+ */
+export const statusDraftBodySchema = z.object({
+  audience: z.enum(["internal", "customer"]).default("internal"),
+});
+
+export type StatusDraftBodyInput = z.infer<typeof statusDraftBodySchema>;

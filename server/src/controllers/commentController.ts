@@ -59,6 +59,35 @@ export class CommentController {
   }
 
   /**
+   * GET /api/v1/incidents/:incidentId/comments/:commentId/replies
+   * List all replies for a specific comment thread.
+   */
+  async listReplies(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const rawIncidentId = req.params.incidentId;
+      const incidentId = Array.isArray(rawIncidentId) ? rawIncidentId[0] : rawIncidentId;
+
+      const rawCommentId = req.params.commentId;
+      const commentId = Array.isArray(rawCommentId) ? rawCommentId[0] : rawCommentId;
+
+      const result = await commentService.listReplies(
+        req.user!.organizationId,
+        incidentId,
+        commentId
+      );
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * PATCH /api/v1/incidents/:incidentId/comments/:commentId
    * Update a comment. (Only original author can edit content).
    */

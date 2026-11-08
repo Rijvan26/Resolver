@@ -80,6 +80,13 @@ export async function processAiJob(job: Job<AiJobData>): Promise<void> {
     case "postmortem":
       await processPostmortemJob(job.data);
       break;
+    case "statusDraft":
+      await aiService.generateStatusDraft(
+        job.data.incidentId,
+        job.data.organizationId,
+        job.data.audience || "internal"
+      );
+      break;
     default:
       console.warn(`[AiWorker] Unrecognized jobType: ${jobType}`);
   }

@@ -6,6 +6,7 @@ import incidentRoutes from "./incidentRoutes";
 import dashboardRoutes from "./dashboardRoutes";
 import notificationRoutes from "./notificationRoutes";
 import aiRoutes from "./aiRoutes";
+import reportRoutes from "./reportRoutes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/incidents", incidentRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/ai", aiRoutes);
+router.use("/reports", reportRoutes);
 
 export default router;

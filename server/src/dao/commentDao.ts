@@ -6,12 +6,14 @@ export interface CreateCommentDaoInput {
   organizationId: Types.ObjectId | string;
   authorId: Types.ObjectId | string;
   content: string;
+  parentId?: Types.ObjectId | string | null;
 }
 
 export interface CommentPaginationOptions {
   skip?: number;
   limit?: number;
   sortOrder?: "asc" | "desc";
+  parentId?: Types.ObjectId | string | null;
 }
 
 export class CommentDao {
@@ -24,6 +26,7 @@ export class CommentDao {
       organizationId: data.organizationId,
       authorId: data.authorId,
       content: data.content.trim(),
+      parentId: data.parentId ?? null,
     });
 
     return await comment.save({ session });
@@ -103,6 +106,19 @@ export class CommentDao {
   }
 
   /**
+   * Find replies for a comment thread.
+   */
+  async findReplies(
+    organizationId: string | Types.ObjectId,
+    parentId: string | Types.ObjectId
+  ): Promise<IComment[]> {
+    return await Comment.find({ organizationId, parentId })
+      .sort({ createdAt: 1 })
+      .populate("authorId", "name email role isActive")
+      .exec();
+  }
+
+  /**
    * Delete a comment scoped to organization.
    */
   async deleteByOrgAndId(
@@ -114,6 +130,13 @@ export class CommentDao {
       { _id: commentId, organizationId },
       { session }
     ).exec();
+
+    if (result) {
+      await Comment.deleteMany(
+        { parentId: commentId, organizationId },
+        { session }
+      ).exec();
+    }
 
     return result !== null;
   }
