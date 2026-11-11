@@ -1,0 +1,145 @@
+{
+  "benchmark": "load-autocannon",
+  "status": "completed",
+  "benchSessionId": "bench_1794415345020_4wd73",
+  "system": {
+    "timestamp": "2026-11-11T16:43:13.106Z",
+    "gitCommit": "38cb3ae7058c5ad9c4f3a6380d7d0254bdbb06f6",
+    "nodeVersion": "v24.14.0",
+    "os": {
+      "platform": "win32",
+      "type": "Windows_NT",
+      "release": "10.0.19045",
+      "arch": "x64"
+    },
+    "cpu": {
+      "model": "AMD A6-7310 APU with AMD Radeon R4 Graphics    ",
+      "cores": 4,
+      "speedMhz": 1996
+    },
+    "ram": {
+      "totalGb": 7.8,
+      "freeGb": 0.51
+    },
+    "command": "C:\\nvm4w\\nodejs\\node.exe C:\\Users\\RIZWAN\\Desktop\\Resolver\\scripts\\bench\\load.ts --connections 5 --duration 5 --alerts 30",
+    "database": {
+      "name": "resolver_bench",
+      "type": "MongoDB Atlas (Remote Cloud Cluster)"
+    }
+  },
+  "config": {
+    "targetUrl": "http://localhost:5000",
+    "connections": 5,
+    "durationSec": 5,
+    "warmupSec": 2,
+    "alertBurstCount": 30,
+    "aiProvider": "fake"
+  },
+  "endpointResults": [
+    {
+      "target": "Alert Ingest",
+      "method": "POST",
+      "url": "http://localhost:5000/alerts/ingest",
+      "requestsPerSec": 5,
+      "totalRequests": 27,
+      "latencyMs": {
+        "min": 267,
+        "avg": 496.56,
+        "p50": 304,
+        "p90": 1039,
+        "p95": 3044,
+        "p99": 3044,
+        "max": 3044
+      },
+      "errors": 0,
+      "errorRatePercent": 0,
+      "non2xx": 0,
+      "statusCodeBreakdown": {
+        "201": 27
+      }
+    },
+    {
+      "target": "Incident Create",
+      "method": "POST",
+      "url": "http://localhost:5000/api/v1/incidents",
+      "requestsPerSec": 9,
+      "totalRequests": 47,
+      "latencyMs": {
+        "min": 181,
+        "avg": 411.98,
+        "p50": 239,
+        "p90": 683,
+        "p95": 1207,
+        "p99": 1972,
+        "max": 1972
+      },
+      "errors": 0,
+      "errorRatePercent": 0,
+      "non2xx": 0,
+      "statusCodeBreakdown": {
+        "201": 47
+      }
+    },
+    {
+      "target": "Incident Detail",
+      "method": "GET",
+      "url": "http://localhost:5000/api/v1/incidents/:id",
+      "requestsPerSec": 24,
+      "totalRequests": 120,
+      "latencyMs": {
+        "min": 65,
+        "avg": 186.59,
+        "p50": 90,
+        "p90": 498,
+        "p95": 890,
+        "p99": 1029,
+        "max": 1081
+      },
+      "errors": 0,
+      "errorRatePercent": 0,
+      "non2xx": 0,
+      "statusCodeBreakdown": {
+        "200": 120
+      }
+    },
+    {
+      "target": "Incident List",
+      "method": "GET",
+      "url": "http://localhost:5000/api/v1/incidents",
+      "requestsPerSec": 16,
+      "totalRequests": 80,
+      "latencyMs": {
+        "min": 82,
+        "avg": 229.07,
+        "p50": 124,
+        "p90": 351,
+        "p95": 674,
+        "p99": 3023,
+        "max": 3023
+      },
+      "errors": 0,
+      "errorRatePercent": 0,
+      "non2xx": 0,
+      "statusCodeBreakdown": {
+        "200": 80
+      }
+    }
+  ],
+  "burstGrouping": {
+    "alertsSent": 30,
+    "distinctFingerprints": 4,
+    "alertsAccepted": 28,
+    "alertsRateLimited": 0,
+    "incidentsCreated": 8,
+    "boundedCreationVerified": true,
+    "elapsedMs": 11125
+  },
+  "rateLimiting": {
+    "burstSent": 30,
+    "statusCodeBreakdown": {
+      "201": 30
+    },
+    "rateLimitEnforced": false,
+    "serverHealthyAfterwards": true
+  }
+}

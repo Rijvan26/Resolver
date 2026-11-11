@@ -1,13 +1,27 @@
-import mongoose from "mongoose";
+import mongoose, { ConnectOptions } from "mongoose";
 import { config } from "./config";
 
 let isConnected = false;
+let isGracefulDisconnect = false;
 
 export interface DbConnectionOptions {
   uri?: string;
   maxRetries?: number;
   retryDelayMs?: number;
 }
+
+/**
+ * Sensible default connection options for MongoDB (especially Atlas clusters).
+ * Prevents idle socket dropouts, avoids socket explosions, and provides fast fail detection.
+ */
+export const DEFAULT_MONGOOSE_OPTIONS: ConnectOptions = {
+  serverSelectionTimeoutMS: 10000, // 10s: Fast failure detection instead of hanging 30s
+  maxIdleTimeMS: 45000,            // 45s: Prunes idle sockets client-side before Atlas resets them
+  minPoolSize: 2,                  // Keeps 2 warm connections to avoid cold-start disconnects between sporadic BullMQ jobs
+  maxPoolSize: 10,                 // Conservative pool limit for dual-core laptop / free tier
+  socketTimeoutMS: 45000,          // 45s: Closes dead sockets cleanly
+  heartbeatFrequencyMS: 10000,     // 10s: Background ping keeps connections active through NAT/proxies
+};
 
 /**
  * Connect to MongoDB with automatic retry capability.
@@ -35,7 +49,8 @@ export const connectToDb = async (
         console.log(`🔄 [Database] Attempt ${attempt} of ${maxRetries} to connect to MongoDB...`);
       }
 
-      const conn = await mongoose.connect(uri);
+      isGracefulDisconnect = false;
+      const conn = await mongoose.connect(uri, DEFAULT_MONGOOSE_OPTIONS);
       isConnected = true;
 
       if (config.NODE_ENV !== "test") {
@@ -48,10 +63,25 @@ export const connectToDb = async (
           console.error("❌ MongoDB connection error:", err);
         });
 
+        mongoose.connection.on("connected", () => {
+          isConnected = true;
+        });
+
+        mongoose.connection.on("reconnected", () => {
+          isConnected = true;
+          if (config.NODE_ENV !== "test") {
+            console.log("🔄 [Database] MongoDB connection restored (reconnected).");
+          }
+        });
+
         mongoose.connection.on("disconnected", () => {
           isConnected = false;
           if (config.NODE_ENV !== "test") {
-            console.warn("⚠️  MongoDB disconnected.");
+            if (isGracefulDisconnect) {
+              console.log("ℹ️  [Database] MongoDB disconnected cleanly.");
+            } else {
+              console.log("ℹ️  [Database] MongoDB connection paused (driver reconnecting)...");
+            }
           }
         });
       }
@@ -85,10 +115,16 @@ export const connectToDb = async (
  */
 export const disconnectFromDb = async (): Promise<void> => {
   if (mongoose.connection.readyState !== 0) {
+    isGracefulDisconnect = true;
     await mongoose.disconnect();
     isConnected = false;
   }
 };
+
+/**
+ * Backwards-compatibility alias for legacy scripts
+ */
+export const connectDatabase = connectToDb;
 
 /**
  * Checks whether the current MongoDB deployment supports multi-document transactions.

@@ -37,6 +37,8 @@ import { AiSimilarIncidentsCard } from "@/features/incidents/components/AiSimila
 import { AiDuplicateBanner } from "@/features/incidents/components/AiDuplicateBanner";
 import { AiSeverityMismatchBanner } from "@/features/incidents/components/AiSeverityMismatchBanner";
 import { AiStatusDraftCard } from "@/features/incidents/components/AiStatusDraftCard";
+import { GroupedAlertsCard } from "@/features/incidents/components/GroupedAlertsCard";
+import { AiSuggestedRunbooksCard } from "@/features/incidents/components/AiSuggestedRunbooksCard";
 import { formatRelativeTime } from "@/features/dashboard/dashboardUtils";
 import { parseApiError } from "@/lib/apiErrors";
 import {
@@ -357,6 +359,12 @@ export const IncidentDetailsPage: React.FC = () => {
             incidentId={incident.id}
             statusDraftSuggestion={aiStatus?.suggestions?.statusDraft}
           />
+
+          {/* Grouped Alerts Card (FR-08) */}
+          <GroupedAlertsCard incidentId={incident.id} />
+
+          {/* Suggested Runbooks Card (FR-11) */}
+          <AiSuggestedRunbooksCard incidentId={incident.id} />
 
           {/* Description Section */}
           <Card>

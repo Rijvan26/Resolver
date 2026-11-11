@@ -107,29 +107,27 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
   const initials = author?.name
     ? author.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase()
     : "U";
 
   return (
     <>
       <div
-        className={`group rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900/90 ${
-          comment.parentId ? "bg-slate-50/50 dark:bg-slate-900/40" : ""
-        }`}
+        className={`group rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900/90 ${comment.parentId ? "bg-slate-50/50 dark:bg-slate-900/40" : ""
+          }`}
       >
         <div className="flex items-start justify-between gap-3">
           {/* Left: Author Avatar & Meta */}
           <div className="flex items-center gap-3">
             <div
-              className={`flex shrink-0 items-center justify-center rounded-full font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300 ${
-                comment.parentId
+              className={`flex shrink-0 items-center justify-center rounded-full font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300 ${comment.parentId
                   ? "h-6 w-6 text-[10px] bg-brand-50"
                   : "h-8 w-8 text-xs bg-brand-100"
-              }`}
+                }`}
             >
               {initials}
             </div>

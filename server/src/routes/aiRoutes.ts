@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { aiController } from "../controllers/aiController";
+import { runbookController } from "../controllers/runbookController";
+import { assistantController } from "../controllers/assistantController";
 import { authenticate } from "../middleware/authenticate";
 import { authorize } from "../middleware/authorize";
 import { validate } from "../middleware/validate";
@@ -12,7 +14,9 @@ import {
   listAuditLogQuerySchema,
   clarifyReportBodySchema,
   statusDraftBodySchema,
+  assistantQueryBodySchema,
 } from "../validations/aiValidation";
+import { organizationAiSettingsSchema } from "../validations/organizationValidation";
 
 const router = Router();
 
@@ -95,9 +99,45 @@ router.get(
 );
 
 router.get(
+  "/incidents/:id/runbooks",
+  validate(incidentAiParamsSchema, "params"),
+  runbookController.getSuggestedRunbooks
+);
+
+router.get(
   "/incidents/:id",
   validate(incidentAiParamsSchema, "params"),
   aiController.getIncidentAiStatus
+);
+
+/**
+ * @route   GET /api/v1/ai/settings
+ * @desc    Get current organization AI settings and thresholds
+ * @access  Authenticated
+ */
+router.get("/settings", aiController.getSettings);
+
+/**
+ * @route   PATCH /api/v1/ai/settings
+ * @desc    Update AI settings and thresholds
+ * @access  Authenticated (SUPER_ADMIN, ADMIN)
+ */
+router.patch(
+  "/settings",
+  authorize(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  validate(organizationAiSettingsSchema, "body"),
+  aiController.updateSettings
+);
+
+/**
+ * @route   POST /api/v1/ai/assistant/query
+ * @desc    Execute natural-language read-only assistant query over allowlisted tools (FR-10)
+ * @access  Authenticated
+ */
+router.post(
+  "/assistant/query",
+  validate(assistantQueryBodySchema, "body"),
+  assistantController.query
 );
 
 export default router;

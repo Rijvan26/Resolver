@@ -1,0 +1,52 @@
+{
+  "benchmark": "severityFromRules",
+  "system": {
+    "timestamp": "2026-11-10T17:58:16.571Z",
+    "gitCommit": "38cb3ae7058c5ad9c4f3a6380d7d0254bdbb06f6",
+    "nodeVersion": "v24.14.0",
+    "os": {
+      "platform": "win32",
+      "type": "Windows_NT",
+      "release": "10.0.19045",
+      "arch": "x64"
+    },
+    "cpu": {
+      "model": "AMD A6-7310 APU with AMD Radeon R4 Graphics    ",
+      "cores": 4,
+      "speedMhz": 1996
+    },
+    "ram": {
+      "totalGb": 7.8,
+      "freeGb": 1.33
+    },
+    "command": "C:\\nvm4w\\nodejs\\node.exe C:\\Users\\RIZWAN\\Desktop\\Resolver\\scripts\\bench\\rules.ts"
+  },
+  "config": {
+    "evaluations": 100000,
+    "warmup": 5000,
+    "network": false
+  },
+  "metrics": {
+    "totalWallTimeMs": 1354.0165,
+    "throughputOpsSec": 73854,
+    "correctnessPercent": 100,
+    "latencyMs": {
+      "min": 0.0001,
+      "avg": 0.012109963000000005,
+      "p50": 0.001,
+      "p90": 0.0026,
+      "p95": 0.003,
+      "p99": 0.0062,
+      "max": 229.8604
+    },
+    "latencyUs": {
+      "min": 0.1,
+      "avg": 12.109963000000004,
+      "p50": 1,
+      "p90": 2.6,
+      "p95": 3,
+      "p99": 6.2,
+      "max": 229860.4
+    }
+  }
+}

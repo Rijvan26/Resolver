@@ -7,6 +7,9 @@ import {
   AiTriageOutput,
   AiSummaryOutput,
   AiPostmortemOutput,
+  RunbookSuggestionsResponse,
+  AssistantQueryResponse,
+  OrganizationAiSettings,
 } from "@/types";
 
 export interface TriggerTriagePayload {
@@ -176,6 +179,63 @@ export const aiApi = api.injectEndpoints({
         { type: "IncidentAi", id: incidentId },
       ],
     }),
+
+    getSuggestedRunbooks: builder.query<
+      ApiSuccessResponse<RunbookSuggestionsResponse>,
+      string
+    >({
+      query: (incidentId) => ({
+        url: `/incidents/${incidentId}/ai/runbooks`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, incidentId) => [
+        { type: "IncidentAi", id: `runbooks-${incidentId}` },
+      ],
+    }),
+
+    recordRunbookFeedback: builder.mutation<
+      ApiSuccessResponse<{ success: boolean }>,
+      { incidentId: string; suggestionId: string; feedback: "useful" | "not_useful" }
+    >({
+      query: ({ incidentId, suggestionId, feedback }) => ({
+        url: `/incidents/${incidentId}/ai/runbooks/feedback`,
+        method: "POST",
+        body: { suggestionId, feedback },
+      }),
+      invalidatesTags: (_result, _error, { incidentId }) => [
+        { type: "IncidentAi", id: `runbooks-${incidentId}` },
+        "Dashboard",
+      ],
+    }),
+
+    queryAssistant: builder.mutation<
+      ApiSuccessResponse<AssistantQueryResponse>,
+      { question: string }
+    >({
+      query: (body) => ({
+        url: "/assistant/query",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    getAiSettings: builder.query<ApiSuccessResponse<OrganizationAiSettings>, void>({
+      query: () => ({
+        url: "/ai/settings",
+        method: "GET",
+      }),
+    }),
+
+    updateAiSettings: builder.mutation<
+      ApiSuccessResponse<OrganizationAiSettings>,
+      Partial<OrganizationAiSettings>
+    >({
+      query: (body) => ({
+        url: "/ai/settings",
+        method: "PATCH",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -188,5 +248,10 @@ export const {
   useGetSimilarIncidentsQuery,
   useClarifyReportMutation,
   useTriggerStatusDraftMutation,
+  useGetSuggestedRunbooksQuery,
+  useRecordRunbookFeedbackMutation,
+  useQueryAssistantMutation,
+  useGetAiSettingsQuery,
+  useUpdateAiSettingsMutation,
 } = aiApi;
 

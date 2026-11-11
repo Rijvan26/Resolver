@@ -6,6 +6,20 @@ import { ApiSuccessResponse } from "../types";
 const REFRESH_COOKIE_NAME = "refreshToken";
 const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+function getRefreshCookieOptions(includeMaxAge = true) {
+  const sameSite = config.COOKIE_SAME_SITE || (config.NODE_ENV === "production" ? "none" : "lax");
+  const secure = config.NODE_ENV === "production" || sameSite === "none";
+
+  return {
+    httpOnly: true,
+    secure,
+    sameSite,
+    signed: true,
+    path: "/",
+    ...(includeMaxAge ? { maxAge: COOKIE_MAX_AGE_MS } : {}),
+  } as const;
+}
+
 export class AuthController {
   /**
    * POST /api/v1/auth/register-organization
@@ -34,14 +48,7 @@ export class AuthController {
       const result = await authService.login(req.body);
 
       // Set secure HttpOnly cookie for refresh token
-      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
-        httpOnly: true,
-        secure: config.NODE_ENV === "production",
-        sameSite: "lax",
-        signed: true,
-        maxAge: COOKIE_MAX_AGE_MS,
-        path: "/",
-      });
+      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, getRefreshCookieOptions(true));
 
       const response: ApiSuccessResponse<{
         accessToken: string;
@@ -73,14 +80,7 @@ export class AuthController {
       const tokens = await authService.refreshSession(rawToken);
 
       // Set rotated refresh token cookie
-      res.cookie(REFRESH_COOKIE_NAME, tokens.refreshToken, {
-        httpOnly: true,
-        secure: config.NODE_ENV === "production",
-        sameSite: "lax",
-        signed: true,
-        maxAge: COOKIE_MAX_AGE_MS,
-        path: "/",
-      });
+      res.cookie(REFRESH_COOKIE_NAME, tokens.refreshToken, getRefreshCookieOptions(true));
 
       const response: ApiSuccessResponse<typeof tokens> = {
         success: true,
@@ -105,13 +105,7 @@ export class AuthController {
 
       await authService.logout(rawToken);
 
-      res.clearCookie(REFRESH_COOKIE_NAME, {
-        httpOnly: true,
-        secure: config.NODE_ENV === "production",
-        sameSite: "lax",
-        signed: true,
-        path: "/",
-      });
+      res.clearCookie(REFRESH_COOKIE_NAME, getRefreshCookieOptions(false));
 
       const response: ApiSuccessResponse<null> = {
         success: true,

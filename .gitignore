@@ -1,0 +1,65 @@
+# Root .gitignore for Resolver
+
+# Dependencies
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+dist-ssr/
+build/
+*/dist/
+*/dist-ssr/
+*/build/
+.vite/
+
+# Environment files & Secrets (NEVER push to GitHub)
+.env
+.env.*
+!.env.example
+*.env.local
+*.pem
+*.key
+*.crt
+*.p12
+
+# Local scratch / unused directories & archived invalid benchmark artifacts
+server2/
+server/docs/
+docs/results-raw/archive-invalid/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage and testing
+coverage/
+*.lcov
+.nyc_output/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cache & Temporary
+.cache/
+.eslintcache
+.stylelintcache
+*.tmp
+*.temp
+*.bak
+*.tsbuildinfo

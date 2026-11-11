@@ -168,8 +168,52 @@ export const AI_SUGGESTION_TYPE = {
   DUPLICATE: "duplicate",
   CLARIFY: "clarify",
   STATUS_DRAFT: "statusDraft",
+  ALERT_GROUP: "alert_group",
+  RUNBOOK: "runbook",
+  ASSISTANT: "assistant",
 } as const;
 export type AiSuggestionType = (typeof AI_SUGGESTION_TYPE)[keyof typeof AI_SUGGESTION_TYPE];
+
+export interface AssistantQueryResponse {
+  aiAvailable: boolean;
+  reason?: string;
+  answer?: string;
+  sources?: string[];
+  label?: "AI-generated";
+}
+
+export interface OrganizationAiSettings {
+  alertGrouping: boolean;
+  runbooks: boolean;
+  assistant: boolean;
+  alertGroupingWindowMinutes: number;
+  alertGroupingSimilarityThreshold: number;
+}
+
+export const ALERT_STATUS = {
+  OPEN: "open",
+  GROUPED: "grouped",
+  DISMISSED: "dismissed",
+} as const;
+export type AlertStatus = (typeof ALERT_STATUS)[keyof typeof ALERT_STATUS];
+
+export interface SuggestedRunbookItem {
+  id?: string;
+  title: string;
+  url: string;
+  tags: string[];
+  serviceId?: string | null;
+  score: number;
+  reason: string;
+  explanation?: string;
+}
+
+export interface RunbookSuggestionsResult {
+  aiAvailable: boolean;
+  reason?: string;
+  suggestionId?: string;
+  runbooks: SuggestedRunbookItem[];
+}
 
 export const AI_USER_DECISION = {
   PENDING: "pending",

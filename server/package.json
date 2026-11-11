@@ -20,12 +20,19 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --max-old-space-size=384 dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ai:backfill": "tsx scripts/backfillEmbeddings.ts"
+    "ai:backfill": "tsx scripts/backfillEmbeddings.ts",
+    "bench:load": "tsx ../scripts/bench/load.ts",
+    "bench:rules": "tsx ../scripts/bench/rules.ts",
+    "bench:failure": "tsx ../scripts/bench/failure.ts",
+    "bench:cleanup": "tsx ../scripts/bench/cleanup.ts",
+    "bench:report": "tsx ../scripts/bench/report.ts",
+    "bench:all": "tsx ../scripts/bench/rules.ts && tsx ../scripts/bench/load.ts && tsx ../scripts/bench/failure.ts && tsx ../scripts/bench/report.ts"
   },
   "devDependencies": {
+    "@types/autocannon": "^7.12.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -33,6 +40,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.5",
     "@types/supertest": "^7.2.1",
+    "autocannon": "^9.0.0",
     "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.3.1",
     "tsx": "^4.23.15",

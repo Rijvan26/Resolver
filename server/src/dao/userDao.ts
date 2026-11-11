@@ -9,6 +9,8 @@ export interface CreateUserInput {
   role: Role;
   organizationId: Types.ObjectId | string;
   isActive?: boolean;
+  seeded?: boolean;
+  benchSession?: string;
 }
 
 export interface FindMembersFilter {

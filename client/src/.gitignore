@@ -1,4 +1,30 @@
-.env 
-node_modules
+# Dependencies
+node_modules/
 
+# Production output
 dist/
+dist-ssr/
+build/
+.vite/
+
+# Environment files & Secrets
+.env
+.env.*
+!.env.example
+*.env.local
+*.pem
+*.key
+*.crt
+*.p12
+
+# Logs & Cache
+logs/
+*.log
+.cache/
+.eslintcache
+*.tmp
+*.temp
+*.bak
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

@@ -61,9 +61,114 @@ const envSchema = z.object({
   // Duplicate Detection Configuration (FR-06)
   AI_DUPLICATE_THRESHOLD: z.coerce.number().default(0.70),
   AI_DUPLICATE_WINDOW_HOURS: z.coerce.number().default(24),
+
+  // Alert Grouping Configuration (FR-08)
+  AI_ALERT_GROUPING_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val !== "false" && val !== "0")
+    .default(true),
+  AI_ALERT_GROUPING_WINDOW_MINUTES: z.coerce.number().default(30),
+  AI_ALERT_GROUPING_SIMILARITY_THRESHOLD: z.coerce.number().default(0.82),
+
+  // Runbook Suggestions Configuration (FR-11)
+  AI_RUNBOOK_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val !== "false" && val !== "0")
+    .default(true),
+  AI_RUNBOOK_EXPLANATION_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val === "true" || val === "1")
+    .default(false),
+
+  // Assistant Configuration (FR-10)
+  AI_ASSISTANT_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val !== "false" && val !== "0")
+    .default(true),
+
+  // Cookies & Reverse Proxy Configuration
+  TRUST_PROXY: z.coerce.number().int().min(0).default(1),
+  COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).optional(),
+
+  // Alert Ingest Security & Flood Protection (Hardening)
+  ALERT_INGEST_SECRET: z
+    .string()
+    .default("resolver_alert_ingest_secret_token_default_32chars"),
+  ALERT_FLOOD_INCIDENT_CAP: z.coerce.number().default(10),
+  ALERT_FLOOD_WINDOW_MINUTES: z.coerce.number().default(10),
+  ALERT_RATE_LIMIT_MAX: z.coerce.number().default(120),
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
+const DEFAULT_DEV_INGEST_SECRET = "resolver_alert_ingest_secret_token_default_32chars";
+
+const isLocalhostUrl = (url: string): boolean => {
+  const lower = url.toLowerCase();
+  return lower.includes("localhost") || lower.includes("127.0.0.1");
+};
+
+export const productionEnvSchema = envSchema.superRefine((env, ctx) => {
+  if (env.NODE_ENV !== "production") {
+    return;
+  }
+
+  if (!env.ALERT_INGEST_SECRET || env.ALERT_INGEST_SECRET === DEFAULT_DEV_INGEST_SECRET || env.ALERT_INGEST_SECRET.length < 16) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["ALERT_INGEST_SECRET"],
+      message: "ALERT_INGEST_SECRET must be explicitly set to a strong secret (>= 16 chars) in production",
+    });
+  }
+
+  if (!env.MONGODB_URI || isLocalhostUrl(env.MONGODB_URI)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["MONGODB_URI"],
+      message: "MONGODB_URI must point to a remote production cluster (not localhost) in production",
+    });
+  }
+
+  if (!env.REDIS_URL || isLocalhostUrl(env.REDIS_URL)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["REDIS_URL"],
+      message: "REDIS_URL must point to Upstash / remote Redis (not localhost) in production",
+    });
+  }
+
+  if (!env.CORS_ORIGIN || isLocalhostUrl(env.CORS_ORIGIN)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["CORS_ORIGIN"],
+      message: "CORS_ORIGIN must be set to your production frontend origin (not localhost) in production",
+    });
+  }
+
+  if (!env.INVITATION_BASE_URL || isLocalhostUrl(env.INVITATION_BASE_URL)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["INVITATION_BASE_URL"],
+      message: "INVITATION_BASE_URL must be set to your production frontend invitation URL in production",
+    });
+  }
+
+  if (!env.APP_URL || isLocalhostUrl(env.APP_URL)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["APP_URL"],
+      message: "APP_URL must be set to your production backend URL in production",
+    });
+  }
+});
+
+export function validateEnv(rawEnv: Record<string, string | undefined>) {
+  return productionEnvSchema.safeParse(rawEnv);
+}
+
+const parsedEnv = validateEnv(process.env);
 
 if (!parsedEnv.success) {
   console.error("❌ Invalid environment configuration:");

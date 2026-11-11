@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Command } from "cmdk";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { setCommandPaletteOpen, setTheme } from "@/app/uiSlice";
+import { useQueryAssistantMutation } from "@/features/incidents/aiApi";
+import { AssistantQueryResponse } from "@/types";
 import {
   LayoutGrid,
   AlertTriangle,
@@ -18,6 +20,8 @@ import {
   Activity,
   Layers,
   X,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 export const CommandPalette: React.FC = () => {
@@ -26,6 +30,10 @@ export const CommandPalette: React.FC = () => {
   const isOpen = useAppSelector((state) => state.ui.commandPaletteOpen);
   const theme = useAppSelector((state) => state.ui.theme);
   const [search, setSearch] = useState("");
+  const [assistantResult, setAssistantResult] = useState<AssistantQueryResponse | null>(null);
+  const [assistantError, setAssistantError] = useState<string | null>(null);
+
+  const [queryAssistant, { isLoading: isAssistantLoading }] = useQueryAssistantMutation();
 
   // Global keyboard shortcut: Ctrl+K or Cmd+K
   useEffect(() => {
@@ -66,6 +74,19 @@ export const CommandPalette: React.FC = () => {
       (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
     dispatch(setTheme(isDark ? "light" : "dark"));
     handleClose();
+  };
+
+  const handleAskAssistant = async () => {
+    if (!search.trim()) return;
+    setAssistantError(null);
+    try {
+      const res = await queryAssistant({ question: search.trim() }).unwrap();
+      if (res.data) {
+        setAssistantResult(res.data);
+      }
+    } catch (err: any) {
+      setAssistantError(err?.data?.error?.message || "Assistant unavailable. Please try again later.");
+    }
   };
 
   return (
@@ -110,6 +131,73 @@ export const CommandPalette: React.FC = () => {
 
           {/* List of items */}
           <Command.List className="max-h-80 overflow-y-auto p-2 scrollbar-none">
+            {isAssistantLoading && (
+              <div className="p-4 flex items-center gap-3 text-xs text-muted-fg bg-violet-500/5 border border-violet-500/20 rounded-xl my-2">
+                <Loader2 className="h-4 w-4 animate-spin text-violet-400 shrink-0" />
+                <span>Consulting read-only tools and system telemetry...</span>
+              </div>
+            )}
+
+            {assistantError && (
+              <div className="p-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl my-2 flex items-center justify-between">
+                <span>{assistantError}</span>
+                <button
+                  onClick={() => setAssistantError(null)}
+                  className="text-[10px] text-muted-fg hover:text-main-fg underline ml-2"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {assistantResult && (
+              <div className="p-3.5 space-y-2.5 bg-violet-500/5 border border-violet-500/20 rounded-xl my-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-violet-400" />
+                    <span className="text-xs font-semibold text-violet-400">Assistant Response</span>
+                  </div>
+                  <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-400 border border-violet-500/20">
+                    AI-generated
+                  </span>
+                </div>
+
+                {assistantResult.aiAvailable === false ? (
+                  <p className="text-xs text-muted-fg italic">
+                    AI Assistant is unavailable ({assistantResult.reason || "disabled"}). Normal command menu navigation remains active.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs text-main-fg leading-relaxed whitespace-pre-wrap">
+                      {assistantResult.answer}
+                    </p>
+                    {assistantResult.sources && assistantResult.sources.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-violet-500/10">
+                        <span className="text-[10px] text-muted-fg font-medium">Sources used:</span>
+                        {assistantResult.sources.map((src) => (
+                          <span
+                            key={src}
+                            className="rounded bg-pill px-1.5 py-0.5 text-[10px] font-mono text-muted-fg border border-border-color"
+                          >
+                            {src}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={() => setAssistantResult(null)}
+                    className="text-[10px] text-muted-fg hover:text-main-fg transition-colors"
+                  >
+                    Clear answer
+                  </button>
+                </div>
+              </div>
+            )}
+
             <Command.Empty className="py-8 text-center text-xs text-muted-fg">
               No results found for &ldquo;<span className="font-semibold text-main-fg">{search}</span>&rdquo;
             </Command.Empty>
@@ -119,6 +207,25 @@ export const CommandPalette: React.FC = () => {
               heading="Quick Actions"
               className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-fg"
             >
+              {search.trim().length > 0 && (
+                <Command.Item
+                  onSelect={handleAskAssistant}
+                  className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-main-fg hover:bg-violet-500/10 cursor-pointer aria-selected:bg-violet-500/10 border border-violet-500/20 bg-violet-500/5 mb-1.5 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-violet-600 text-white">
+                      <Sparkles className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-violet-400">Ask AI Assistant: </span>
+                      <span className="text-main-fg italic">&ldquo;{search}&rdquo;</span>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-400 border border-violet-500/20">
+                    AI-generated
+                  </span>
+                </Command.Item>
+              )}
               <Command.Item
                 onSelect={() => handleNavigate("/incidents/new")}
                 className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-main-fg hover:bg-pill-hover cursor-pointer aria-selected:bg-pill-hover transition-colors"

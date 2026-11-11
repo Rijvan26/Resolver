@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { aiService } from "../services/ai/aiService";
 import { incidentDao } from "../dao/incidentDao";
+import { organizationDao } from "../dao/organizationDao";
 import {
   aiSuggestionDao,
   FindAuditLogsFilter,
@@ -14,6 +15,7 @@ import {
   INCIDENT_STATUS,
   INCIDENT_PRIORITY_UPDATE_ROLES,
   ApiSuccessResponse,
+  OrganizationAiSettings,
 } from "../types";
 import { ForbiddenError, NotFoundError, ValidationError } from "../utils/errors";
 import { ListAuditLogQueryInput } from "../validations/aiValidation";
@@ -422,6 +424,74 @@ export class AiController {
       };
 
       res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/v1/ai/settings
+   * Retrieve AI feature settings and thresholds for the organization
+   */
+  async getSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const organizationId = req.user!.organizationId;
+      const org = await organizationDao.findById(organizationId);
+      if (!org) {
+        throw new NotFoundError("Organization not found");
+      }
+
+      const settings: OrganizationAiSettings = org.aiSettings || {
+        alertGrouping: config.AI_ALERT_GROUPING_ENABLED,
+        runbooks: config.AI_RUNBOOK_ENABLED,
+        assistant: config.AI_ASSISTANT_ENABLED,
+        alertGroupingWindowMinutes: config.AI_ALERT_GROUPING_WINDOW_MINUTES,
+        alertGroupingSimilarityThreshold: config.AI_ALERT_GROUPING_SIMILARITY_THRESHOLD,
+      };
+
+      res.status(200).json({
+        success: true,
+        data: settings,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/ai/settings
+   * Update AI feature toggles and thresholds (SUPER_ADMIN, ADMIN)
+   */
+  async updateSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const organizationId = req.user!.organizationId;
+      const existing = await organizationDao.findById(organizationId);
+      if (!existing) {
+        throw new NotFoundError("Organization not found");
+      }
+
+      const current = existing.aiSettings || {
+        alertGrouping: config.AI_ALERT_GROUPING_ENABLED,
+        runbooks: config.AI_RUNBOOK_ENABLED,
+        assistant: config.AI_ASSISTANT_ENABLED,
+        alertGroupingWindowMinutes: config.AI_ALERT_GROUPING_WINDOW_MINUTES,
+        alertGroupingSimilarityThreshold: config.AI_ALERT_GROUPING_SIMILARITY_THRESHOLD,
+      };
+
+      const updatedSettings = {
+        ...current,
+        ...(req.body || {}),
+      };
+
+      const updatedOrg = await organizationDao.updateById(organizationId, {
+        aiSettings: updatedSettings,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "AI settings updated successfully",
+        data: updatedOrg?.aiSettings || updatedSettings,
+      });
     } catch (error) {
       next(error);
     }

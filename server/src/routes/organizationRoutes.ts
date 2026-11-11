@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { organizationController } from "../controllers/organizationController";
+import { settingsController } from "../controllers/settingsController";
 import { authenticate } from "../middleware/authenticate";
 import { authorize } from "../middleware/authorize";
 import { validate } from "../middleware/validate";
@@ -19,24 +20,24 @@ router.use(authenticate);
 
 /**
  * @route   GET /api/v1/organizations/me
- * @desc    Get authenticated user's organization profile
+ * @desc    Get authenticated user's organization profile (Aliased to canonical /settings)
  * @access  Authenticated (All active members)
  */
 router.get(
   "/me",
-  organizationController.getOrganization
+  settingsController.getSettings
 );
 
 /**
  * @route   PATCH /api/v1/organizations/me
- * @desc    Update organization settings (name, statusPageEnabled)
+ * @desc    Update organization settings (Aliased to canonical /settings)
  * @access  Authenticated (SUPER_ADMIN, ADMIN)
  */
 router.patch(
   "/me",
   authorize(ROLES.SUPER_ADMIN, ROLES.ADMIN),
   validate(updateOrganizationSchema, "body"),
-  organizationController.updateOrganization
+  settingsController.updateSettings
 );
 
 /**

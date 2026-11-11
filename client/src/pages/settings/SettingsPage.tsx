@@ -24,6 +24,10 @@ import {
   Save,
   Lock,
   User,
+  Sparkles,
+  Layers,
+  BookOpen,
+  Bot,
 } from "lucide-react";
 
 export const SettingsPage: React.FC = () => {
@@ -56,6 +60,13 @@ export const SettingsPage: React.FC = () => {
     defaultValues: {
       name: organization?.name || "",
       statusPageEnabled: organization?.statusPageEnabled || false,
+      aiSettings: {
+        alertGrouping: organization?.aiSettings?.alertGrouping ?? true,
+        runbooks: organization?.aiSettings?.runbooks ?? true,
+        assistant: organization?.aiSettings?.assistant ?? true,
+        alertGroupingWindowMinutes: organization?.aiSettings?.alertGroupingWindowMinutes ?? 30,
+        alertGroupingSimilarityThreshold: organization?.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
+      },
     },
   });
 
@@ -65,6 +76,13 @@ export const SettingsPage: React.FC = () => {
       reset({
         name: organization.name,
         statusPageEnabled: organization.statusPageEnabled ?? false,
+        aiSettings: {
+          alertGrouping: organization.aiSettings?.alertGrouping ?? true,
+          runbooks: organization.aiSettings?.runbooks ?? true,
+          assistant: organization.aiSettings?.assistant ?? true,
+          alertGroupingWindowMinutes: organization.aiSettings?.alertGroupingWindowMinutes ?? 30,
+          alertGroupingSimilarityThreshold: organization.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
+        },
       });
     }
   }, [organization, reset]);
@@ -77,6 +95,7 @@ export const SettingsPage: React.FC = () => {
       await updateOrganization({
         name: values.name,
         statusPageEnabled: values.statusPageEnabled,
+        aiSettings: values.aiSettings,
       }).unwrap();
 
       setSuccessMessage("Organization settings have been updated successfully.");
@@ -230,6 +249,139 @@ export const SettingsPage: React.FC = () => {
                       ? new Date(organization.createdAt).toLocaleString()
                       : "—"}
                   </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI & Automation Settings Card (Phase 3) */}
+          <Card className="border border-violet-500/20 bg-card-bg shadow-sm">
+            <CardHeader className="pb-3 border-b border-border-color">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-main-fg">AI & Automation</CardTitle>
+                    <p className="text-[11px] text-muted-fg">
+                      Configure Phase 3 alert grouping, runbook suggestions, and Cmd+K assistant
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-400 border border-violet-500/20">
+                  AI-generated
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-5">
+              {/* Alert Grouping Toggle (FR-08) */}
+              <div className="rounded-xl border border-border-color bg-pill p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <Layers className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-main-fg">Alert Grouping (FR-08)</h4>
+                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                        Group identical or semantically similar incoming alerts into existing open incidents. Exact matches group automatically; ambiguous matches create suggestions for human review.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                    <input
+                      type="checkbox"
+                      {...register("aiSettings.alertGrouping")}
+                      disabled={!isPrivileged || isUpdating}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
+                  </label>
+                </div>
+
+                {/* Threshold Configuration */}
+                <div className="mt-4 pt-3 border-t border-border-color grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-medium text-main-fg mb-1">
+                      Grouping Window (minutes)
+                    </label>
+                    <Input
+                      type="number"
+                      {...register("aiSettings.alertGroupingWindowMinutes", { valueAsNumber: true })}
+                      disabled={!isPrivileged || isUpdating}
+                      min={1}
+                      max={1440}
+                      className="h-8 text-xs font-mono"
+                    />
+                    <span className="text-[10px] text-muted-fg mt-0.5 block">
+                      Time window after incident creation to attach matching alerts (default: 30m).
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-main-fg mb-1">
+                      Similarity Threshold (0.00 – 1.00)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...register("aiSettings.alertGroupingSimilarityThreshold", { valueAsNumber: true })}
+                      disabled={!isPrivileged || isUpdating}
+                      min={0}
+                      max={1}
+                      className="h-8 text-xs font-mono"
+                    />
+                    <span className="text-[10px] text-muted-fg mt-0.5 block">
+                      Cosine threshold for AI embedding suggestions (default: 0.82).
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Runbook Suggestions Toggle (FR-11) */}
+              <div className="rounded-xl border border-border-color bg-pill p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-main-fg">Runbook Suggestions (FR-11)</h4>
+                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                        Suggest relevant operational runbooks on the Incident Detail page using deterministic keyword, service, and semantic embedding matching.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                    <input
+                      type="checkbox"
+                      {...register("aiSettings.runbooks")}
+                      disabled={!isPrivileged || isUpdating}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Assistant Toggle (FR-10) */}
+              <div className="rounded-xl border border-border-color bg-pill p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <Bot className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-main-fg">Command-Palette Assistant (FR-10)</h4>
+                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                        Enable read-only conversational inquiries inside the Cmd+K command palette with strict allowlist tool calling and caller RBAC enforcement.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                    <input
+                      type="checkbox"
+                      {...register("aiSettings.assistant")}
+                      disabled={!isPrivileged || isUpdating}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
+                  </label>
                 </div>
               </div>
             </CardContent>

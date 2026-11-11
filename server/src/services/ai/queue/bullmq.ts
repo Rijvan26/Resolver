@@ -108,14 +108,20 @@ export async function addAiJob(jobData: AiJobData): Promise<string | null> {
     console.warn("⚠️ [BullMQ] Failed to set incident AI status to pending:", dbErr);
   }
 
-  // 3. Attempt to add job to BullMQ queue
+  // 3. Attempt to add job to BullMQ queue (with bounded fail-open timeout)
+  const queueTimeoutMs = config.NODE_ENV === "test" ? 300 : 1500;
   try {
     const queue = getAiQueue();
     // Unique job name includes type and incident for clear observability in Bull Board
     const jobName = `${jobType}:${incidentId}`;
-    const job = await queue.add(jobName, jobData, {
-      jobId: `${jobType}-${incidentId}-${Date.now()}`,
-    });
+    const job = await Promise.race([
+      queue.add(jobName, jobData, {
+        jobId: `${jobType}-${incidentId}-${Date.now()}`,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Redis connection queue timeout")), queueTimeoutMs)
+      ),
+    ]);
 
     return job.id || null;
   } catch (queueErr: unknown) {
@@ -208,12 +214,18 @@ export async function addEmbedJob(jobData: EmbedJobData): Promise<string | null>
     return null;
   }
 
+  const embedTimeoutMs = config.NODE_ENV === "test" ? 300 : 1500;
   try {
     const queue = getEmbedQueue();
     const jobName = `embed:${incidentId}`;
-    const job = await queue.add(jobName, jobData, {
-      jobId: `embed-${incidentId}-${Date.now()}`,
-    });
+    const job = await Promise.race([
+      queue.add(jobName, jobData, {
+        jobId: `embed-${incidentId}-${Date.now()}`,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Redis connection embed queue timeout")), embedTimeoutMs)
+      ),
+    ]);
 
     return job.id || null;
   } catch (queueErr: unknown) {
@@ -222,5 +234,30 @@ export async function addEmbedJob(jobData: EmbedJobData): Promise<string | null>
       `⚠️ [BullMQ:Embed] Failed to enqueue embedding job (Redis offline or broker error). Failing open: ${(queueErr as Error)?.message || queueErr}`
     );
     return null;
+  }
+}
+
+/**
+ * Cleanly closes BullMQ Queue instances on graceful server shutdown.
+ */
+export async function closeAiQueues(): Promise<void> {
+  if (aiQueue) {
+    try {
+      await aiQueue.close();
+    } catch {
+      // Ignore close errors
+    } finally {
+      aiQueue = null;
+    }
+  }
+
+  if (embedQueue) {
+    try {
+      await embedQueue.close();
+    } catch {
+      // Ignore close errors
+    } finally {
+      embedQueue = null;
+    }
   }
 }

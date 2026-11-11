@@ -1,10 +1,14 @@
 import { Schema, model, Document, Types } from "mongoose";
+import { OrganizationAiSettings } from "../types";
 
 export interface IOrganization extends Document {
   _id: Types.ObjectId;
   name: string;
   slug: string;
   statusPageEnabled: boolean;
+  aiSettings?: OrganizationAiSettings;
+  seeded?: boolean;
+  benchSession?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +37,22 @@ const organizationSchema = new Schema<IOrganization>(
     statusPageEnabled: {
       type: Boolean,
       default: false,
+    },
+    aiSettings: {
+      alertGrouping: { type: Boolean, default: true },
+      runbooks: { type: Boolean, default: true },
+      assistant: { type: Boolean, default: true },
+      alertGroupingWindowMinutes: { type: Number, default: 30 },
+      alertGroupingSimilarityThreshold: { type: Number, default: 0.82 },
+    },
+    seeded: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    benchSession: {
+      type: String,
+      index: true,
     },
   },
   {

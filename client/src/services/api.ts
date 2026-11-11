@@ -9,6 +9,7 @@ export const TAG_TYPES = [
   "Incidents",
   "IncidentDetails",
   "IncidentAi",
+  "IncidentAlerts",
   "Comments",
   "Timeline",
   "Notifications",

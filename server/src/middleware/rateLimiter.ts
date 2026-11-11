@@ -35,3 +35,20 @@ export const invitationRateLimiter = rateLimit({
     },
   },
 });
+
+/**
+ * Per-source rate limiter for alert webhook ingestion (60 requests/minute per source/IP)
+ */
+export const alertRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: config.NODE_ENV === "test" ? 1000 : config.ALERT_RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Too many alert ingestion requests. Please try again later.",
+    },
+  },
+});

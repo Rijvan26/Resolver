@@ -1,16 +1,17 @@
 import { api } from "@/services/api";
-import { ApiSuccessResponse, Organization } from "@/types";
+import { ApiSuccessResponse, Organization, OrganizationAiSettings } from "@/types";
 
 export interface UpdateOrganizationPayload {
   name?: string;
   statusPageEnabled?: boolean;
+  aiSettings?: Partial<OrganizationAiSettings>;
 }
 
 export const organizationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getOrganization: builder.query<ApiSuccessResponse<Organization>, void>({
       query: () => ({
-        url: "/organizations/me",
+        url: "/settings",
         method: "GET",
       }),
       providesTags: ["Organization"],
@@ -21,7 +22,7 @@ export const organizationApi = api.injectEndpoints({
       UpdateOrganizationPayload
     >({
       query: (body) => ({
-        url: "/organizations/me",
+        url: "/settings",
         method: "PATCH",
         body,
       }),

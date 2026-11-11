@@ -7,6 +7,7 @@ import {
   Role,
   MEMBER_ROLE_ASSIGNMENT_PERMISSIONS,
   MEMBER_MODIFICATION_TARGET_PERMISSIONS,
+  OrganizationAiSettings,
 } from "../types";
 import {
   NotFoundError,
@@ -23,6 +24,7 @@ export interface SafeOrganizationDetails {
   name: string;
   slug: string;
   statusPageEnabled: boolean;
+  aiSettings?: OrganizationAiSettings;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +65,13 @@ export class OrganizationService {
       name: org.name,
       slug: org.slug,
       statusPageEnabled: org.statusPageEnabled,
+      aiSettings: org.aiSettings || {
+        alertGrouping: true,
+        runbooks: true,
+        assistant: true,
+        alertGroupingWindowMinutes: 30,
+        alertGroupingSimilarityThreshold: 0.82,
+      },
       createdAt: org.createdAt,
       updatedAt: org.updatedAt,
     };
@@ -75,9 +84,28 @@ export class OrganizationService {
     organizationId: string,
     input: UpdateOrganizationInput
   ): Promise<SafeOrganizationDetails> {
+    const existing = await organizationDao.findById(organizationId);
+    if (!existing) {
+      throw new NotFoundError("Organization not found");
+    }
+
+    const mergedAiSettings = input.aiSettings
+      ? {
+          ...(existing.aiSettings || {
+            alertGrouping: true,
+            runbooks: true,
+            assistant: true,
+            alertGroupingWindowMinutes: 30,
+            alertGroupingSimilarityThreshold: 0.82,
+          }),
+          ...input.aiSettings,
+        }
+      : undefined;
+
     const updated = await organizationDao.updateById(organizationId, {
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.statusPageEnabled !== undefined ? { statusPageEnabled: input.statusPageEnabled } : {}),
+      ...(mergedAiSettings !== undefined ? { aiSettings: mergedAiSettings } : {}),
     });
 
     if (!updated) {
@@ -89,6 +117,7 @@ export class OrganizationService {
       name: updated.name,
       slug: updated.slug,
       statusPageEnabled: updated.statusPageEnabled,
+      aiSettings: updated.aiSettings,
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     };

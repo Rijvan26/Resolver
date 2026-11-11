@@ -119,3 +119,33 @@ export const statusDraftBodySchema = z.object({
 });
 
 export type StatusDraftBodyInput = z.infer<typeof statusDraftBodySchema>;
+
+/**
+ * Validates request payload for Runbook Feedback (FR-11)
+ */
+export const runbookFeedbackSchema = z
+  .object({
+    suggestionId: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, "Valid suggestion ID is required"),
+    feedback: z.enum(["useful", "not_useful"]),
+  })
+  .strict();
+
+export type RunbookFeedbackInput = z.infer<typeof runbookFeedbackSchema>;
+
+/**
+ * Validates request payload for Assistant Query (FR-10)
+ */
+export const assistantQueryBodySchema = z
+  .object({
+    question: z
+      .string()
+      .trim()
+      .min(1, "Question must not be empty")
+      .max(1000, "Question cannot exceed 1000 characters"),
+  })
+  .strict();
+
+export type AssistantQueryBodyInput = z.infer<typeof assistantQueryBodySchema>;
+

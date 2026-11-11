@@ -1,16 +1,29 @@
+# Client .gitignore for Resolver
+
 # Dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
 
 # Production output
-dist
-dist-ssr
-build
+dist/
+dist-ssr/
+build/
+.vite/
 *.local
 
+# Environment files & Secrets (NEVER push to GitHub)
+.env
+.env.*
+!.env.example
+*.env.local
+*.pem
+*.key
+*.crt
+*.p12
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -18,17 +31,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Environment files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env.local
-
 # Editor / IDE directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -37,8 +43,16 @@ lerna-debug.log*
 *.sw?
 Thumbs.db
 
+# Testing & Coverage
+coverage/
+*.lcov
+.nyc_output/
+
 # Temporary / cache files
+.cache/
 .eslintcache
 .stylelintcache
+*.tmp
+*.temp
+*.bak
 *.tsbuildinfo
-

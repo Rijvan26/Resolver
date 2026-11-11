@@ -5,6 +5,8 @@ export interface CreateOrganizationInput {
   name: string;
   slug: string;
   statusPageEnabled?: boolean;
+  seeded?: boolean;
+  benchSession?: string;
 }
 
 export class OrganizationDao {

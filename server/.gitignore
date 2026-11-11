@@ -1,3 +1,5 @@
+# Server .gitignore for Resolver
+
 # Dependencies
 node_modules/
 .pnp
@@ -7,15 +9,18 @@ node_modules/
 dist/
 build/
 
-
-# Environment files
+# Environment files & Secrets (NEVER push to GitHub)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 .env.*
 !.env.example
+*.env.local
+*.pem
+*.key
+*.crt
+*.p12
+
+# Accidental local docs/results output inside server/
+docs/
 
 # Logs
 logs/
@@ -29,9 +34,9 @@ lerna-debug.log*
 # Testing & Coverage
 coverage/
 *.lcov
-.nyc_output
+.nyc_output/
 
-# IDE & OS
+# IDE and OS
 .vscode/
 .idea/
 .DS_Store
@@ -41,3 +46,5 @@ Thumbs.db
 .cache/
 *.tmp
 *.temp
+*.bak
+*.tsbuildinfo

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { incidentController } from "../controllers/incidentController";
 import { commentController } from "../controllers/commentController";
 import { aiController } from "../controllers/aiController";
+import { alertController } from "../controllers/alertController";
+import { runbookController } from "../controllers/runbookController";
 import { authenticate } from "../middleware/authenticate";
 import { authorize } from "../middleware/authorize";
 import { validate } from "../middleware/validate";
@@ -24,7 +26,12 @@ import {
   incidentAiParamsSchema,
   triggerTriageBodySchema,
   statusDraftBodySchema,
+  runbookFeedbackSchema,
 } from "../validations/aiValidation";
+import {
+  incidentAlertDecisionParamsSchema,
+  groupDecisionBodySchema,
+} from "../validations/alertValidation";
 import { ROLES } from "../types";
 
 const router = Router();
@@ -249,6 +256,52 @@ router.get(
   "/:incidentId/ai",
   validate(incidentAiParamsSchema, "params"),
   aiController.getIncidentAiStatus
+);
+
+/**
+ * @route   GET /api/v1/incidents/:incidentId/alerts
+ * @desc    Get all grouped alerts and pending suggested alerts for this incident (FR-08)
+ * @access  Authenticated
+ */
+router.get(
+  "/:incidentId/alerts",
+  validate(incidentIdParamSchema, "params"),
+  alertController.getIncidentAlerts
+);
+
+/**
+ * @route   POST /api/v1/incidents/:incidentId/alerts/:alertId/decision
+ * @desc    Accept or dismiss an AI-suggested alert group (FR-08)
+ * @access  Authenticated
+ */
+router.post(
+  "/:incidentId/alerts/:alertId/decision",
+  validate(incidentAlertDecisionParamsSchema, "params"),
+  validate(groupDecisionBodySchema, "body"),
+  alertController.recordGroupDecision
+);
+
+/**
+ * @route   GET /api/v1/incidents/:incidentId/ai/runbooks
+ * @desc    Get top suggested runbooks for an incident (FR-11)
+ * @access  Authenticated
+ */
+router.get(
+  "/:incidentId/ai/runbooks",
+  validate(incidentAiParamsSchema, "params"),
+  runbookController.getSuggestedRunbooks
+);
+
+/**
+ * @route   POST /api/v1/incidents/:incidentId/ai/runbooks/feedback
+ * @desc    Record Useful / Not useful feedback on suggested runbooks (FR-11)
+ * @access  Authenticated
+ */
+router.post(
+  "/:incidentId/ai/runbooks/feedback",
+  validate(incidentAiParamsSchema, "params"),
+  validate(runbookFeedbackSchema, "body"),
+  runbookController.recordRunbookFeedback
 );
 
 export default router;

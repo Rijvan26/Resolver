@@ -3,93 +3,132 @@ import { config } from "../../../config/config";
 
 /**
  * ============================================================================
- * Redis Connection for BullMQ
+ * Redis Connection for BullMQ (Local & Upstash TLS Ready)
  * ============================================================================
- * BullMQ uses Redis as an in-memory message broker to store background jobs,
- * coordinate workers, and maintain job queues.
- *
- * For a beginner learning BullMQ + Redis:
- * - A "Queue" pushes jobs into Redis lists/sets.
- * - A "Worker" listens to Redis and pulls jobs to process asynchronously in the background.
- * - If Redis is unreachable, our system is designed to "fail open" — meaning
- *   incident creation and normal operations NEVER crash or hang waiting for Redis.
+ * - Supports standard `redis://` and TLS-encrypted `rediss://` (Upstash) URLs.
+ * - Uses separate Redis connections for blocking BullMQ Workers vs non-blocking
+ *   Queue producers per BullMQ best practices.
+ * - Queue connections use `enableOfflineQueue: false` so API calls fail open
+ *   immediately if Redis is unreachable.
+ * - Worker connections use `enableOfflineQueue: true` so blocking commands
+ *   wait cleanly through initial TLS handshakes and transient reconnects.
  * ============================================================================
  */
 
 let redisClient: Redis | null = null;
+const workerClients: Redis[] = [];
 let isConnected = false;
 
 /**
- * Creates or retrieves the singleton ioredis client.
- * Configured with fail-safe settings so Redis outages do not crash Express.
+ * Builds production-ready ioredis options for BullMQ queues or workers.
+ */
+export function buildRedisOptions(purpose: "queue" | "worker" = "queue"): RedisOptions {
+  const isTls = config.REDIS_URL.trim().toLowerCase().startsWith("rediss://");
+
+  const options: RedisOptions = {
+    // BullMQ requires maxRetriesPerRequest to be null
+    maxRetriesPerRequest: null,
+    // Upstash & managed Redis compatibility
+    enableReadyCheck: false,
+    lazyConnect: true,
+    // Workers need offline queue enabled through TLS handshakes; API queues fail open fast
+    enableOfflineQueue: purpose === "worker",
+    keepAlive: 30000,
+    connectTimeout: 10000,
+    retryStrategy(times) {
+      if (config.NODE_ENV === "test") {
+        return null;
+      }
+      return Math.min(times * 1000, 15000);
+    },
+  };
+
+  if (isTls) {
+    options.tls = {
+      rejectUnauthorized: true,
+    };
+  }
+
+  return options;
+}
+
+function attachRedisListeners(client: Redis, label: string, trackPrimaryState: boolean): void {
+  client.on("connect", () => {
+    if (trackPrimaryState) isConnected = true;
+    if (config.NODE_ENV !== "test") {
+      console.log(`🔌 [Redis:${label}] Connection established.`);
+    }
+  });
+
+  client.on("ready", () => {
+    if (trackPrimaryState) isConnected = true;
+  });
+
+  client.on("error", (err) => {
+    if (trackPrimaryState) isConnected = false;
+    if (config.NODE_ENV !== "test") {
+      console.warn(`⚠️ [Redis:${label}] Broker error (failing open):`, err.message);
+    }
+  });
+
+  client.on("close", () => {
+    if (trackPrimaryState) isConnected = false;
+  });
+}
+
+/**
+ * Retrieves the singleton ioredis client for Queue producers (`enableOfflineQueue: false`).
  */
 export function getRedisClient(): Redis {
   if (redisClient) {
     return redisClient;
   }
 
-  const redisOptions: RedisOptions = {
-    // BullMQ requires maxRetriesPerRequest to be null so commands wait for reconnection
-    maxRetriesPerRequest: null,
-    // Do not fail startup immediately if Redis is temporarily offline (fail-open architecture)
-    enableReadyCheck: false,
-    lazyConnect: true,
-    // Reconnection backoff strategy: retry every 2s up to 10s max
-    retryStrategy(times) {
-      const delay = Math.min(times * 1000, 10000);
-      return delay;
-    },
-  };
-
-  redisClient = new Redis(config.REDIS_URL, redisOptions);
-
-  // Event Listeners for Redis Connection Lifecycle
-  redisClient.on("connect", () => {
-    isConnected = true;
-    if (config.NODE_ENV !== "test") {
-      console.log("🔌 [Redis] Connection established with Redis broker.");
-    }
-  });
-
-  redisClient.on("ready", () => {
-    isConnected = true;
-  });
-
-  redisClient.on("error", (err) => {
-    isConnected = false;
-    // In test mode or when Redis is offline in dev, log a clean warning without unhandled rejection
-    if (config.NODE_ENV !== "test") {
-      console.warn("⚠️ [Redis] Broker error (failing open):", err.message);
-    }
-  });
-
-  redisClient.on("close", () => {
-    isConnected = false;
-  });
-
+  redisClient = new Redis(config.REDIS_URL, buildRedisOptions("queue"));
+  attachRedisListeners(redisClient, "queue", true);
   return redisClient;
+}
+
+/**
+ * Creates a dedicated ioredis connection for a BullMQ Worker (`enableOfflineQueue: true`).
+ */
+export function createWorkerRedisConnection(label = "worker"): Redis {
+  const client = new Redis(config.REDIS_URL, buildRedisOptions("worker"));
+  attachRedisListeners(client, label, false);
+  workerClients.push(client);
+  return client;
 }
 
 /**
  * Quick helper to check whether Redis is currently reachable.
  */
 export function isRedisConnected(): boolean {
+  if (redisClient?.status === "ready") return true;
+  if (workerClients.some((client) => client.status === "ready")) return true;
   return isConnected;
 }
 
 /**
- * Safely closes Redis connection during graceful server shutdown.
+ * Safely closes all tracked Redis connections during graceful server shutdown.
  */
 export async function closeRedisConnection(): Promise<void> {
-  if (redisClient) {
+  const closeOne = async (client: Redis | null) => {
+    if (!client) return;
     try {
-      await redisClient.quit();
+      await client.quit();
     } catch {
-      redisClient.disconnect();
-    } finally {
-      redisClient = null;
-      isConnected = false;
+      client.disconnect();
     }
-  }
-}
+  };
 
+  const workersToClose = workerClients.splice(0, workerClients.length);
+  await Promise.all(workersToClose.map((c) => closeOne(c)));
+
+  if (redisClient) {
+    const primary = redisClient;
+    redisClient = null;
+    await closeOne(primary);
+  }
+
+  isConnected = false;
+}

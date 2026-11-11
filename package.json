@@ -1,0 +1,24 @@
+{
+  "name": "resolver",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix server run build",
+    "start": "npm --prefix server start",
+    "bench:load": "tsx scripts/bench/load.ts",
+    "bench:rules": "tsx scripts/bench/rules.ts",
+    "bench:failure": "tsx scripts/bench/failure.ts",
+    "bench:cleanup": "tsx scripts/bench/cleanup.ts",
+    "bench:report": "tsx scripts/bench/report.ts",
+    "bench:all": "tsx scripts/bench/rules.ts && tsx scripts/bench/load.ts && tsx scripts/bench/failure.ts && tsx scripts/bench/report.ts"
+  },
+  "devDependencies": {
+    "@types/autocannon": "^7.12.7",
+    "@types/jsonwebtoken": "^9.0.10",
+    "autocannon": "^9.0.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.12.1",
+    "tsx": "^4.23.15"
+  }
+}

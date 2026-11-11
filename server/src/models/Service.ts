@@ -8,6 +8,8 @@ export interface IService extends Document {
   owningTeam: string;
   runbookLinks: string[];
   organizationId: Types.ObjectId;
+  seeded?: boolean;
+  benchSession?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +48,15 @@ const serviceSchema = new Schema<IService>(
       type: Schema.Types.ObjectId,
       ref: "Organization",
       required: [true, "Organization reference is required"],
+      index: true,
+    },
+    seeded: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    benchSession: {
+      type: String,
       index: true,
     },
   },

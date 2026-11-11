@@ -24,7 +24,10 @@ export interface IIncident extends Document {
   ai?: IncidentAiSubdocument;
   linkedIncidentIds?: Types.ObjectId[];
   duplicateOf?: Types.ObjectId | null;
+  alertCount?: number;
   resolvedAt?: Date | null;
+  seeded?: boolean;
+  benchSession?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -130,9 +133,23 @@ const incidentSchema = new Schema<IIncident>(
       ref: "Incident",
       default: null,
     },
+    alertCount: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
     resolvedAt: {
       type: Date,
       default: null,
+      index: true,
+    },
+    seeded: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    benchSession: {
+      type: String,
       index: true,
     },
   },

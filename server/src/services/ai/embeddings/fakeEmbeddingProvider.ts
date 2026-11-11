@@ -29,8 +29,9 @@ export class FakeEmbeddingProvider implements EmbeddingProvider {
   }
 
   async embed(texts: string[], options?: EmbedOptions): Promise<EmbeddingResult> {
-    if (this.shouldFail) {
-      throw new Error("FakeEmbeddingProvider simulated offline failure");
+    const embedFakeMode = process.env.EMBEDDING_FAKE_MODE;
+    if (this.shouldFail || embedFakeMode === "fail" || embedFakeMode === "timeout" || embedFakeMode === "rate_limit") {
+      throw new Error(`FakeEmbeddingProvider simulated offline failure (mode=${embedFakeMode || "manual"})`);
     }
 
     const start = performance.now();

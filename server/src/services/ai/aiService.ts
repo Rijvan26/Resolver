@@ -491,28 +491,32 @@ export class AiService {
         } else {
           chosenSeverity = String(
             suggestion.output?.suggestedSeverity ||
-              suggestion.output?.severity ||
-              "MEDIUM"
+            suggestion.output?.severity ||
+            "MEDIUM"
           );
         }
 
         const canonicalSeverity = normalizePriority(chosenSeverity);
 
         // HARD RULE #1: Human acceptance explicitly sets `finalSeverity` and `aiAccepted = true`
-        await incidentDao.updateByOrgAndId(organizationId, suggestion.incidentId, {
-          finalSeverity: canonicalSeverity,
-          priority: canonicalSeverity,
-          aiAccepted: true,
-        });
+        if (suggestion.incidentId) {
+          await incidentDao.updateByOrgAndId(organizationId, suggestion.incidentId, {
+            finalSeverity: canonicalSeverity,
+            priority: canonicalSeverity,
+            aiAccepted: true,
+          });
+        }
       } else if (decision === AI_USER_DECISION.DISMISSED) {
-        await incidentDao.updateByOrgAndId(organizationId, suggestion.incidentId, {
-          aiAccepted: false,
-        });
+        if (suggestion.incidentId) {
+          await incidentDao.updateByOrgAndId(organizationId, suggestion.incidentId, {
+            aiAccepted: false,
+          });
+        }
       }
     }
 
     // 2. Summary Decision Handling
-    if (suggestion.type === AI_SUGGESTION_TYPE.SUMMARY) {
+    if (suggestion.type === AI_SUGGESTION_TYPE.SUMMARY && suggestion.incidentId) {
       if (decision === AI_USER_DECISION.EDITED && editedOutput?.summary) {
         await incidentDao.updateByOrgAndId(organizationId, suggestion.incidentId, {
           "ai.summary": String(editedOutput.summary),
@@ -522,7 +526,7 @@ export class AiService {
     }
 
     // 3. Duplicate Decision Handling (FR-06)
-    if (suggestion.type === AI_SUGGESTION_TYPE.DUPLICATE) {
+    if (suggestion.type === AI_SUGGESTION_TYPE.DUPLICATE && suggestion.incidentId) {
       if (decision === AI_USER_DECISION.ACCEPTED) {
         const output = suggestion.output as {
           bestMatchIncidentId?: string;
@@ -536,7 +540,7 @@ export class AiService {
 
         if (candidateIdToLink) {
           const candidateObjId = new Types.ObjectId(candidateIdToLink);
-          const currentIncidentObjId = new Types.ObjectId(suggestion.incidentId);
+          const currentIncidentObjId = new Types.ObjectId(suggestion.incidentId.toString());
 
           // Add to linkedIncidentIds for both incidents (bidirectional link)
           // and mark duplicateOf on the current incident
@@ -581,18 +585,20 @@ export class AiService {
     );
 
     // 5. Log immutable audit activity
-    await activityDao.create({
-      organizationId,
-      incidentId: suggestion.incidentId,
-      actorId: userId,
-      action: ACTIVITY_ACTION.AI_SUGGESTION_DECIDED,
-      metadata: {
-        suggestionId,
-        type: suggestion.type,
-        decision,
-        editedOutput: editedOutput || null,
-      },
-    });
+    if (suggestion.incidentId) {
+      await activityDao.create({
+        organizationId,
+        incidentId: suggestion.incidentId,
+        actorId: userId,
+        action: ACTIVITY_ACTION.AI_SUGGESTION_DECIDED,
+        metadata: {
+          suggestionId,
+          type: suggestion.type,
+          decision,
+          hasEdits: Boolean(editedOutput),
+        },
+      });
+    }
 
     return updated!;
   }
@@ -762,8 +768,8 @@ export class AiService {
         // Check for same-service match
         const candServiceIdStr = past.serviceId
           ? (typeof past.serviceId === "object" && "_id" in (past.serviceId as object)
-              ? ((past.serviceId as { _id: Types.ObjectId })._id).toString()
-              : String(past.serviceId))
+            ? ((past.serviceId as { _id: Types.ObjectId })._id).toString()
+            : String(past.serviceId))
           : null;
 
         const isSameService = Boolean(targetServiceIdStr && candServiceIdStr && targetServiceIdStr === candServiceIdStr);

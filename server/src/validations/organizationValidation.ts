@@ -2,9 +2,19 @@ import { z } from "zod";
 import { Types } from "mongoose";
 import { ROLES, Role } from "../types";
 
+export const organizationAiSettingsSchema = z.object({
+  alertGrouping: z.boolean().optional(),
+  runbooks: z.boolean().optional(),
+  assistant: z.boolean().optional(),
+  alertGroupingWindowMinutes: z.number().int().min(1).max(1440).optional(),
+  alertGroupingSimilarityThreshold: z.number().min(0).max(1).optional(),
+});
+
+export type OrganizationAiSettingsInput = z.infer<typeof organizationAiSettingsSchema>;
+
 /**
  * Schema for updating organization settings.
- * Only explicitly authorized fields (name, statusPageEnabled) are permitted.
+ * Authorized fields: name, statusPageEnabled, aiSettings.
  * Unknown or unauthorized keys are strictly rejected.
  */
 export const updateOrganizationSchema = z
@@ -16,12 +26,16 @@ export const updateOrganizationSchema = z
       .max(100, "Organization name cannot exceed 100 characters")
       .optional(),
     statusPageEnabled: z.boolean().optional(),
+    aiSettings: organizationAiSettingsSchema.optional(),
   })
   .strict()
   .refine(
-    (data) => data.name !== undefined || data.statusPageEnabled !== undefined,
+    (data) =>
+      data.name !== undefined ||
+      data.statusPageEnabled !== undefined ||
+      data.aiSettings !== undefined,
     {
-      message: "At least one valid field (name or statusPageEnabled) must be provided for update",
+      message: "At least one valid field (name, statusPageEnabled, or aiSettings) must be provided for update",
     }
   );
 

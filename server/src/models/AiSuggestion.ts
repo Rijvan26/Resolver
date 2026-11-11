@@ -8,7 +8,7 @@ import {
 
 export interface IAiSuggestion {
   _id: Types.ObjectId;
-  incidentId: Types.ObjectId;
+  incidentId?: Types.ObjectId | null;
   organizationId: Types.ObjectId;
   type: AiSuggestionType;
   inputHash: string;
@@ -29,7 +29,8 @@ const aiSuggestionSchema = new Schema<IAiSuggestion>(
     incidentId: {
       type: Schema.Types.ObjectId,
       ref: "Incident",
-      required: [true, "Incident reference is required"],
+      required: false,
+      default: null,
       index: true,
     },
     organizationId: {

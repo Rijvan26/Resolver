@@ -1,9 +1,31 @@
 import { Types } from "mongoose";
 import { AiSuggestion, IAiSuggestion } from "../models/AiSuggestion";
 import { AiSuggestionType, AiUserDecision } from "../types";
+import { redact } from "../services/ai/redaction";
+
+/**
+ * Recursively redacts sensitive tokens, API keys, passwords, and PII from objects
+ * before persisting to the ai_suggestions audit log.
+ */
+export function deepRedact(val: unknown): unknown {
+  if (typeof val === "string") {
+    return redact(val);
+  }
+  if (Array.isArray(val)) {
+    return val.map(deepRedact);
+  }
+  if (val !== null && typeof val === "object" && !(val instanceof Types.ObjectId) && !(val instanceof Date)) {
+    const sanitized: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      sanitized[k] = deepRedact(v);
+    }
+    return sanitized;
+  }
+  return val;
+}
 
 export interface CreateAiSuggestionDto {
-  incidentId: string | Types.ObjectId;
+  incidentId?: string | Types.ObjectId | null;
   organizationId: string | Types.ObjectId;
   type: AiSuggestionType;
   inputHash: string;
@@ -49,7 +71,11 @@ export interface AuditMetrics {
 
 export class AiSuggestionDao {
   async create(data: CreateAiSuggestionDto): Promise<IAiSuggestion> {
-    return AiSuggestion.create(data);
+    const sanitizedOutput = (deepRedact(data.output) as Record<string, unknown>) || {};
+    return AiSuggestion.create({
+      ...data,
+      output: sanitizedOutput,
+    });
   }
 
   async findById(id: string | Types.ObjectId): Promise<IAiSuggestion | null> {
@@ -348,6 +374,25 @@ export class AiSuggestionDao {
         falseLinkRate,
       },
     };
+  }
+
+  /**
+   * Count suggestions generated today for an organization (for daily cap tracking)
+   */
+  async countTodayByOrg(
+    organizationId: string | Types.ObjectId,
+    type?: AiSuggestionType
+  ): Promise<number> {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const query: Record<string, unknown> = {
+      organizationId,
+      createdAt: { $gte: startOfDay },
+    };
+    if (type) query.type = type;
+
+    return AiSuggestion.countDocuments(query).exec();
   }
 }
 

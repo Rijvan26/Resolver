@@ -16,6 +16,8 @@ export interface CreateIncidentDaoInput {
   aiAccepted?: boolean;
   ai?: IncidentAiSubdocument;
   resolvedAt?: Date | null;
+  seeded?: boolean;
+  benchSession?: string;
 }
 
 export interface FindIncidentsFilter {
@@ -164,6 +166,56 @@ export class IncidentDao {
     ).exec();
 
     return result !== null;
+  }
+
+  /**
+   * Atomically increment the alert count for an incident.
+   */
+  async incrementAlertCount(
+    organizationId: string | Types.ObjectId,
+    incidentId: string | Types.ObjectId,
+    amount = 1,
+    session?: ClientSession
+  ): Promise<IIncident | null> {
+    return await Incident.findOneAndUpdate(
+      { _id: incidentId, organizationId },
+      { $inc: { alertCount: amount } },
+      { returnDocument: "after", session }
+    ).exec();
+  }
+
+  /**
+   * Find open incidents for a specific service created or updated after a given timestamp.
+   */
+  async findOpenByServiceAndWindow(
+    organizationId: string | Types.ObjectId,
+    serviceId: string | Types.ObjectId,
+    since: Date
+  ): Promise<IIncident[]> {
+    return await Incident.find({
+      organizationId,
+      serviceId,
+      status: { $in: ["OPEN", "IN_PROGRESS"] },
+      updatedAt: { $gte: since },
+    })
+      .sort({ updatedAt: -1 })
+      .populate("serviceId", "name tier owningTeam runbookLinks")
+      .exec();
+  }
+
+  /**
+   * Find the most recent open incident for an organization.
+   */
+  async findLatestOpenByOrg(
+    organizationId: string | Types.ObjectId
+  ): Promise<IIncident | null> {
+    return await Incident.findOne({
+      organizationId,
+      status: { $in: ["OPEN", "IN_PROGRESS"] },
+    })
+      .sort({ updatedAt: -1 })
+      .populate("serviceId", "name tier owningTeam runbookLinks")
+      .exec();
   }
 }
 

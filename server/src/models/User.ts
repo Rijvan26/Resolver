@@ -9,6 +9,8 @@ export interface IUser extends Document {
   role: Role;
   organizationId: Types.ObjectId;
   isActive: boolean;
+  seeded?: boolean;
+  benchSession?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +53,15 @@ const userSchema = new Schema<IUser>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    seeded: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    benchSession: {
+      type: String,
+      index: true,
     },
   },
   {

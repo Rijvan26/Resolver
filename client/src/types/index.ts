@@ -142,6 +142,9 @@ export const AI_SUGGESTION_TYPE = {
   DUPLICATE: "duplicate",
   CLARIFY: "clarify",
   STATUS_DRAFT: "statusDraft",
+  ALERT_GROUP: "alert_group",
+  RUNBOOK: "runbook",
+  ASSISTANT: "assistant",
 } as const;
 export type AiSuggestionType = (typeof AI_SUGGESTION_TYPE)[keyof typeof AI_SUGGESTION_TYPE];
 
@@ -245,6 +248,63 @@ export interface IncidentAiStatus {
   };
 }
 
+export const ALERT_STATUS = {
+  OPEN: "open",
+  GROUPED: "grouped",
+  DISMISSED: "dismissed",
+} as const;
+export type AlertStatus = (typeof ALERT_STATUS)[keyof typeof ALERT_STATUS];
+
+export interface Alert {
+  _id: string;
+  organizationId: string;
+  serviceId: string | { _id: string; name: string; tier: number; owningTeam: string };
+  title: string;
+  description: string;
+  severity: IncidentPriority;
+  source: string;
+  fingerprint: string;
+  incidentId?: string | null;
+  suggestedIncidentId?: string | null;
+  status: AlertStatus;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SuggestedAlertItem {
+  alert: Alert;
+  suggestionId?: string;
+  similarityScore?: number;
+  reason?: string;
+  isTier1Safeguard?: boolean;
+}
+
+export interface IncidentAlertsData {
+  incidentId: string;
+  alertCount: number;
+  groupedAlerts: Alert[];
+  suggestedAlerts: SuggestedAlertItem[];
+}
+
+export interface SuggestedRunbookItem {
+  id?: string;
+  title: string;
+  url: string;
+  tags: string[];
+  serviceId?: string | null;
+  score: number;
+  reason: string;
+  explanation?: string;
+}
+
+export interface RunbookSuggestionsResponse {
+  aiAvailable: boolean;
+  reason?: string;
+  suggestionId?: string;
+  runbooks: SuggestedRunbookItem[];
+}
+
 export const NOTIFICATION_TYPES = {
   INCIDENT_ASSIGNED: "INCIDENT_ASSIGNED",
   INCIDENT_STATUS_CHANGED: "INCIDENT_STATUS_CHANGED",
@@ -304,11 +364,28 @@ export interface UserSummary {
   isActive?: boolean;
 }
 
+export interface OrganizationAiSettings {
+  alertGrouping: boolean;
+  runbooks: boolean;
+  assistant: boolean;
+  alertGroupingWindowMinutes: number;
+  alertGroupingSimilarityThreshold: number;
+}
+
+export interface AssistantQueryResponse {
+  aiAvailable: boolean;
+  reason?: string;
+  answer?: string;
+  sources?: string[];
+  label?: "AI-generated";
+}
+
 export interface Organization {
   id: string;
   name: string;
   slug: string;
   statusPageEnabled: boolean;
+  aiSettings?: OrganizationAiSettings;
   createdAt: string;
   updatedAt?: string;
 }
@@ -347,6 +424,7 @@ export interface Incident {
   finalSeverity?: IncidentPriority | null;
   aiAccepted?: boolean;
   ai?: IncidentAiSubdocument;
+  alertCount?: number;
   resolvedAt?: string | null;
   createdAt: string;
   updatedAt: string;

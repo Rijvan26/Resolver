@@ -1,5 +1,5 @@
 import { Worker, Job } from "bullmq";
-import { getRedisClient } from "./connection";
+import { createWorkerRedisConnection } from "./connection";
 import {
   AI_QUEUE_NAME,
   AiJobData,
@@ -102,15 +102,17 @@ export function startAiWorker(): Worker<AiJobData> | null {
   }
 
   try {
-    const redis = getRedisClient();
+    const redis = createWorkerRedisConnection("ai-worker");
+    const isManagedTls = config.REDIS_URL.trim().toLowerCase().startsWith("rediss://");
 
     aiWorker = new Worker<AiJobData>(AI_QUEUE_NAME, processAiJob, {
       connection: redis,
-      concurrency: 2, // Concurrency 2: conservative for weak CPU
+      concurrency: 2, // Concurrency 2: conservative for 512 MB / weak CPU
       limiter: {
         max: 10,
         duration: 60000, // Rate limiter: max 10 jobs/minute to avoid burning free-tier API quotas
       },
+      ...(isManagedTls ? { stalledInterval: 60000, drainDelay: 30 } : {}),
     });
 
     aiWorker.on("completed", (job) => {
@@ -226,7 +228,8 @@ export function startEmbedWorker(): Worker<EmbedJobData> | null {
   }
 
   try {
-    const redis = getRedisClient();
+    const redis = createWorkerRedisConnection("embed-worker");
+    const isManagedTls = config.REDIS_URL.trim().toLowerCase().startsWith("rediss://");
 
     embedWorker = new Worker<EmbedJobData>(
       AI_EMBED_QUEUE_NAME,
@@ -235,11 +238,12 @@ export function startEmbedWorker(): Worker<EmbedJobData> | null {
       },
       {
         connection: redis,
-        concurrency: 1, // Concurrency 1: strictly single-threaded execution for weak CPU
+        concurrency: 1, // Concurrency 1: strictly single-threaded execution for 512 MB / weak CPU
         limiter: {
           max: 30,
           duration: 60000, // 30 jobs/minute rate limiter
         },
+        ...(isManagedTls ? { stalledInterval: 60000, drainDelay: 30 } : {}),
       }
     );
 

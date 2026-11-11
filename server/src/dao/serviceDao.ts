@@ -8,6 +8,8 @@ export interface CreateServiceDto {
   owningTeam: string;
   runbookLinks?: string[];
   organizationId: string | Types.ObjectId;
+  seeded?: boolean;
+  benchSession?: string;
 }
 
 export class ServiceDao {

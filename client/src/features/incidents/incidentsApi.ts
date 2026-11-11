@@ -7,6 +7,7 @@ import {
   CreateIncidentPayload,
   UpdateIncidentPayload,
   UpdateAssigneePayload,
+  IncidentAlertsData,
 } from "@/types";
 
 export const incidentsApi = api.injectEndpoints({
@@ -94,6 +95,33 @@ export const incidentsApi = api.injectEndpoints({
         "Dashboard",
       ],
     }),
+
+    getIncidentAlerts: builder.query<ApiSuccessResponse<IncidentAlertsData>, string>({
+      query: (incidentId) => ({
+        url: `/incidents/${incidentId}/alerts`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, id) => [{ type: "IncidentAlerts", id }],
+    }),
+
+    recordAlertDecision: builder.mutation<
+      ApiSuccessResponse<unknown>,
+      { incidentId: string; alertId: string; decision: "accept" | "dismiss" }
+    >({
+      query: ({ incidentId, alertId, decision }) => ({
+        url: `/incidents/${incidentId}/alerts/${alertId}/decision`,
+        method: "POST",
+        body: { decision },
+      }),
+      invalidatesTags: (_result, _error, { incidentId }) => [
+        { type: "IncidentAlerts", id: incidentId },
+        { type: "IncidentDetails", id: incidentId },
+        { type: "Incidents", id: incidentId },
+        { type: "Incidents", id: "LIST" },
+        { type: "Timeline", id: incidentId },
+        "Dashboard",
+      ],
+    }),
   }),
 });
 
@@ -104,5 +132,7 @@ export const {
   useUpdateIncidentMutation,
   useUpdateAssigneeMutation,
   useDeleteIncidentMutation,
+  useGetIncidentAlertsQuery,
+  useRecordAlertDecisionMutation,
 } = incidentsApi;
 

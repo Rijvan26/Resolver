@@ -111,11 +111,10 @@ describe("BullMQ Queue & AI Worker (ai-jobs)", () => {
 
       (config as any).AI_ENABLED = true;
 
-      // Mock getAiQueue to throw a Redis ECONNREFUSED error
+      // Mock queue.add and getAiQueue to simulate a Redis ECONNREFUSED error
       const bullmqModule = await import("../src/services/ai/queue/bullmq");
-      vi.spyOn(bullmqModule, "getAiQueue").mockImplementation(() => {
-        throw new Error("connect ECONNREFUSED 127.0.0.1:6379");
-      });
+      const queue = bullmqModule.getAiQueue();
+      vi.spyOn(queue, "add").mockRejectedValue(new Error("connect ECONNREFUSED 127.0.0.1:6379"));
 
       // Must NOT throw
       const jobId = await addAiJob({
