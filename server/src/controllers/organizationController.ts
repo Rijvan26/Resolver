@@ -146,6 +146,54 @@ export class OrganizationController {
       next(error);
     }
   }
+
+  /**
+   * GET /api/v1/organizations/:id/delete-preview
+   * Retrieve counts per collection for organization deletion preview (SUPER_ADMIN only).
+   */
+  async getDeletePreview(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const targetId = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+      const result = await organizationService.getDeletePreview(
+        req.user!.userId,
+        targetId
+      );
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * DELETE /api/v1/organizations/:id
+   * Cascade delete organization and all associated data (SUPER_ADMIN only, password re-auth required).
+   */
+  async deleteOrganization(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const targetId = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+      const result = await organizationService.deleteOrganization(
+        req.user!.userId,
+        targetId,
+        req.body
+      );
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.message,
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const organizationController = new OrganizationController();

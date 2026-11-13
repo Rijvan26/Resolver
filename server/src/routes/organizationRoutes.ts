@@ -10,7 +10,10 @@ import {
   memberIdParamSchema,
   updateMemberRoleSchema,
   updateMemberStatusSchema,
+  organizationIdParamSchema,
+  deleteOrganizationBodySchema,
 } from "../validations/organizationValidation";
+import { organizationDeletionRateLimiter } from "../middleware/rateLimiter";
 import { ROLES } from "../types";
 
 const router = Router();
@@ -86,6 +89,32 @@ router.patch(
   validate(memberIdParamSchema, "params"),
   validate(updateMemberStatusSchema, "body"),
   organizationController.updateMemberStatus
+);
+
+/**
+ * @route   GET /api/v1/organizations/:id/delete-preview
+ * @desc    Dry-run preview returning document counts per collection (Counts only, zero personal data)
+ * @access  Authenticated (SUPER_ADMIN only)
+ */
+router.get(
+  "/:id/delete-preview",
+  authorize(ROLES.SUPER_ADMIN),
+  validate(organizationIdParamSchema, "params"),
+  organizationController.getDeletePreview
+);
+
+/**
+ * @route   DELETE /api/v1/organizations/:id
+ * @desc    Cascade delete organization and all associated collection data
+ * @access  Authenticated (SUPER_ADMIN only, password re-auth required, rate-limited)
+ */
+router.delete(
+  "/:id",
+  authorize(ROLES.SUPER_ADMIN),
+  organizationDeletionRateLimiter,
+  validate(organizationIdParamSchema, "params"),
+  validate(deleteOrganizationBodySchema, "body"),
+  organizationController.deleteOrganization
 );
 
 export default router;

@@ -52,3 +52,20 @@ export const alertRateLimiter = rateLimit({
     },
   },
 });
+
+/**
+ * Strict rate limiter for destructive organization deletion (5 requests/hour per IP/user)
+ */
+export const organizationDeletionRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: config.NODE_ENV === "test" ? 1000 : 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Too many organization deletion attempts. Please try again after 1 hour.",
+    },
+  },
+});

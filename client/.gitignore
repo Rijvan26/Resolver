@@ -50,6 +50,7 @@ coverage/
 
 # Temporary / cache files
 .cache/
+.vercel/
 .eslintcache
 .stylelintcache
 *.tmp

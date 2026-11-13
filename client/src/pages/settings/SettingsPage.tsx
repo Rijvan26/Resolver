@@ -19,6 +19,7 @@ import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROLES } from "@/types";
 import { parseApiError } from "@/lib/apiErrors";
+import { DeleteOrganizationModal } from "@/features/organization/components/DeleteOrganizationModal";
 import {
   Building,
   Users,
@@ -33,6 +34,7 @@ import {
   Bot,
   CheckCircle,
   ExternalLink,
+  AlertTriangle,
 } from "lucide-react";
 
 type SettingsTab =
@@ -48,6 +50,7 @@ export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const isPrivileged =
     user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN;
@@ -248,6 +251,7 @@ export const SettingsPage: React.FC = () => {
             <div className="lg:col-span-3 min-w-0 max-w-full">
               {/* Tab 1: General Profile (Pixel-matched with Image 1) */}
               {activeTab === "general" && (
+                <>
                 <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm overflow-hidden max-w-full">
                   {/* Card Header */}
                   <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border-color">
@@ -392,6 +396,46 @@ export const SettingsPage: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Danger Zone: Visible only to SUPER_ADMIN */}
+                {user?.role === ROLES.SUPER_ADMIN && organization && (
+                  <Card className="rounded-2xl border border-rose-200/80 bg-rose-50/20 shadow-xs dark:border-rose-900/30 dark:bg-rose-950/10 overflow-hidden mt-6 max-w-full">
+                    <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-rose-100 dark:border-rose-900/20">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300 shrink-0">
+                          <AlertTriangle className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm sm:text-base font-bold text-rose-950 dark:text-rose-200">
+                            Danger Zone
+                          </CardTitle>
+                          <p className="text-xs text-rose-800/80 dark:text-rose-300/80">
+                            Destructive and irreversible organizational actions
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-semibold text-main-fg">
+                          Delete this organization
+                        </h4>
+                        <p className="text-[11px] text-muted-fg leading-relaxed max-w-xl">
+                          Permanently delete <strong className="font-semibold text-main-fg">{organization.name}</strong>, along with all incidents, member accounts, alerts, comments, and settings. Once deleted, this data cannot be recovered.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="rounded-xl text-xs h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white font-medium shrink-0 self-start sm:self-auto shadow-xs"
+                      >
+                        Delete organization
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
               )}
 
               {/* Tab 2: Members & Teams */}
@@ -707,6 +751,15 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
         </form>
+      )}
+
+      {/* Delete Organization Confirmation Modal */}
+      {organization && (
+        <DeleteOrganizationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          organization={organization}
+        />
       )}
     </div>
   );

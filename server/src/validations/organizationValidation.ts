@@ -93,3 +93,29 @@ export const updateMemberStatusSchema = z
   .strict();
 
 export type UpdateMemberStatusInput = z.infer<typeof updateMemberStatusSchema>;
+
+/**
+ * Schema for organization ID parameter (supports ObjectId or 'me')
+ */
+export const organizationIdParamSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .refine((val) => val === "me" || Types.ObjectId.isValid(val), {
+      message: "Invalid organization ID format: must be a valid ObjectId or 'me'",
+    }),
+});
+
+export type OrganizationIdParamInput = z.infer<typeof organizationIdParamSchema>;
+
+/**
+ * Schema for organization deletion confirmation
+ */
+export const deleteOrganizationBodySchema = z
+  .object({
+    organizationName: z.string().trim().min(1, "Organization name confirmation is required"),
+    password: z.string().min(1, "Super Admin password is required for confirmation"),
+  })
+  .strict();
+
+export type DeleteOrganizationBodyInput = z.infer<typeof deleteOrganizationBodySchema>;
