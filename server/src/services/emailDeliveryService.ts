@@ -24,6 +24,7 @@ export type EmailSender = (payload: EmailDeliveryPayload) => Promise<{ messageId
 export class EmailDeliveryService {
   private customSender: EmailSender | null = null;
   private transporter: Transporter | null = null;
+  private liveInTest: boolean = false;
   private maxRetries: number = 3;
   private baseBackoffMs: number = 200;
 
@@ -47,6 +48,9 @@ export class EmailDeliveryService {
           user,
           pass,
         },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
       });
     } else {
       this.transporter = null;
@@ -65,6 +69,13 @@ export class EmailDeliveryService {
    */
   public setTransporter(transporter: Transporter | null): void {
     this.transporter = transporter;
+  }
+
+  /**
+   * For testing: explicitly allow live SMTP delivery even when NODE_ENV === 'test'.
+   */
+  public setLiveInTest(enabled: boolean): void {
+    this.liveInTest = enabled;
   }
 
   /**
@@ -98,11 +109,13 @@ export class EmailDeliveryService {
    */
   async sendEmail(payload: EmailDeliveryPayload): Promise<EmailDeliveryResult> {
     // 1. Determine active sender (custom mock or live Nodemailer transport)
+    const isLiveAllowed = config.NODE_ENV !== "test" || this.liveInTest;
     const activeSender =
       this.customSender ||
-      (this.transporter
+      (this.transporter && isLiveAllowed
         ? async (p: EmailDeliveryPayload) => {
-            const from = config.GOOGLE_USER?.trim() || config.EMAIL_FROM;
+            const rawFrom = config.GOOGLE_USER?.trim() || config.EMAIL_FROM;
+            const from = rawFrom.includes("<") ? rawFrom : `Resolver <${rawFrom}>`;
             const info = await this.transporter!.sendMail({
               from,
               to: p.to,

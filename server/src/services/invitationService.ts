@@ -25,6 +25,7 @@ import {
   AcceptInvitationInput,
 } from "../validations/invitationValidation";
 import { SafeUser, SafeOrganization } from "./authService";
+import { emailDeliveryService } from "./emailDeliveryService";
 
 const INVITATION_EXPIRATION_DAYS = 7;
 
@@ -111,10 +112,103 @@ export class InvitationService {
       status: INVITATION_STATUS.PENDING,
     });
 
-    // 7. Construct safe response. In development/test mode only, provide the invitation link/token
-    const isDevelopmentOrTest = config.NODE_ENV !== "production";
+    // 7. Construct secure invitation URL
     const invitationLink = `${config.INVITATION_BASE_URL}?token=${rawToken}`;
 
+    // 8. Deliver invitation email with the onboarding link
+    try {
+      const [organization, inviter] = await Promise.all([
+        organizationDao.findById(organizationId),
+        userDao.findById(inviterId),
+      ]);
+
+      const orgName = organization?.name || "your organization";
+      const inviterName = inviter?.name || "A team member";
+
+      const subject = `Invitation to join ${orgName} on Resolver`;
+      const text = `Hello,\n\n${inviterName} has invited you to join ${orgName} on Resolver as a ${targetRole}.\n\nClick the link below to accept your invitation and set up your account:\n${invitationLink}\n\nThis invitation link expires in ${INVITATION_EXPIRATION_DAYS} days.\n\nIf you did not expect this invitation, you can safely ignore this email.\n\nBest regards,\nThe Resolver Team`;
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ECECE8; margin: 0; padding: 24px 16px; color: #111113;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; border: 1px solid #EEEEE9; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);">
+    <tr>
+      <td style="padding: 32px 32px 24px; text-align: left;">
+        <table border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+          <tr>
+            <td style="vertical-align: middle;">
+              <span style="display: inline-block; width: 36px; height: 36px; line-height: 36px; text-align: center; background-color: #111113; color: #FFFFFF; border-radius: 10px; font-weight: 700; font-size: 18px;">R</span>
+            </td>
+            <td style="vertical-align: middle; padding-left: 10px;">
+              <span style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #111113;">Resolver</span>
+            </td>
+          </tr>
+        </table>
+        
+        <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #111113; letter-spacing: -0.02em;">You've been invited!</h1>
+        <p style="font-size: 14px; line-height: 1.6; margin: 0 0 20px; color: #55555C;">
+          <strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on <strong>Resolver</strong> as a <strong>${targetRole}</strong>.
+        </p>
+        
+        <table border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
+          <tr>
+            <td style="border-radius: 12px; background-color: #111113; text-align: center;">
+              <a href="${invitationLink}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; border-radius: 12px; letter-spacing: -0.01em;">
+                Accept Invitation &rarr;
+              </a>
+            </td>
+          </tr>
+        </table>
+        
+        <p style="font-size: 12px; line-height: 1.5; color: #6B6B72; margin: 0 0 8px;">
+          Or copy and paste this link into your browser:
+        </p>
+        <p style="font-size: 12px; line-height: 1.5; color: #6A4CFF; word-break: break-all; margin: 0 0 24px;">
+          <a href="${invitationLink}" style="color: #6A4CFF; text-decoration: underline;">${invitationLink}</a>
+        </p>
+
+        <p style="font-size: 12px; line-height: 1.5; color: #9E9EA7; margin: 0;">
+          This invitation link will expire in ${INVITATION_EXPIRATION_DAYS} days. If you did not expect this invitation, please ignore this email.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #F7F7F5; padding: 16px 32px; border-top: 1px solid #EEEEE9; text-align: center; font-size: 11px; color: #9E9EA7;">
+        Resolver Incident Management Platform &bull; Automated System Email
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+      `.trim();
+
+      await emailDeliveryService.sendEmail({
+        to: normalizedEmail,
+        recipientName: normalizedEmail,
+        subject,
+        text,
+        html,
+        metadata: {
+          organizationId,
+          inviterId,
+          role: targetRole,
+          invitationId: invitation._id.toString(),
+        },
+      });
+    } catch (emailErr) {
+      console.error(
+        `[InvitationService] Failed to dispatch invitation email to ${normalizedEmail}:`,
+        emailErr
+      );
+    }
+
+    // 9. Construct safe response
     return {
       id: invitation._id.toString(),
       organizationId: invitation.organizationId.toString(),
@@ -124,12 +218,8 @@ export class InvitationService {
       expiresAt: invitation.expiresAt,
       createdAt: invitation.createdAt,
       inviterId: invitation.inviterId.toString(),
-      ...(isDevelopmentOrTest
-        ? {
-            invitationLink,
-            invitationToken: rawToken,
-          }
-        : {}),
+      invitationLink,
+      invitationToken: rawToken,
     };
   }
 

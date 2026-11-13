@@ -52,6 +52,7 @@ describe("Brevo SMTP Configuration & Connectivity Verification", () => {
   it("should safely handle delivery attempts with live transporter without crashing", async () => {
     emailDeliveryService.setSender(null);
     emailDeliveryService.initTransporter();
+    emailDeliveryService.setLiveInTest(true);
 
     const recipient = config.GOOGLE_USER?.trim() || "khanrijvan2610@gmail.com";
     const sendResult = await emailDeliveryService.sendEmail({
@@ -59,6 +60,8 @@ describe("Brevo SMTP Configuration & Connectivity Verification", () => {
       subject: "Test Brevo Delivery via Resolver Test Suite",
       text: "Testing Brevo SMTP live integration with Resolver.",
     });
+
+    emailDeliveryService.setLiveInTest(false);
 
     // The service must return a structured result, never crash or leak secrets
     expect(sendResult).toHaveProperty("success");
