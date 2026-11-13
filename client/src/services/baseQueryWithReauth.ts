@@ -47,8 +47,17 @@ export const baseQueryWithReauth: BaseQueryFn<
       isRefreshing = true;
       refreshPromise = (async () => {
         try {
+          const savedRefreshToken =
+            typeof window !== "undefined"
+              ? localStorage.getItem("resolver_refresh_token")
+              : null;
+
           const refreshResult = await baseQuery(
-            { url: "/auth/refresh", method: "POST" },
+            {
+              url: "/auth/refresh",
+              method: "POST",
+              body: savedRefreshToken ? { refreshToken: savedRefreshToken } : {},
+            },
             api,
             extraOptions
           );
@@ -61,6 +70,9 @@ export const baseQueryWithReauth: BaseQueryFn<
 
             if (data?.accessToken) {
               api.dispatch(setAccessToken(data.accessToken));
+              if (data.refreshToken && typeof window !== "undefined") {
+                localStorage.setItem("resolver_refresh_token", data.refreshToken);
+              }
               return data.accessToken;
             }
           }

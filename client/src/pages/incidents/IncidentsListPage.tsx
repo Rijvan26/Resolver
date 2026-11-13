@@ -13,7 +13,7 @@ import {
   INCIDENT_PRIORITY,
 } from "@/types";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { PriorityBadge } from "@/components/shared/PriorityBadge";
+import { PriorityBadge, SeverityIcon } from "@/components/shared/PriorityBadge";
 import { AiSeverityMismatchPill } from "@/features/incidents/components/AiSeverityMismatchBanner";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -34,6 +34,41 @@ import {
   User,
   ExternalLink,
 } from "lucide-react";
+
+function formatDurationMs(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return "<1m";
+  const totalMinutes = Math.floor(ms / 60_000);
+  if (totalMinutes < 1) return "<1m";
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const totalHours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  if (totalHours < 24) return mins > 0 ? `${totalHours}h ${mins}m` : `${totalHours}h`;
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+}
+
+function formatOpenDuration(
+  createdAt: string,
+  status: IncidentStatus,
+  resolvedAt?: string | null
+): string {
+  const createdMs = new Date(createdAt).getTime();
+  if (Number.isNaN(createdMs)) return "—";
+
+  if (status === INCIDENT_STATUS.OPEN || status === INCIDENT_STATUS.IN_PROGRESS) {
+    return `open for ${formatDurationMs(Date.now() - createdMs)}`;
+  }
+
+  if (resolvedAt) {
+    const resolvedMs = new Date(resolvedAt).getTime();
+    if (!Number.isNaN(resolvedMs)) {
+      return `Resolved (${formatDurationMs(resolvedMs - createdMs)})`;
+    }
+  }
+
+  return status === INCIDENT_STATUS.RESOLVED ? "Resolved" : "Closed";
+}
 
 export const IncidentsListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -357,6 +392,7 @@ export const IncidentsListPage: React.FC = () => {
                   <th className="py-3.5 px-4 font-semibold text-main-fg">Priority</th>
                   <th className="py-3.5 px-4 font-semibold text-main-fg">Assignee</th>
                   <th className="py-3.5 px-4 font-semibold text-main-fg">Reporter</th>
+                  <th className="py-3.5 px-4 font-semibold text-main-fg">Open For</th>
                   <th className="py-3.5 px-4 font-semibold text-main-fg">Updated</th>
                   <th className="py-3.5 px-4 text-right font-semibold text-main-fg">Action</th>
                 </tr>
@@ -366,6 +402,11 @@ export const IncidentsListPage: React.FC = () => {
                   const assignee = incident.assignee;
                   const creator =
                     typeof incident.createdBy === "object" ? incident.createdBy : null;
+                  const openDurationLabel = formatOpenDuration(
+                    incident.createdAt,
+                    incident.status,
+                    incident.resolvedAt
+                  );
 
                   return (
                     <tr
@@ -375,11 +416,12 @@ export const IncidentsListPage: React.FC = () => {
                     >
                       <td className="py-3.5 px-4 max-w-sm">
                         <div className="flex items-center gap-2">
+                          <SeverityIcon priority={incident.priority} />
                           <span className="font-semibold text-main-fg truncate">
                             {incident.title}
                           </span>
                         </div>
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-fg">
+                        <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-fg pl-5">
                           {incident.description}
                         </p>
                       </td>
@@ -412,6 +454,9 @@ export const IncidentsListPage: React.FC = () => {
                       <td className="py-3.5 px-4 whitespace-nowrap text-muted-fg">
                         {creator?.name || "System"}
                       </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap text-muted-fg tabular-nums">
+                        {openDurationLabel}
+                      </td>
                       <td className="py-3.5 px-4 whitespace-nowrap text-muted-fg">
                         {formatRelativeTime(incident.updatedAt || incident.createdAt)}
                       </td>
@@ -440,9 +485,12 @@ export const IncidentsListPage: React.FC = () => {
                 className="p-4 cursor-pointer hover:shadow-md transition-shadow space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-main-fg line-clamp-1">
-                    {incident.title}
-                  </h3>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <SeverityIcon priority={incident.priority} />
+                    <h3 className="text-sm font-semibold text-main-fg line-clamp-1">
+                      {incident.title}
+                    </h3>
+                  </div>
                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                     <StatusBadge status={incident.status} size="sm" />
                     <PriorityBadge priority={incident.priority} size="sm" />
@@ -457,14 +505,23 @@ export const IncidentsListPage: React.FC = () => {
                   {incident.description}
                 </p>
 
-                <div className="flex items-center justify-between pt-2 border-t border-border-color text-[11px] text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5" />
-                    <span>{incident.assignee?.name || "Unassigned"}</span>
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-color text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <User className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{incident.assignee?.name || "Unassigned"}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{formatRelativeTime(incident.updatedAt || incident.createdAt)}</span>
+                  <div className="flex items-center gap-3 shrink-0 tabular-nums">
+                    <span>
+                      {formatOpenDuration(
+                        incident.createdAt,
+                        incident.status,
+                        incident.resolvedAt
+                      )}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{formatRelativeTime(incident.updatedAt || incident.createdAt)}</span>
+                    </div>
                   </div>
                 </div>
               </Card>

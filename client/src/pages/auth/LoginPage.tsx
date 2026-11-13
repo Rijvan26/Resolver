@@ -66,6 +66,7 @@ export const LoginPage: React.FC = () => {
         dispatch(
           setCredentials({
             accessToken: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
             user: response.data.user,
             organization: response.data.organization,
           })

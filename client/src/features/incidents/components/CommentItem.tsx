@@ -4,7 +4,6 @@ import {
   useUpdateCommentMutation,
   useListRepliesQuery,
 } from "@/features/incidents/commentsApi";
-import { RoleBadge } from "@/components/shared/RoleBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
@@ -29,6 +28,22 @@ export interface CommentItemProps {
   currentUserId?: string;
   currentUserRole?: Role;
 }
+
+const formatRole = (role?: string) => {
+  if (!role) return "";
+  switch (role) {
+    case "SUPER_ADMIN":
+      return "Super Admin";
+    case "ADMIN":
+      return "Admin";
+    case "MANAGER":
+      return "Manager";
+    case "DEVELOPER":
+      return "Developer";
+    default:
+      return role;
+  }
+};
 
 export const CommentItem: React.FC<CommentItemProps> = ({
   comment,
@@ -107,27 +122,29 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
   const initials = author?.name
     ? author.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase()
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
     : "U";
 
   return (
     <>
       <div
-        className={`group rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900/90 ${comment.parentId ? "bg-slate-50/50 dark:bg-slate-900/40" : ""
-          }`}
+        className={`group rounded-2xl border border-border-color bg-card-bg p-4 shadow-xs transition-all ${
+          comment.parentId ? "bg-slate-50/40 dark:bg-slate-900/40" : ""
+        }`}
       >
+        {/* Comment Header: Author, Role Badge, Time, Actions */}
         <div className="flex items-start justify-between gap-3">
-          {/* Left: Author Avatar & Meta */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <div
-              className={`flex shrink-0 items-center justify-center rounded-full font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300 ${comment.parentId
+              className={`flex shrink-0 items-center justify-center rounded-full font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300 ${
+                comment.parentId
                   ? "h-6 w-6 text-[10px] bg-brand-50"
                   : "h-8 w-8 text-xs bg-brand-100"
-                }`}
+              }`}
             >
               {initials}
             </div>
@@ -136,7 +153,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <span className="text-xs font-semibold text-main-fg">
                   {author?.name || "Unknown User"}
                 </span>
-                {author?.role && <RoleBadge role={author.role} size="sm" />}
+                {author?.role && (
+                  <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                    {formatRole(author.role)}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-fg mt-0.5">
                 <span title={new Date(comment.createdAt).toLocaleString()}>
@@ -157,14 +178,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           </div>
 
-          {/* Right: Actions */}
+          {/* Action Icons: Edit & Delete */}
           {!isEditing && (canEdit || canDelete) && (
             <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
               {canEdit && (
                 <button
                   type="button"
                   onClick={handleStartEdit}
-                  className="rounded p-1 text-muted-fg hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+                  className="rounded p-1 text-muted-fg hover:bg-pill hover:text-main-fg transition-colors"
                   title="Edit comment"
                   aria-label="Edit comment"
                 >
@@ -187,7 +208,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         </div>
 
         {/* Comment Body / Editing State */}
-        <div className="mt-3">
+        <div className="mt-2.5">
           {isEditing ? (
             <div className="space-y-2">
               {editError && (
@@ -200,7 +221,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 onChange={(e) => setEditContent(e.target.value)}
                 rows={3}
                 placeholder="Edit your comment..."
-                className="text-xs"
+                className="text-xs rounded-xl"
                 disabled={isUpdating}
                 autoFocus
               />
@@ -226,7 +247,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                     isLoading={isUpdating}
                     disabled={isUpdating || !editContent.trim()}
                     onClick={handleSaveEdit}
-                    className="h-7 text-xs px-2.5"
+                    className="h-7 text-xs px-2.5 bg-brand-600 hover:bg-brand-700"
                   >
                     <Check className="h-3 w-3 mr-1" /> Save
                   </Button>
@@ -242,23 +263,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
         {/* Reply Toolbar (Top-Level Comments Only) */}
         {isTopLevel && !isEditing && (
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+          <div className="mt-3 pt-2 border-t border-border-color flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setIsReplying((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
             >
-              <Reply className="h-3 w-3" />
-              <span>{isReplying ? "Cancel Reply" : "Reply"}</span>
+              <Reply className="h-3.5 w-3.5" />
+              <span>{isReplying ? "Cancel" : "Reply"}</span>
             </button>
 
             {replyCount > 0 && (
               <button
                 type="button"
                 onClick={() => setIsRepliesExpanded((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-muted-fg dark:hover:text-slate-200 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-main-fg transition-colors"
               >
-                <MessageSquare className="h-3 w-3" />
+                <MessageSquare className="h-3.5 w-3.5" />
                 <span>
                   {replyCount} {replyCount === 1 ? "reply" : "replies"}
                 </span>
@@ -274,7 +295,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
         {/* Inline Reply Form */}
         {isTopLevel && isReplying && (
-          <div className="mt-3 rounded-lg border border-brand-200/80 bg-brand-50/30 p-3 dark:border-brand-900/50 dark:bg-brand-950/20">
+          <div className="mt-3 rounded-xl border border-border-color bg-slate-50/50 p-3 dark:bg-slate-900/40">
             <CommentInput
               incidentId={incidentId}
               parentId={comment.id}
@@ -292,7 +313,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
         {/* Threaded Nested Replies */}
         {isTopLevel && isRepliesExpanded && replyCount > 0 && (
-          <div className="mt-3.5 space-y-2 border-l-2 border-slate-200 dark:border-slate-800 pl-3.5 ml-1">
+          <div className="mt-3.5 space-y-2.5 border-l-2 border-slate-200 dark:border-slate-800 pl-4 ml-3">
             {replies.map((reply) => (
               <CommentItem
                 key={reply.id}

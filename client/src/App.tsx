@@ -6,7 +6,7 @@ import {
   setAccessToken,
   setUserAndOrganization,
   setInitialized,
-  setCredentials,
+  logoutState,
 } from "@/features/auth/authSlice";
 import { useLazyGetMeQuery } from "@/features/auth/authApi";
 import { Spinner } from "@/components/ui/spinner";
@@ -19,8 +19,8 @@ export const App: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(!isInitialized);
 
   useEffect(() => {
-    // If already initialized (e.g. after login/registration), skip session restoration
-    if (isInitialized) {
+    // If we already have a restored access token and initialization from storage, stop loading
+    if (accessToken && isInitialized) {
       setIsRestoring(false);
       return;
     }
@@ -29,65 +29,49 @@ export const App: React.FC = () => {
 
     const restoreSession = async () => {
       try {
-        // Attempt silent session restoration using the HttpOnly signed cookie
+        const savedRefreshToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("resolver_refresh_token")
+            : null;
+
+        // Attempt silent session restoration using the HttpOnly signed cookie or saved token
         const refreshRes = await fetch(
           `${import.meta.env.VITE_API_URL || "/api/v1"}/auth/refresh`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              savedRefreshToken ? { refreshToken: savedRefreshToken } : {}
+            ),
             credentials: "include",
           }
         );
 
-        if (!refreshRes.ok) {
-          // Dev fallback: auto-login with verified admin credentials if unauthenticated
-          try {
-            const devLoginRes = await fetch(
-              `${import.meta.env.VITE_API_URL || "/api/v1"}/auth/login`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  email: "alex.rivera@resolver.internal",
-                  password: "Password123!",
-                }),
-                credentials: "include",
-              }
-            );
-            if (devLoginRes.ok) {
-              const devLoginData = await devLoginRes.json();
-              if (devLoginData?.data && isMounted) {
-                dispatch(setCredentials(devLoginData.data));
-                dispatch(setInitialized(true));
-                setIsRestoring(false);
-                return;
-              }
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          const newAccessToken = refreshData?.data?.accessToken;
+          const newRefreshToken = refreshData?.data?.refreshToken;
+
+          if (newAccessToken && isMounted) {
+            dispatch(setAccessToken(newAccessToken));
+            if (newRefreshToken && typeof window !== "undefined") {
+              localStorage.setItem("resolver_refresh_token", newRefreshToken);
             }
-          } catch {
-            // ignore
+
+            // Fetch current user and organization profile with the verified access token
+            const meResult = await lazyGetMe().unwrap();
+            if (isMounted && meResult.success && meResult.data) {
+              dispatch(setUserAndOrganization(meResult.data));
+            }
           }
-
-          if (isMounted) {
-            dispatch(setInitialized(true));
-            setIsRestoring(false);
-          }
-          return;
-        }
-
-        const refreshData = await refreshRes.json();
-        const newAccessToken = refreshData?.data?.accessToken;
-
-        if (newAccessToken && isMounted) {
-          dispatch(setAccessToken(newAccessToken));
-
-          // Fetch current user and organization profile with the verified access token
-          const meResult = await lazyGetMe().unwrap();
-          if (isMounted && meResult.success && meResult.data) {
-            dispatch(setUserAndOrganization(meResult.data));
+        } else {
+          // If refresh failed and no access token, mark unauthenticated cleanly
+          if (isMounted && !accessToken) {
+            dispatch(logoutState());
           }
         }
       } catch {
-        // Silent failure: user simply remains unauthenticated
+        // Silent failure: keep existing offline state
       } finally {
         if (isMounted) {
           dispatch(setInitialized(true));
@@ -97,36 +81,31 @@ export const App: React.FC = () => {
     };
 
     restoreSession();
+  }, [dispatch, isInitialized, accessToken, lazyGetMe]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch, isInitialized, lazyGetMe]);
-
-  // Apply theme class to <html>
+  // Synchronize root HTML theme class with reactive theme preference
   useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (theme === "light") {
-      document.documentElement.classList.remove("dark");
+    const root = document.documentElement;
+    const isDark =
+      theme === "dark" ||
+      (theme === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    if (isDark) {
+      root.classList.add("dark");
     } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (prefersDark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      root.classList.remove("dark");
     }
   }, [theme]);
 
-  // Show full-page splash loader only during initial cold startup check
-  if (isRestoring && !isInitialized && !accessToken) {
+  // Initial session restoration loading screen
+  if (isRestoring && !accessToken) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-pill">
         <div className="flex flex-col items-center gap-3">
           <Spinner size="lg" />
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-fg">
-            Connecting to Resolver...
+          <p className="text-sm font-medium text-muted-fg">
+            Restoring session...
           </p>
         </div>
       </div>

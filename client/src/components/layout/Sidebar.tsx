@@ -25,28 +25,28 @@ export interface SidebarProps {
 }
 
 /**
- * Signature Notch Tab SVG
- * Exact inverse fillets (20px concave corners) where the tab meets the 72px sidebar,
- * with a 28px rounded pill cap on the left, protruding 16px past the right edge into the page.
+ * Signature Flat Tab SVG
+ * Flat straight top and bottom edges (no upper or lower scoop curves),
+ * with a smooth rounded cap wrapping around the active icon.
  * Uses reactive fill color: #ECECE8 in light theme, #0E0E10 in dark theme.
  */
 const NotchTabSvg: React.FC<{ isDark: boolean }> = ({ isDark }) => (
   <svg
     className="absolute pointer-events-none select-none transition-colors duration-200"
     style={{
-      top: -20,
+      top: 0,
       left: 0,
-      width: 92,
-      height: 96,
+      width: 80,
+      height: 56,
       zIndex: 1,
     }}
-    viewBox="0 0 92 96"
+    viewBox="0 0 80 56"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
   >
     <path
-      d="M 72 0 A 20 20 0 0 0 52 20 L 36 20 A 28 28 0 0 0 36 76 L 52 76 A 20 20 0 0 0 72 96 L 92 96 L 92 0 Z"
+      d="M 80 0 L 36 0 A 28 28 0 0 0 36 56 L 80 56 Z"
       fill={isDark ? "#0E0E10" : "#ECECE8"}
     />
   </svg>

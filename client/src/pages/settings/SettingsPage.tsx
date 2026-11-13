@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "react-router-dom";
 import { useAppSelector } from "@/app/hooks";
 import {
   useGetOrganizationQuery,
@@ -20,18 +21,31 @@ import { ROLES } from "@/types";
 import { parseApiError } from "@/lib/apiErrors";
 import {
   Building,
+  Users,
+  ShieldCheck,
+  Link as LinkIcon,
+  CreditCard,
   Globe,
-  Save,
   Lock,
-  User,
   Sparkles,
   Layers,
   BookOpen,
   Bot,
+  CheckCircle,
+  ExternalLink,
 } from "lucide-react";
+
+type SettingsTab =
+  | "general"
+  | "members"
+  | "security"
+  | "integrations"
+  | "billing"
+  | "ai";
 
 export const SettingsPage: React.FC = () => {
   const { user, organization: authOrg } = useAppSelector((state) => state.auth);
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -54,6 +68,7 @@ export const SettingsPage: React.FC = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<UpdateOrganizationFormValues>({
     resolver: zodResolver(updateOrganizationFormSchema),
@@ -64,11 +79,15 @@ export const SettingsPage: React.FC = () => {
         alertGrouping: organization?.aiSettings?.alertGrouping ?? true,
         runbooks: organization?.aiSettings?.runbooks ?? true,
         assistant: organization?.aiSettings?.assistant ?? true,
-        alertGroupingWindowMinutes: organization?.aiSettings?.alertGroupingWindowMinutes ?? 30,
-        alertGroupingSimilarityThreshold: organization?.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
+        alertGroupingWindowMinutes:
+          organization?.aiSettings?.alertGroupingWindowMinutes ?? 30,
+        alertGroupingSimilarityThreshold:
+          organization?.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
       },
     },
   });
+
+  const statusPageEnabled = watch("statusPageEnabled");
 
   // Keep form in sync when organization query loads
   useEffect(() => {
@@ -80,8 +99,10 @@ export const SettingsPage: React.FC = () => {
           alertGrouping: organization.aiSettings?.alertGrouping ?? true,
           runbooks: organization.aiSettings?.runbooks ?? true,
           assistant: organization.aiSettings?.assistant ?? true,
-          alertGroupingWindowMinutes: organization.aiSettings?.alertGroupingWindowMinutes ?? 30,
-          alertGroupingSimilarityThreshold: organization.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
+          alertGroupingWindowMinutes:
+            organization.aiSettings?.alertGroupingWindowMinutes ?? 30,
+          alertGroupingSimilarityThreshold:
+            organization.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
         },
       });
     }
@@ -106,15 +127,59 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleCancel = () => {
+    if (organization) {
+      reset({
+        name: organization.name,
+        statusPageEnabled: organization.statusPageEnabled ?? false,
+        aiSettings: {
+          alertGrouping: organization.aiSettings?.alertGrouping ?? true,
+          runbooks: organization.aiSettings?.runbooks ?? true,
+          assistant: organization.aiSettings?.assistant ?? true,
+          alertGroupingWindowMinutes:
+            organization.aiSettings?.alertGroupingWindowMinutes ?? 30,
+          alertGroupingSimilarityThreshold:
+            organization.aiSettings?.alertGroupingSimilarityThreshold ?? 0.82,
+        },
+      });
+    }
+  };
+
+  const formatOrgCreatedDate = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const navItems = [
+    { id: "general" as const, label: "General Profile", icon: Building },
+    { id: "members" as const, label: "Members & Teams", icon: Users },
+    { id: "security" as const, label: "Security & SSO", icon: ShieldCheck },
+    { id: "integrations" as const, label: "Integrations", icon: LinkIcon },
+    { id: "billing" as const, label: "Billing & Usage", icon: CreditCard },
+    { id: "ai" as const, label: "AI & Automation", icon: Sparkles },
+  ];
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-main-fg">
           Organization Settings
         </h1>
         <p className="text-xs text-muted-fg mt-1">
-          Manage your organization details, public status page, and security profile
+          Manage your organization details, public status page, and security profile.
         </p>
       </div>
 
@@ -132,318 +197,515 @@ export const SettingsPage: React.FC = () => {
 
       {isLoading ? (
         <div className="space-y-4">
-          <Skeleton className="h-48 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
         </div>
       ) : isError ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-6 text-center text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-6 text-center text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300">
           <p>Failed to load organization settings.</p>
-          <Button variant="ghost" size="sm" onClick={() => refetch()} className="mt-2 text-xs">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refetch()}
+            className="mt-2 text-xs"
+          >
             Retry
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Organization Details Card */}
-          <Card>
-            <CardHeader className="pb-4 border-b border-border-color">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                    <Building className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm font-semibold">General Profile</CardTitle>
-                    <p className="text-[11px] text-slate-500">
-                      Primary organizational identity and slug
-                    </p>
-                  </div>
-                </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            {/* Left Navigation Menu */}
+            <aside className="lg:col-span-1 space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs transition-all text-left ${
+                      isActive
+                        ? "bg-card-bg shadow-xs border border-border-color text-main-fg font-semibold"
+                        : "text-muted-fg hover:text-main-fg hover:bg-pill font-medium border border-transparent"
+                    }`}
+                  >
+                    {isActive ? (
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                    ) : (
+                      <Icon className="h-4 w-4 shrink-0 text-muted-fg" />
+                    )}
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </aside>
 
-                {!isPrivileged && (
-                  <span className="flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-muted-fg">
-                    <Lock className="h-3 w-3" /> Read Only
-                  </span>
-                )}
-              </div>
-            </CardHeader>
+            {/* Right Main Card */}
+            <div className="lg:col-span-3">
+              {/* Tab 1: General Profile (Pixel-matched with Image 1) */}
+              {activeTab === "general" && (
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm overflow-hidden">
+                  {/* Card Header */}
+                  <CardHeader className="p-5 sm:p-6 pb-4 border-b border-border-color">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                          <Building className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base font-bold text-main-fg">
+                            General Profile
+                          </CardTitle>
+                          <p className="text-xs text-muted-fg">
+                            Primary organizational identity and slug
+                          </p>
+                        </div>
+                      </div>
 
-            <CardContent className="p-6 space-y-5">
-              {/* Org Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-main-fg">
-                  Organization Name
-                </label>
-                <Input
-                  {...register("name")}
-                  error={errors.name?.message}
-                  disabled={!isPrivileged || isUpdating}
-                  placeholder="Acme Corporation"
-                />
-                <p className="text-[11px] text-muted-fg">
-                  The display name of your organization visible to team members.
-                </p>
-              </div>
+                      {!isPrivileged && (
+                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-muted-fg">
+                          <Lock className="h-3 w-3" /> Read Only
+                        </span>
+                      )}
+                    </div>
+                  </CardHeader>
 
-              {/* Org Slug (Read-only) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-main-fg">
-                  Organization Slug
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={organization?.slug || ""}
-                    disabled
-                    readOnly
-                    className="bg-slate-50 font-mono text-xs dark:bg-slate-900"
-                  />
-                </div>
-                <p className="text-[11px] text-muted-fg">
-                  Unique immutable URL identifier assigned during organization creation.
-                </p>
-              </div>
-
-              {/* Status Page Feature Toggle */}
-              <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/40">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <Globe className="h-5 w-5 text-brand-600 dark:text-brand-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-main-fg">
-                        Public Status Page
-                      </h4>
-                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
-                        Allow stakeholders to view system incident status and live service health without signing in.
+                  {/* Card Content Form */}
+                  <CardContent className="p-5 sm:p-6 space-y-6">
+                    {/* Organization Name */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-main-fg block">
+                        Organization Name
+                      </label>
+                      <Input
+                        {...register("name")}
+                        error={errors.name?.message}
+                        disabled={!isPrivileged || isUpdating}
+                        placeholder="Acme Corporation"
+                        className="rounded-xl h-10 text-xs"
+                      />
+                      <p className="text-[11px] text-muted-fg">
+                        The display name of your organization visible to team members.
                       </p>
                     </div>
-                  </div>
 
-                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                    <input
-                      type="checkbox"
-                      {...register("statusPageEnabled")}
-                      disabled={!isPrivileged || isUpdating}
-                      className="sr-only peer"
-                    />
-                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Read-Only Org Metadata */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-border-color text-xs">
-                <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-0.5">
-                    Organization ID
-                  </span>
-                  <span className="font-mono text-main-fg select-all">
-                    {organization?.id}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-0.5">
-                    Created At
-                  </span>
-                  <span className="text-main-fg">
-                    {organization?.createdAt
-                      ? new Date(organization.createdAt).toLocaleString()
-                      : "—"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* AI & Automation Settings Card (Phase 3) */}
-          <Card className="border border-violet-500/20 bg-card-bg shadow-sm">
-            <CardHeader className="pb-3 border-b border-border-color">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm font-semibold text-main-fg">AI & Automation</CardTitle>
-                    <p className="text-[11px] text-muted-fg">
-                      Configure Phase 3 alert grouping, runbook suggestions, and Cmd+K assistant
-                    </p>
-                  </div>
-                </div>
-                <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-400 border border-violet-500/20">
-                  AI-generated
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-5">
-              {/* Alert Grouping Toggle (FR-08) */}
-              <div className="rounded-xl border border-border-color bg-pill p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <Layers className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-main-fg">Alert Grouping (FR-08)</h4>
-                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
-                        Group identical or semantically similar incoming alerts into existing open incidents. Exact matches group automatically; ambiguous matches create suggestions for human review.
+                    {/* Organization Slug */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-main-fg">
+                          Organization Slug
+                        </label>
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                          <Lock className="h-2.5 w-2.5" />
+                          Locked
+                        </span>
+                      </div>
+                      <Input
+                        value={organization?.slug || ""}
+                        disabled
+                        readOnly
+                        className="bg-slate-100/70 dark:bg-slate-900/60 font-mono text-xs text-muted-fg rounded-xl h-10 cursor-not-allowed border border-border-color"
+                      />
+                      <p className="text-[11px] text-muted-fg">
+                        Unique immutable URL identifier assigned during organization creation.
                       </p>
                     </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                    <input
-                      type="checkbox"
-                      {...register("aiSettings.alertGrouping")}
-                      disabled={!isPrivileged || isUpdating}
-                      className="sr-only peer"
-                    />
-                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
-                  </label>
-                </div>
 
-                {/* Threshold Configuration */}
-                <div className="mt-4 pt-3 border-t border-border-color grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="block text-[11px] font-medium text-main-fg mb-1">
-                      Grouping Window (minutes)
-                    </label>
-                    <Input
-                      type="number"
-                      {...register("aiSettings.alertGroupingWindowMinutes", { valueAsNumber: true })}
-                      disabled={!isPrivileged || isUpdating}
-                      min={1}
-                      max={1440}
-                      className="h-8 text-xs font-mono"
-                    />
-                    <span className="text-[10px] text-muted-fg mt-0.5 block">
-                      Time window after incident creation to attach matching alerts (default: 30m).
-                    </span>
-                  </div>
+                    {/* Public Status Page Feature Card */}
+                    <div className="rounded-2xl border border-border-color p-4 bg-slate-50/40 dark:bg-slate-900/30">
+                      <div className="flex items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400 shrink-0 mt-0.5 sm:mt-0">
+                            <Globe className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-semibold text-main-fg">
+                              Public Status Page
+                            </h4>
+                            <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                              Allow stakeholders to view system incident status and live service health without signing in.
+                            </p>
+                          </div>
+                        </div>
 
-                  <div>
-                    <label className="block text-[11px] font-medium text-main-fg mb-1">
-                      Similarity Threshold (0.00 – 1.00)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      {...register("aiSettings.alertGroupingSimilarityThreshold", { valueAsNumber: true })}
-                      disabled={!isPrivileged || isUpdating}
-                      min={0}
-                      max={1}
-                      className="h-8 text-xs font-mono"
-                    />
-                    <span className="text-[10px] text-muted-fg mt-0.5 block">
-                      Cosine threshold for AI embedding suggestions (default: 0.82).
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Runbook Suggestions Toggle (FR-11) */}
-              <div className="rounded-xl border border-border-color bg-pill p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <BookOpen className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-main-fg">Runbook Suggestions (FR-11)</h4>
-                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
-                        Suggest relevant operational runbooks on the Incident Detail page using deterministic keyword, service, and semantic embedding matching.
-                      </p>
+                        {/* Toggle with Off/On and Inactive/Active */}
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="text-xs font-semibold text-main-fg">
+                            {statusPageEnabled ? "On" : "Off"}
+                          </span>
+                          <div className="flex flex-col items-center">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                {...register("statusPageEnabled")}
+                                disabled={!isPrivileged || isUpdating}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
+                            </label>
+                            <span className="text-[10px] text-muted-fg mt-0.5">
+                              {statusPageEnabled ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                    <input
-                      type="checkbox"
-                      {...register("aiSettings.runbooks")}
-                      disabled={!isPrivileged || isUpdating}
-                      className="sr-only peer"
-                    />
-                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
-                  </label>
-                </div>
-              </div>
 
-              {/* Assistant Toggle (FR-10) */}
-              <div className="rounded-xl border border-border-color bg-pill p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <Bot className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-main-fg">Command-Palette Assistant (FR-10)</h4>
-                      <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
-                        Enable read-only conversational inquiries inside the Cmd+K command palette with strict allowlist tool calling and caller RBAC enforcement.
-                      </p>
+                    {/* Card Footer */}
+                    <div className="pt-4 border-t border-border-color flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="text-[11px] text-muted-fg space-y-0.5">
+                        <div>
+                          Organization ID:{" "}
+                          <span className="font-mono text-main-fg select-all">
+                            {organization?.id || "—"}
+                          </span>
+                        </div>
+                        <div>
+                          Created: {formatOrgCreatedDate(organization?.createdAt)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCancel}
+                          disabled={!isDirty || isUpdating}
+                          className="rounded-xl text-xs h-9 px-4"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          isLoading={isUpdating}
+                          disabled={!isPrivileged || isUpdating || !isDirty}
+                          className="rounded-xl text-xs h-9 px-4 bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-sm"
+                        >
+                          {isUpdating ? "Saving changes..." : "Save changes"}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                    <input
-                      type="checkbox"
-                      {...register("aiSettings.assistant")}
-                      disabled={!isPrivileged || isUpdating}
-                      className="sr-only peer"
-                    />
-                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
-                  </label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              )}
 
-          {/* Current User Session Profile Card */}
-          <Card>
-            <CardHeader className="pb-3 border-b border-border-color">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  <User className="h-4 w-4" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-semibold">Your Session Profile</CardTitle>
-                  <p className="text-[11px] text-slate-500">
-                    Current user credentials and role privileges
+              {/* Tab 2: Members & Teams */}
+              {activeTab === "members" && (
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base font-bold text-main-fg">
+                          Members & Teams
+                        </CardTitle>
+                        <p className="text-xs text-muted-fg">
+                          Manage user invitations, team roles, and on-call assignments
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      to="/members"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors"
+                    >
+                      Open Members Directory <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                  <p className="text-xs text-muted-fg leading-relaxed">
+                    View active responders, invite engineers, assign roles (Super Admin, Admin, Manager, Developer), and configure team rotations in the Members directory.
                   </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
-                    Name
-                  </span>
-                  <span className="font-semibold text-main-fg">
-                    {user?.name}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
-                    Email
-                  </span>
-                  <span className="text-main-fg">{user?.email}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
-                    Role Privilege
-                  </span>
-                  {user?.role && <RoleBadge role={user.role} size="sm" />}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </Card>
+              )}
 
-          {/* Save Button for Privileged Users */}
-          {isPrivileged && (
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                isLoading={isUpdating}
-                disabled={isUpdating || !isDirty}
-                leftIcon={<Save className="h-4 w-4" />}
-                className="text-xs"
-              >
-                {isUpdating ? "Saving Changes..." : "Save Settings"}
-              </Button>
+              {/* Tab 3: Security & SSO */}
+              {activeTab === "security" && (
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-bold text-main-fg">
+                        Security & SSO
+                      </CardTitle>
+                      <p className="text-xs text-muted-fg">
+                        Session authentication, role credentials, and access control
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-border-color text-xs">
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                        Active User
+                      </span>
+                      <span className="font-semibold text-main-fg">{user?.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                        Email Address
+                      </span>
+                      <span className="text-main-fg">{user?.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                        Role Privilege
+                      </span>
+                      {user?.role && <RoleBadge role={user.role} size="sm" />}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border-color bg-slate-50/50 dark:bg-slate-900/30 p-4 text-xs space-y-2">
+                    <div className="flex items-center gap-2 font-semibold text-main-fg">
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      Session Policy Active
+                    </div>
+                    <p className="text-[11px] text-muted-fg leading-relaxed">
+                      HttpOnly refresh token rotation enabled with SameSite=Lax security, automatic 7-day token expiry, and strict organization tenant boundary isolation.
+                    </p>
+                  </div>
+                </Card>
+              )}
+
+              {/* Tab 4: Integrations */}
+              {activeTab === "integrations" && (
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                      <LinkIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-bold text-main-fg">
+                        Integrations
+                      </CardTitle>
+                      <p className="text-xs text-muted-fg">
+                        Connected operational channels and alerting webhooks
+                      </p>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-border-color text-xs">
+                    <div className="py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-main-fg">Brevo SMTP Pager</div>
+                        <div className="text-[11px] text-muted-fg">Email incident alerting and responder escalation notifications</div>
+                      </div>
+                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                        Connected
+                      </span>
+                    </div>
+                    <div className="py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-main-fg">Slack Incident Bot</div>
+                        <div className="text-[11px] text-muted-fg">Dedicated #incident channel creation and responder paging</div>
+                      </div>
+                      <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                        Configured
+                      </span>
+                    </div>
+                    <div className="py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-main-fg">AI Models (Gemini & Groq)</div>
+                        <div className="text-[11px] text-muted-fg">Triage recommendations, status drafts, and postmortem generation</div>
+                      </div>
+                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                        Active
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Tab 5: Billing & Usage */}
+              {activeTab === "billing" && (
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-bold text-main-fg">
+                        Billing & Usage
+                      </CardTitle>
+                      <p className="text-xs text-muted-fg">
+                        Subscription tier, incident volume, and API quotas
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-border-color">
+                      <span className="text-[11px] text-muted-fg block">Current Plan</span>
+                      <span className="text-base font-bold text-main-fg">Enterprise</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-border-color">
+                      <span className="text-[11px] text-muted-fg block">Active Incidents Quota</span>
+                      <span className="text-base font-bold text-main-fg">Unlimited</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-border-color">
+                      <span className="text-[11px] text-muted-fg block">AI Evaluations</span>
+                      <span className="text-base font-bold text-main-fg">Included</span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Tab 6: AI & Automation (Preserves Phase 3 settings and submission) */}
+              {activeTab === "ai" && (
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm">
+                  <CardHeader className="p-5 sm:p-6 pb-4 border-b border-border-color">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base font-bold text-main-fg">
+                            AI & Automation
+                          </CardTitle>
+                          <p className="text-xs text-muted-fg">
+                            Configure Phase 3 alert grouping, runbook suggestions, and Cmd+K assistant
+                          </p>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                        AI-generated
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-5 sm:p-6 space-y-5">
+                    {/* Alert Grouping Toggle (FR-08) */}
+                    <div className="rounded-xl border border-border-color bg-slate-50/40 dark:bg-slate-900/30 p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                          <Layers className="h-5 w-5 text-brand-600 dark:text-brand-400 mt-0.5 shrink-0" />
+                          <div>
+                            <h4 className="text-xs font-semibold text-main-fg">Alert Grouping (FR-08)</h4>
+                            <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                              Group identical or semantically similar incoming alerts into existing open incidents. Exact matches group automatically; ambiguous matches create suggestions for human review.
+                            </p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                          <input
+                            type="checkbox"
+                            {...register("aiSettings.alertGrouping")}
+                            disabled={!isPrivileged || isUpdating}
+                            className="sr-only peer"
+                          />
+                          <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
+                        </label>
+                      </div>
+
+                      {/* Threshold Configuration */}
+                      <div className="mt-4 pt-3 border-t border-border-color grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-[11px] font-medium text-main-fg mb-1">
+                            Grouping Window (minutes)
+                          </label>
+                          <Input
+                            type="number"
+                            {...register("aiSettings.alertGroupingWindowMinutes", { valueAsNumber: true })}
+                            disabled={!isPrivileged || isUpdating}
+                            min={1}
+                            max={1440}
+                            className="h-8 text-xs font-mono rounded-lg"
+                          />
+                          <span className="text-[10px] text-muted-fg mt-0.5 block">
+                            Time window after incident creation to attach matching alerts (default: 30m).
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-medium text-main-fg mb-1">
+                            Similarity Threshold (0.00 – 1.00)
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            {...register("aiSettings.alertGroupingSimilarityThreshold", { valueAsNumber: true })}
+                            disabled={!isPrivileged || isUpdating}
+                            min={0}
+                            max={1}
+                            className="h-8 text-xs font-mono rounded-lg"
+                          />
+                          <span className="text-[10px] text-muted-fg mt-0.5 block">
+                            Cosine threshold for AI embedding suggestions (default: 0.82).
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Runbook Suggestions Toggle (FR-11) */}
+                    <div className="rounded-xl border border-border-color bg-slate-50/40 dark:bg-slate-900/30 p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                          <BookOpen className="h-5 w-5 text-brand-600 dark:text-brand-400 mt-0.5 shrink-0" />
+                          <div>
+                            <h4 className="text-xs font-semibold text-main-fg">Runbook Suggestions (FR-11)</h4>
+                            <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                              Suggest relevant operational runbooks on the Incident Detail page using deterministic keyword, service, and semantic embedding matching.
+                            </p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                          <input
+                            type="checkbox"
+                            {...register("aiSettings.runbooks")}
+                            disabled={!isPrivileged || isUpdating}
+                            className="sr-only peer"
+                          />
+                          <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Assistant Toggle (FR-10) */}
+                    <div className="rounded-xl border border-border-color bg-slate-50/40 dark:bg-slate-900/30 p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                          <Bot className="h-5 w-5 text-brand-600 dark:text-brand-400 mt-0.5 shrink-0" />
+                          <div>
+                            <h4 className="text-xs font-semibold text-main-fg">Command-Palette Assistant (FR-10)</h4>
+                            <p className="text-[11px] text-muted-fg mt-0.5 leading-relaxed">
+                              Enable read-only conversational inquiries inside the Cmd+K command palette with strict allowlist tool calling and caller RBAC enforcement.
+                            </p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                          <input
+                            type="checkbox"
+                            {...register("aiSettings.assistant")}
+                            disabled={!isPrivileged || isUpdating}
+                            className="sr-only peer"
+                          />
+                          <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* AI Tab Save Button */}
+                    <div className="pt-4 border-t border-border-color flex justify-end">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        isLoading={isUpdating}
+                        disabled={!isPrivileged || isUpdating || !isDirty}
+                        className="rounded-xl text-xs h-9 px-4 bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-sm"
+                      >
+                        {isUpdating ? "Saving changes..." : "Save changes"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-          )}
+          </div>
         </form>
       )}
     </div>

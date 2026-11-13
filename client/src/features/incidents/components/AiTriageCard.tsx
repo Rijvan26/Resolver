@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Layers,
   Info,
+  ArrowRight,
 } from "lucide-react";
 
 interface AiTriageCardProps {
@@ -116,7 +117,7 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
       <Card className="border-dashed border-slate-200 dark:border-slate-800 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
@@ -158,17 +159,22 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
       {/* Header with Badges */}
       <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3 px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {isRuleBased ? (
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
                 <ShieldAlert className="h-3 w-3" />
                 Deterministic Rule Match
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300">
-                <Sparkles className="h-3 w-3" />
-                AI Triage Recommendation
-              </span>
+              <>
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-brand-100 text-brand-800 dark:bg-brand-950/80 dark:text-brand-300">
+                  <Sparkles className="h-3 w-3" />
+                  AI Triage Recommendation
+                </span>
+                <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800">
+                  AI-generated
+                </span>
+              </>
             )}
             <span className="text-[11px] text-muted-fg font-medium">
               Human-in-the-Loop
@@ -396,6 +402,99 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
         )}
 
         {actionError && <p className="text-xs text-rose-500">{actionError}</p>}
+      </CardContent>
+    </Card>
+  );
+};
+
+export interface AiTriageSummaryMiniCardProps {
+  aiStatus?: IncidentAiStatus | null;
+  onViewAllAi: () => void;
+}
+
+export const AiTriageSummaryMiniCard: React.FC<AiTriageSummaryMiniCardProps> = ({
+  aiStatus,
+  onViewAllAi,
+}) => {
+  const triageSuggestion = aiStatus?.suggestions?.triage as AiSuggestion<AiTriageOutput> | undefined;
+  const aiSubdoc = aiStatus?.ai;
+  const output = triageSuggestion?.output;
+  const isRuleBased =
+    triageSuggestion?.model === "rules-engine" || triageSuggestion?.provider === "rules";
+  const hasTriage = Boolean(triageSuggestion || (aiSubdoc && aiSubdoc.status !== "none"));
+  const suggestedSeverity = (output?.suggestedSeverity || aiSubdoc?.severity) as
+    | IncidentPriority
+    | undefined;
+  const rawConfidence = output?.confidence ?? aiSubdoc?.confidence;
+  const confidencePercent =
+    typeof rawConfidence === "number" ? Math.round(rawConfidence * 100) : null;
+  const rationale = output?.reason || aiSubdoc?.reason;
+
+  return (
+    <Card className="border-border-color shadow-sm">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+            <h3 className="text-sm font-semibold text-main-fg">AI Triage</h3>
+            {hasTriage && (
+              <span
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                  isRuleBased
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"
+                    : "bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800"
+                }`}
+              >
+                {isRuleBased ? "Rule Match" : "AI-generated"}
+              </span>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onViewAllAi}
+            rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+            className="text-xs h-7 px-2.5 border-brand-200 text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-300 dark:hover:bg-brand-950/50"
+          >
+            View all AI
+          </Button>
+        </div>
+
+        {!hasTriage ? (
+          <p className="text-xs text-muted-fg">
+            No triage suggestion yet. Open the AI tab to run triage, inspect similar incidents, or view status drafts.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              {suggestedSeverity && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-muted-fg">Suggested:</span>
+                  <PriorityBadge priority={suggestedSeverity} size="sm" />
+                </div>
+              )}
+              {confidencePercent !== null && (
+                <span className="text-[11px] font-medium text-muted-fg tabular-nums">
+                  Confidence: <strong className="text-main-fg">{confidencePercent}%</strong>
+                </span>
+              )}
+              {triageSuggestion?.userDecision &&
+                triageSuggestion.userDecision !== AI_USER_DECISION.PENDING && (
+                  <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-pill text-muted-fg">
+                    {triageSuggestion.userDecision}
+                  </span>
+                )}
+            </div>
+            {rationale && (
+              <p className="text-xs text-muted-fg line-clamp-2 leading-relaxed">
+                {rationale}
+              </p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

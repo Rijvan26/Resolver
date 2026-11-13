@@ -70,7 +70,7 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
     } catch (err: unknown) {
       setActionError(
         (err as { data?: { message?: string } })?.data?.message ||
-          "Failed to generate status draft"
+        "Failed to generate status draft"
       );
     }
   };
@@ -98,7 +98,7 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
     } catch (err: unknown) {
       setActionError(
         (err as { data?: { message?: string } })?.data?.message ||
-          "Failed to record decision"
+        "Failed to record decision"
       );
     }
   };
@@ -115,13 +115,13 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
     } catch (err: unknown) {
       setActionError(
         (err as { data?: { message?: string } })?.data?.message ||
-          "Failed to dismiss draft"
+        "Failed to dismiss draft"
       );
     }
   };
 
   return (
-    <Card className="border border-slate-200/90 shadow-sm dark:border-slate-800">
+    <Card className="border border-border-color bg-card-bg shadow-sm rounded-2xl">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -149,11 +149,10 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
                   handleGenerate("internal");
                 }
               }}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                audience === "internal"
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${audience === "internal"
                   ? "bg-white text-main-fg shadow-sm dark:bg-slate-700"
                   : "text-muted-fg hover:text-main-fg"
-              }`}
+                }`}
             >
               <Lock className="h-3 w-3" />
               Internal
@@ -166,11 +165,10 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
                   handleGenerate("customer");
                 }
               }}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                audience === "customer"
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${audience === "customer"
                   ? "bg-white text-main-fg shadow-sm dark:bg-slate-700"
                   : "text-muted-fg hover:text-main-fg"
-              }`}
+                }`}
             >
               <Globe className="h-3 w-3" />
               Public Status
@@ -209,19 +207,16 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleCopy}
-                  className="h-7 px-2.5 text-xs"
+                  leftIcon={
+                    copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )
+                  }
+                  className="h-8 px-3 text-xs rounded-xl border-border-color bg-card-bg shadow-2xs"
                 >
-                  {copied ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5 mr-1" />
-                      Copy Draft
-                    </>
-                  )}
+                  {copied ? "Copied" : "Copy Draft"}
                 </Button>
 
                 {isPending && (
@@ -231,9 +226,9 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
                       size="sm"
                       onClick={handleAccept}
                       disabled={isDeciding}
-                      className="h-7 px-2.5 text-xs"
+                      leftIcon={<Check className="h-3.5 w-3.5" />}
+                      className="h-8 px-3.5 text-xs rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-xs"
                     >
-                      <Check className="h-3.5 w-3.5 mr-1" />
                       Accept Draft
                     </Button>
                     <Button
@@ -241,10 +236,10 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
                       size="sm"
                       onClick={handleDismiss}
                       disabled={isDeciding}
-                      className="h-7 px-2 text-xs text-muted-fg hover:text-main-fg"
+                      leftIcon={<X className="h-3.5 w-3.5" />}
+                      className="h-8 px-3 text-xs rounded-xl text-muted-fg hover:text-main-fg"
                       title="Dismiss status draft"
                     >
-                      <X className="h-3.5 w-3.5 mr-1" />
                       Dismiss
                     </Button>
                   </>
@@ -255,7 +250,7 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
                   size="sm"
                   onClick={() => handleGenerate(audience)}
                   disabled={isGenerating}
-                  className="h-7 px-2 text-xs text-muted-fg hover:text-main-fg"
+                  className="h-8 w-8 p-0 text-xs text-muted-fg hover:text-main-fg rounded-xl"
                   title="Regenerate draft"
                 >
                   <RefreshCw
@@ -266,12 +261,12 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-4 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-border-color p-4 bg-slate-50/50 dark:bg-slate-900/30">
             <div>
-              <p className="font-medium text-main-fg">
+              <p className="font-semibold text-main-fg text-xs sm:text-sm">
                 No active status draft for this incident
               </p>
-              <p className="mt-0.5 text-[11px] text-muted-fg">
+              <p className="mt-0.5 text-xs text-muted-fg">
                 Generate an AI-drafted update for {audience === "customer" ? "external users" : "internal responders"}.
               </p>
             </div>
@@ -280,19 +275,16 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
               size="sm"
               onClick={() => handleGenerate(audience)}
               disabled={isGenerating}
-              className="h-8 px-3 text-xs"
+              leftIcon={
+                isGenerating ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin text-brand-600" />
+                ) : (
+                  <Send className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
+                )
+              }
+              className="h-9 px-4 text-xs font-semibold rounded-xl shrink-0 border-border-color bg-card-bg hover:border-brand-500 hover:text-brand-600 transition-colors shadow-2xs"
             >
-              {isGenerating ? (
-                <>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Send className="h-3.5 w-3.5 mr-1.5" />
-                  Generate Draft
-                </>
-              )}
+              {isGenerating ? "Generating..." : "Generate Draft"}
             </Button>
           </div>
         )}

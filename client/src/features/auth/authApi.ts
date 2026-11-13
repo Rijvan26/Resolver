@@ -53,6 +53,7 @@ export const authApi = api.injectEndpoints({
             dispatch(
               setCredentials({
                 accessToken: data.data.accessToken,
+                refreshToken: data.data.refreshToken,
                 user: data.data.user,
                 organization: data.data.organization,
               })
