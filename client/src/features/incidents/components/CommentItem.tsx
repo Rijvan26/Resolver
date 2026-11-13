@@ -132,7 +132,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   return (
     <>
       <div
-        className={`group rounded-2xl border border-border-color bg-card-bg p-4 shadow-xs transition-all ${
+        className={`group rounded-2xl border border-border-color bg-card-bg p-4 shadow-xs transition-all max-w-full overflow-hidden [overflow-wrap:anywhere] ${
           comment.parentId ? "bg-slate-50/40 dark:bg-slate-900/40" : ""
         }`}
       >
@@ -185,7 +185,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <button
                   type="button"
                   onClick={handleStartEdit}
-                  className="rounded p-1 text-muted-fg hover:bg-pill hover:text-main-fg transition-colors"
+                  className="rounded p-1.5 text-muted-fg hover:bg-pill hover:text-main-fg transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                   title="Edit comment"
                   aria-label="Edit comment"
                 >
@@ -196,7 +196,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDeleteOpen(true)}
-                  className="rounded p-1 text-muted-fg hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors"
+                  className="rounded p-1.5 text-muted-fg hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                   title="Delete comment"
                   aria-label="Delete comment"
                 >
@@ -267,7 +267,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             <button
               type="button"
               onClick={() => setIsReplying((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-brand-600 dark:hover:text-brand-400 transition-colors min-h-[36px] py-1 px-2 -ml-2"
             >
               <Reply className="h-3.5 w-3.5" />
               <span>{isReplying ? "Cancel" : "Reply"}</span>
@@ -277,7 +277,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               <button
                 type="button"
                 onClick={() => setIsRepliesExpanded((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-main-fg transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-main-fg transition-colors min-h-[36px] py-1 px-2 -mr-2"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
                 <span>

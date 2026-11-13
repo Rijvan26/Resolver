@@ -78,17 +78,17 @@ export const TeamWorkloadWidget: React.FC<TeamWorkloadWidgetProps> = ({
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-              <CardTitle>Team Workload</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Users className="h-4 w-4 text-brand-600 dark:text-brand-400 shrink-0" />
+              <CardTitle className="truncate">Team Workload</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="truncate">
               Active unresolved incidents per eligible team member
             </CardDescription>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-main-fg tabular-nums">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-main-fg tabular-nums shrink-0">
             {team.length} Members
           </span>
         </div>

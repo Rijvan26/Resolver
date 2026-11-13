@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAppSelector } from "@/app/hooks";
+import { cn } from "@/lib/utils";
 import {
   useGetIncidentQuery,
   useUpdateIncidentMutation,
@@ -104,6 +105,20 @@ export const IncidentDetailsPage: React.FC = () => {
     }
     setSearchParams(next);
   };
+
+  const tabRefs = useRef<Record<DetailTab, HTMLButtonElement | null>>({
+    overview: null,
+    ai: null,
+    messages: null,
+    timeline: null,
+  });
+
+  useEffect(() => {
+    const el = tabRefs.current[activeTab];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [activeTab]);
 
   const { data, isLoading, isError } = useGetIncidentQuery(incidentId || "", {
     skip: !incidentId,
@@ -316,44 +331,57 @@ export const IncidentDetailsPage: React.FC = () => {
   const slaStatus = calculateSlaStatus(incident.createdAt, incident.priority, incident.status);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-16">
+    <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto pb-16 px-2.5 sm:px-0">
       {/* Top Tab Bar & Action Toolbar (Pixel-matched with Image 4) */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border-color">
+      <div className="flex items-center justify-between gap-2 sm:gap-4 border-b border-border-color pb-0 max-w-full">
         {/* The 4 Tab Options: Overview, AI, Messages, Timeline */}
-        <div className="flex items-center gap-6 overflow-x-auto">
-          {DETAIL_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center gap-2 pb-3 px-1 text-sm transition-colors border-b-2 -mb-px whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400 font-semibold"
-                    : "border-transparent text-muted-fg hover:text-main-fg hover:border-slate-300 dark:hover:border-slate-700 font-medium"
-                }`}
-              >
-                <Icon
-                  className={`h-4 w-4 ${
-                    isActive ? "text-brand-600 dark:text-brand-400" : "text-muted-fg"
+        <div className="relative flex-1 min-w-0 max-w-full overflow-hidden">
+          <div
+            role="tablist"
+            aria-label="Incident detail views"
+            className="flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-6 sm:pr-0"
+          >
+            {DETAIL_TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  ref={(el) => {
+                    tabRefs.current[tab.id] = el;
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center gap-2 pb-3 px-1 text-xs sm:text-sm transition-colors border-b-2 -mb-px whitespace-nowrap cursor-pointer snap-start min-h-[44px] sm:min-h-0 ${
+                    isActive
+                      ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400 font-semibold"
+                      : "border-transparent text-muted-fg hover:text-main-fg hover:border-slate-300 dark:hover:border-slate-700 font-medium"
                   }`}
-                />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+                >
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${
+                      isActive ? "text-brand-600 dark:text-brand-400" : "text-muted-fg"
+                    }`}
+                  />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Subtle fade on right edge on mobile */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-page to-transparent sm:hidden" />
         </div>
 
-        {/* Action Buttons: Edit, Assign, + Declare Incident, ... */}
-        <div className="flex items-center gap-2 flex-wrap pb-2.5">
+        {/* Action Buttons: on mobile Edit/Assign are inside '...' menu, no 2-row wrapping */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pb-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsEditOpen(true)}
             disabled={!canEditIncident}
-            className="rounded-xl text-xs h-9 px-3.5 bg-card-bg shadow-xs border-border-color"
+            className="hidden sm:inline-flex rounded-xl text-xs h-9 px-3.5 bg-card-bg shadow-xs border-border-color"
             leftIcon={<Edit className="h-3.5 w-3.5" />}
           >
             Edit
@@ -364,7 +392,7 @@ export const IncidentDetailsPage: React.FC = () => {
             size="sm"
             onClick={() => setIsAssignOpen(true)}
             disabled={!canReassign}
-            className="rounded-xl text-xs h-9 px-3.5 bg-card-bg shadow-xs border-border-color"
+            className="hidden sm:inline-flex rounded-xl text-xs h-9 px-3.5 bg-card-bg shadow-xs border-border-color"
             leftIcon={<UserPlus className="h-3.5 w-3.5" />}
           >
             Assign
@@ -374,9 +402,10 @@ export const IncidentDetailsPage: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={() => navigate("/incidents/new")}
-            className="rounded-xl text-xs h-9 px-4 bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-sm"
+            className="rounded-xl text-xs min-h-[40px] sm:min-h-0 h-10 sm:h-9 px-3 sm:px-4 bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-sm shrink-0 whitespace-nowrap"
           >
-            + Declare Incident
+            <span className="hidden sm:inline">+ Declare Incident</span>
+            <span className="sm:hidden">+ Declare</span>
           </Button>
 
           {/* ... More actions dropdown */}
@@ -388,26 +417,56 @@ export const IncidentDetailsPage: React.FC = () => {
                 setStatusMenuOpen(false);
                 setPriorityMenuOpen(false);
               }}
-              className="h-9 w-9 flex items-center justify-center rounded-xl border border-border-color bg-card-bg hover:bg-pill text-muted-fg transition-colors"
+              className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border-color bg-card-bg hover:bg-pill text-muted-fg transition-colors shrink-0 min-h-[40px] sm:min-h-0"
               aria-label="More actions"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 mt-1.5 z-30 min-w-[150px] rounded-xl border border-border-color bg-card-bg p-1.5 shadow-xl space-y-0.5">
-                {user?.role && (user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN) && (
+              <div className="absolute right-0 mt-1.5 z-30 min-w-[170px] rounded-xl border border-border-color bg-card-bg p-1.5 shadow-xl space-y-0.5">
+                {/* On mobile: Edit and Assign actions are here */}
+                {canEditIncident && (
                   <button
                     type="button"
                     onClick={() => {
-                      setIsDeleteOpen(true);
+                      setIsEditOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg text-left"
+                    className="sm:hidden flex items-center gap-2 w-full px-3 py-2.5 text-xs font-medium text-main-fg hover:bg-pill rounded-lg text-left min-h-[40px]"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete Incident
+                    <Edit className="h-3.5 w-3.5 text-muted-fg" />
+                    Edit Incident
                   </button>
+                )}
+                {canReassign && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAssignOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="sm:hidden flex items-center gap-2 w-full px-3 py-2.5 text-xs font-medium text-main-fg hover:bg-pill rounded-lg text-left min-h-[40px]"
+                  >
+                    <UserPlus className="h-3.5 w-3.5 text-muted-fg" />
+                    Assign Incident
+                  </button>
+                )}
+
+                {user?.role && (user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN) && (
+                  <div className="pt-1 mt-1 border-t border-border-color">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDeleteOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg text-left min-h-[40px]"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete Incident
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -423,7 +482,12 @@ export const IncidentDetailsPage: React.FC = () => {
 
       {/* When on AI, Messages, or Timeline tabs: show clean back-to-overview top bar (Matching Image 3) */}
       {activeTab !== "overview" && (
-        <div className="flex items-center justify-between gap-3">
+        <div
+          className={cn(
+            "items-center justify-between gap-3",
+            activeTab === "ai" ? "hidden sm:flex" : "flex"
+          )}
+        >
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/90 bg-brand-50/80 px-3.5 py-1.5 text-xs font-semibold text-brand-700 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-300">
             <span className="h-2 w-2 rounded-full bg-brand-600" />
             <span>
@@ -438,7 +502,7 @@ export const IncidentDetailsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange("overview")}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border-color bg-card-bg px-3.5 py-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 hover:bg-pill transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border-color bg-card-bg px-3.5 py-2 text-xs font-semibold text-brand-600 hover:text-brand-700 hover:bg-pill transition-colors shadow-2xs min-h-[40px] sm:min-h-0"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Overview
           </button>
@@ -447,12 +511,12 @@ export const IncidentDetailsPage: React.FC = () => {
 
       {/* Main Overview Tab (Image 2 exact 2-column layout) */}
       {activeTab === "overview" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3 items-start">
             {/* Left Column (2 cols) */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Card 1: Incident Header Card */}
-              <Card className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm">
+              <Card className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6 shadow-sm">
                 <div className="space-y-3">
                   {/* Top Badges Row: #id, Status Dropdown Pill, Priority Dropdown Pill */}
                   <div className="flex items-center gap-2.5 flex-wrap">
@@ -556,15 +620,15 @@ export const IncidentDetailsPage: React.FC = () => {
                   </div>
 
                   {/* Incident Title */}
-                  <h1 className="text-2xl font-bold tracking-tight text-main-fg pt-1">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-main-fg pt-1 [overflow-wrap:anywhere]">
                     {incident.title}
                   </h1>
 
                   {/* Subtitle: Reported by X • Created Ym ago • Active investigation */}
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-fg">
-                    <div className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-muted-fg" />
-                      <span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <User className="h-3.5 w-3.5 text-muted-fg shrink-0" />
+                      <span className="truncate">
                         Reported by{" "}
                         <strong className="text-main-fg font-medium">
                           {creator?.name || "System"}
@@ -588,22 +652,22 @@ export const IncidentDetailsPage: React.FC = () => {
               </Card>
 
               {/* Card 2: Description & Impact Card (With AI Triage strip matching Image 2) */}
-              <Card className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm space-y-4">
-                <h2 className="text-base font-bold text-main-fg">
+              <Card className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6 shadow-sm space-y-4 max-w-full overflow-hidden">
+                <h2 className="text-[15px] sm:text-base font-bold text-main-fg">
                   Description & Impact
                 </h2>
 
-                <div className="text-sm leading-relaxed text-main-fg whitespace-pre-wrap">
+                <div className="text-sm leading-relaxed text-main-fg whitespace-pre-wrap [overflow-wrap:anywhere]">
                   {incident.description}
                 </div>
 
                 {/* AI Triage Strip (Pixel-matched with Image 2) */}
-                <div className="rounded-xl border border-border-color bg-slate-50/50 dark:bg-slate-900/30 p-4 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="rounded-xl border border-border-color bg-slate-50/50 dark:bg-slate-900/30 p-3.5 sm:p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                      <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400 shrink-0" />
                       <span className="font-semibold text-xs text-main-fg">AI Triage</span>
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 whitespace-nowrap">
                         {aiStatus?.ai?.status === "pending"
                           ? "Generating"
                           : isRuleBased
@@ -614,13 +678,13 @@ export const IncidentDetailsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleTabChange("ai")}
-                      className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline"
+                      className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline min-h-[36px] sm:min-h-0 inline-flex items-center"
                     >
                       View AI Insights
                     </button>
                   </div>
 
-                  <p className="text-xs text-main-fg font-medium">
+                  <p className="text-xs text-main-fg font-medium [overflow-wrap:anywhere]">
                     Suggested Action:{" "}
                     <span className="text-muted-fg font-normal">
                       {triageSuggestion?.output?.reason ||
@@ -636,18 +700,18 @@ export const IncidentDetailsPage: React.FC = () => {
               </Card>
 
               {/* Card 3: Active Timeline Card (Pixel-matched with Image 2) */}
-              <Card className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between gap-2 border-b border-border-color pb-3">
-                  <h2 className="text-base font-bold text-main-fg">
+              <Card className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6 shadow-sm space-y-4 max-w-full overflow-hidden">
+                <div className="flex items-center justify-between gap-2 border-b border-border-color pb-3 flex-wrap">
+                  <h2 className="text-[15px] sm:text-base font-bold text-main-fg">
                     Active Timeline
                   </h2>
-                  <div className="flex items-center gap-2 text-xs font-semibold">
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold">
                     <button
                       type="button"
                       onClick={() => setActiveTimelineTab("timeline")}
-                      className={`px-2.5 py-1 rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 min-h-[36px] sm:min-h-0 rounded-lg transition-colors ${
                         activeTimelineTab === "timeline"
-                          ? "bg-pill text-main-fg shadow-2xs"
+                          ? "bg-pill text-main-fg shadow-2xs font-semibold"
                           : "text-muted-fg hover:text-main-fg"
                       }`}
                     >
@@ -656,9 +720,9 @@ export const IncidentDetailsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveTimelineTab("comments")}
-                      className={`px-2.5 py-1 rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 min-h-[36px] sm:min-h-0 rounded-lg transition-colors ${
                         activeTimelineTab === "comments"
-                          ? "bg-pill text-main-fg shadow-2xs"
+                          ? "bg-pill text-main-fg shadow-2xs font-semibold"
                           : "text-muted-fg hover:text-main-fg"
                       }`}
                     >
@@ -676,8 +740,8 @@ export const IncidentDetailsPage: React.FC = () => {
             </div>
 
             {/* Right Column: Incident Metadata Card (Pixel-matched with Image 2) */}
-            <div className="space-y-6">
-              <Card className="rounded-2xl border border-border-color bg-card-bg p-6 shadow-sm space-y-6 text-xs">
+            <div className="space-y-4 sm:space-y-6">
+              <Card className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6 shadow-sm space-y-5 sm:space-y-6 text-xs max-w-full overflow-hidden">
                 <h2 className="text-base font-bold text-main-fg">
                   Incident Metadata
                 </h2>

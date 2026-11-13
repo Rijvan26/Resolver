@@ -102,6 +102,15 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* Hide scrollbar while preserving scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 /* Tabular figures for counters and timestamps */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
@@ -137,3 +146,310 @@
 .row-highlight {
   animation: highlight-fade 2s ease-out forwards;
 }
+
+/* ==========================================================================
+   AUTH SHOWCASE ARCHITECTURAL CURTAIN & PYRAMID ANIMATIONS
+   10-second unified loop with Red (P1) -> Amber (Investigating) -> Green (Resolved)
+   ========================================================================== */
+
+/* Fluted curtain column base style with 3D cylindrical specular highlights */
+.pillar-bar {
+  position: relative;
+  flex: 1;
+  border-radius: 9999px 9999px 0 0;
+  transform-origin: bottom center;
+  will-change: transform, opacity, filter, box-shadow;
+  transition: height 0.3s ease;
+}
+
+.pillar-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg, 
+    rgba(255,255,255,0.3) 0%, 
+    rgba(255,255,255,0.65) 30%, 
+    rgba(255,255,255,0.1) 60%, 
+    rgba(0,0,0,0.35) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Left segment - Red bias transitioning smoothly */
+@keyframes barPyramidRed {
+  0%, 100% {
+    background: linear-gradient(to top, rgba(217,45,58,0.2) 0%, #D92D3A 55%, #FF6B7A 88%, #FFE4E6 100%);
+    box-shadow: 0 -4px 18px rgba(217, 45, 58, 0.75), inset 0 2px 4px rgba(255,255,255,0.85);
+    opacity: 0.95;
+    transform: scaleY(0.92);
+  }
+  18% {
+    background: linear-gradient(to top, rgba(217,45,58,0.4) 0%, #E11D48 55%, #FF4554 85%, #FFE4E6 100%);
+    box-shadow: 0 -8px 24px rgba(225, 29, 72, 0.9), inset 0 2px 6px rgba(255,255,255,1);
+    opacity: 1;
+    transform: scaleY(1.06);
+  }
+  38% {
+    background: linear-gradient(to top, rgba(245,158,11,0.25) 0%, #C98A00 50%, #FBBF24 85%, #FEF3C7 100%);
+    box-shadow: 0 -4px 14px rgba(201, 138, 0, 0.5), inset 0 2px 4px rgba(255,255,255,0.8);
+    opacity: 0.85;
+    transform: scaleY(0.96);
+  }
+  68%, 82% {
+    background: linear-gradient(to top, rgba(31,157,107,0.25) 0%, #1F9D6B 50%, #34D399 85%, #D1FAE5 100%);
+    box-shadow: 0 -4px 18px rgba(31, 157, 107, 0.75), inset 0 2px 4px rgba(255,255,255,0.85);
+    opacity: 0.95;
+    transform: scaleY(1.0);
+  }
+  92% {
+    background: linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 70%, rgba(0,0,0,0.28) 100%);
+    box-shadow: 0 0 0 transparent;
+    opacity: 0.35;
+    transform: scaleY(0.72);
+  }
+}
+
+/* Center crest / transitional segment - Amber bias & tri-color gradient blend */
+@keyframes barPyramidAmber {
+  0%, 100% {
+    background: linear-gradient(to top, rgba(217,45,58,0.2) 0%, #C98A00 55%, #FBBF24 88%, #FFFBEB 100%);
+    box-shadow: 0 -4px 16px rgba(201, 138, 0, 0.6), inset 0 2px 4px rgba(255,255,255,0.8);
+    opacity: 0.88;
+    transform: scaleY(0.94);
+  }
+  22% {
+    background: linear-gradient(to top, rgba(217,45,58,0.3) 0%, #D92D3A 45%, #C98A00 80%, #FEF3C7 100%);
+    box-shadow: 0 -5px 18px rgba(217, 45, 58, 0.7), inset 0 2px 5px rgba(255,255,255,0.9);
+    opacity: 0.95;
+    transform: scaleY(1.02);
+  }
+  45% {
+    background: linear-gradient(to top, rgba(201,138,0,0.35) 0%, #C98A00 50%, #FBBF24 85%, #FEF3C7 100%);
+    box-shadow: 0 -8px 24px rgba(201, 138, 0, 0.9), inset 0 2px 6px rgba(255,255,255,1);
+    opacity: 1;
+    transform: scaleY(1.08);
+  }
+  72%, 84% {
+    background: linear-gradient(to top, rgba(31,157,107,0.25) 0%, #1F9D6B 50%, #34D399 85%, #D1FAE5 100%);
+    box-shadow: 0 -5px 20px rgba(31, 157, 107, 0.8), inset 0 2px 4px rgba(255,255,255,0.85);
+    opacity: 1;
+    transform: scaleY(1.02);
+  }
+  92% {
+    background: linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 70%, rgba(0,0,0,0.28) 100%);
+    box-shadow: 0 0 0 transparent;
+    opacity: 0.35;
+    transform: scaleY(0.72);
+  }
+}
+
+/* Right segment - Green bias resolving the flow */
+@keyframes barPyramidGreen {
+  0%, 100% {
+    background: linear-gradient(to top, rgba(201,138,0,0.2) 0%, #1F9D6B 55%, #34D399 88%, #ECFDF5 100%);
+    box-shadow: 0 -4px 16px rgba(31, 157, 107, 0.6), inset 0 2px 4px rgba(255,255,255,0.8);
+    opacity: 0.88;
+    transform: scaleY(0.92);
+  }
+  22% {
+    background: linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 70%, rgba(0,0,0,0.28) 100%);
+    box-shadow: 0 0 0 transparent;
+    opacity: 0.4;
+    transform: scaleY(0.78);
+  }
+  45% {
+    background: linear-gradient(to top, rgba(201,138,0,0.25) 0%, #1F9D6B 50%, #6EE7B7 85%, #ECFDF5 100%);
+    box-shadow: 0 -4px 16px rgba(31, 157, 107, 0.65), inset 0 2px 4px rgba(255,255,255,0.8);
+    opacity: 0.88;
+    transform: scaleY(0.96);
+  }
+  70%, 86% {
+    background: linear-gradient(to top, rgba(31,157,107,0.35) 0%, #1F7A55 48%, #1F9D6B 80%, #A7F3D0 100%);
+    box-shadow: 0 -8px 24px rgba(31, 157, 107, 0.95), inset 0 2px 6px rgba(255,255,255,1);
+    opacity: 1;
+    transform: scaleY(1.07);
+  }
+  93% {
+    background: linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 70%, rgba(0,0,0,0.28) 100%);
+    box-shadow: 0 0 0 transparent;
+    opacity: 0.35;
+    transform: scaleY(0.72);
+  }
+}
+
+/* Badges Keyframe Animations - Synchronized with the wave flow */
+@keyframes badgeP1Wave {
+  0%, 28% {
+    background-color: rgba(217, 45, 58, 0.12);
+    border-color: rgba(217, 45, 58, 0.45);
+    color: #D92D3A;
+    box-shadow: 0 0 12px rgba(217, 45, 58, 0.25);
+  }
+  35%, 88% {
+    background-color: transparent;
+    border-color: rgba(150, 150, 150, 0.2);
+    color: var(--color-muted);
+    box-shadow: 0 0 0 transparent;
+  }
+  96%, 100% {
+    background-color: rgba(217, 45, 58, 0.12);
+    border-color: rgba(217, 45, 58, 0.45);
+    color: #D92D3A;
+    box-shadow: 0 0 12px rgba(217, 45, 58, 0.25);
+  }
+}
+
+@keyframes dotP1Wave {
+  0%, 28% { background-color: #D92D3A; box-shadow: 0 0 8px #FF4D5E; }
+  35%, 88% { background-color: #9CA3AF; box-shadow: none; }
+  96%, 100% { background-color: #D92D3A; box-shadow: 0 0 8px #FF4D5E; }
+}
+
+@keyframes badgeInvestigatingWave {
+  0%, 26% {
+    background-color: transparent;
+    border-color: rgba(150, 150, 150, 0.2);
+    color: var(--color-muted);
+    box-shadow: 0 0 0 transparent;
+  }
+  34%, 60% {
+    background-color: rgba(201, 138, 0, 0.12);
+    border-color: rgba(201, 138, 0, 0.45);
+    color: #C98A00;
+    box-shadow: 0 0 12px rgba(201, 138, 0, 0.25);
+  }
+  68%, 100% {
+    background-color: transparent;
+    border-color: rgba(150, 150, 150, 0.2);
+    color: var(--color-muted);
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes dotInvestigatingWave {
+  0%, 26% { background-color: #9CA3AF; box-shadow: none; }
+  34%, 60% { background-color: #C98A00; box-shadow: 0 0 8px #FBBF24; }
+  68%, 100% { background-color: #9CA3AF; box-shadow: none; }
+}
+
+@keyframes badgeResolvedWave {
+  0%, 58% {
+    background-color: transparent;
+    border-color: rgba(150, 150, 150, 0.2);
+    color: var(--color-muted);
+    box-shadow: 0 0 0 transparent;
+  }
+  66%, 90% {
+    background-color: rgba(31, 157, 107, 0.12);
+    border-color: rgba(31, 157, 107, 0.45);
+    color: #1F9D6B;
+    box-shadow: 0 0 12px rgba(31, 157, 107, 0.25);
+  }
+  96%, 100% {
+    background-color: transparent;
+    border-color: rgba(150, 150, 150, 0.2);
+    color: var(--color-muted);
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes dotResolvedWave {
+  0%, 58% { background-color: #9CA3AF; box-shadow: none; }
+  66%, 90% { background-color: #1F9D6B; box-shadow: 0 0 8px #34D399; }
+  96%, 100% { background-color: #9CA3AF; box-shadow: none; }
+}
+
+/* Ambient Floor Multi-blend Dynamic Glow */
+@keyframes ambientBlendGlowAnim {
+  0%, 25% {
+    background: radial-gradient(circle at 25% 100%, rgba(217,45,58,0.3) 0%, transparent 65%),
+                radial-gradient(circle at 50% 100%, rgba(201,138,0,0.15) 0%, transparent 60%),
+                radial-gradient(circle at 75% 100%, rgba(31,157,107,0.1) 0%, transparent 60%);
+    opacity: 0.85;
+  }
+  35%, 60% {
+    background: radial-gradient(circle at 25% 100%, rgba(217,45,58,0.12) 0%, transparent 60%),
+                radial-gradient(circle at 50% 100%, rgba(201,138,0,0.35) 0%, transparent 65%),
+                radial-gradient(circle at 75% 100%, rgba(31,157,107,0.18) 0%, transparent 60%);
+    opacity: 0.9;
+  }
+  68%, 90% {
+    background: radial-gradient(circle at 25% 100%, rgba(217,45,58,0.1) 0%, transparent 60%),
+                radial-gradient(circle at 50% 100%, rgba(201,138,0,0.18) 0%, transparent 60%),
+                radial-gradient(circle at 75% 100%, rgba(31,157,107,0.4) 0%, transparent 65%);
+    opacity: 0.95;
+  }
+  96%, 100% {
+    background: radial-gradient(circle at 25% 100%, rgba(217,45,58,0.3) 0%, transparent 65%),
+                radial-gradient(circle at 50% 100%, rgba(201,138,0,0.15) 0%, transparent 60%),
+                radial-gradient(circle at 75% 100%, rgba(31,157,107,0.1) 0%, transparent 60%);
+    opacity: 0.85;
+  }
+}
+
+.pyramid-red-anim {
+  animation: barPyramidRed 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.pyramid-amber-anim {
+  animation: barPyramidAmber 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.pyramid-green-anim {
+  animation: barPyramidGreen 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.badge-p1 {
+  animation: badgeP1Wave 10s ease infinite;
+}
+
+.dot-p1 {
+  animation: dotP1Wave 10s ease infinite;
+}
+
+.badge-investigating {
+  animation: badgeInvestigatingWave 10s ease infinite;
+}
+
+.dot-investigating {
+  animation: dotInvestigatingWave 10s ease infinite;
+}
+
+.badge-resolved {
+  animation: badgeResolvedWave 10s ease infinite;
+}
+
+.dot-resolved {
+  animation: dotResolvedWave 10s ease infinite;
+}
+
+.glow-pyramid-ambient {
+  animation: ambientBlendGlowAnim 10s ease-in-out infinite;
+}
+
+/* Pause animation when container has class .auth-anim-paused */
+.auth-anim-paused * {
+  animation-play-state: paused !important;
+}
+
+/* Respect prefers-reduced-motion: fully lit, no animation */
+@media (prefers-reduced-motion: reduce) {
+  .pyramid-red-anim,
+  .pyramid-amber-anim,
+  .pyramid-green-anim,
+  .badge-p1,
+  .badge-investigating,
+  .badge-resolved,
+  .dot-p1,
+  .dot-investigating,
+  .dot-resolved,
+  .glow-pyramid-ambient {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: scaleY(1) !important;
+  }
+}
+

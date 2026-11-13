@@ -152,6 +152,7 @@ export const NotificationsPage: React.FC = () => {
             disabled={unreadCount === 0 || isMarkingAll}
             isLoading={isMarkingAll}
             leftIcon={<CheckCheck className="h-4 w-4" />}
+            className="min-h-[40px]"
           >
             Mark All as Read
           </Button>
@@ -300,7 +301,7 @@ export const NotificationsPage: React.FC = () => {
                       type="button"
                       onClick={(e) => handleMarkSingleRead(e, item.id)}
                       disabled={isMarkingSingle}
-                      className="shrink-0 rounded-lg p-1.5 text-muted-fg opacity-60 hover:opacity-100 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all"
+                      className="shrink-0 rounded-lg p-2 text-muted-fg opacity-80 hover:opacity-100 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all min-h-[40px] min-w-[40px] flex items-center justify-center"
                       title="Mark as read"
                       aria-label="Mark as read"
                     >

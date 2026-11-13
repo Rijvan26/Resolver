@@ -482,16 +482,16 @@ export const IncidentsListPage: React.FC = () => {
               <Card
                 key={incident.id}
                 onClick={() => navigate(`/incidents/${incident.id}`)}
-                className="p-4 cursor-pointer hover:shadow-md transition-shadow space-y-3"
+                className="p-4 cursor-pointer hover:shadow-md transition-shadow space-y-3 max-w-full overflow-hidden"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col gap-2 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <SeverityIcon priority={incident.priority} />
-                    <h3 className="text-sm font-semibold text-main-fg line-clamp-1">
+                    <h3 className="text-sm font-semibold text-main-fg truncate min-w-0">
                       {incident.title}
                     </h3>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <StatusBadge status={incident.status} size="sm" />
                     <PriorityBadge priority={incident.priority} size="sm" />
                     <AiSeverityMismatchPill
@@ -501,16 +501,16 @@ export const IncidentsListPage: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-fg line-clamp-2">
+                <p className="text-xs text-muted-fg line-clamp-2 [overflow-wrap:anywhere]">
                   {incident.description}
                 </p>
 
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-color text-[11px] text-slate-500">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border-color text-[11px] text-slate-500 min-w-0">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <User className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{incident.assignee?.name || "Unassigned"}</span>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 tabular-nums">
+                  <div className="flex items-center gap-2.5 shrink-0 tabular-nums">
                     <span>
                       {formatOpenDuration(
                         incident.createdAt,

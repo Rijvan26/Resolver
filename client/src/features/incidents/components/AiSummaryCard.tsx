@@ -48,24 +48,27 @@ export const AiSummaryCard: React.FC<AiSummaryCardProps> = ({
   };
 
   return (
-    <Card className="border border-slate-200 dark:border-slate-800/80 shadow-sm overflow-hidden">
-      <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3 px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+    <Card className="border border-slate-200 dark:border-slate-800/80 shadow-sm overflow-hidden max-w-full">
+      <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3 px-4 sm:px-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <CardTitle className="text-sm font-semibold text-main-fg">
+            <CardTitle className="text-[15px] sm:text-base font-semibold text-main-fg truncate min-w-0">
               Incident Status Overview
             </CardTitle>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-fg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+            <span className="hidden sm:inline-flex text-[10px] font-semibold uppercase tracking-wider text-muted-fg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
               AI-Generated
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-2.5 flex-wrap min-w-0">
+            <span className="sm:hidden inline-flex text-[10px] font-semibold uppercase tracking-wider text-muted-fg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
+              AI-Generated
+            </span>
             {updatedAt && (
-              <span className="hidden sm:flex items-center gap-1 text-[11px] text-muted-fg">
+              <span className="hidden sm:flex items-center gap-1 text-[11px] text-muted-fg shrink-0">
                 <Clock className="h-3 w-3" />
                 Updated {formatRelativeTime(updatedAt)}
               </span>
@@ -75,20 +78,23 @@ export const AiSummaryCard: React.FC<AiSummaryCardProps> = ({
               size="sm"
               onClick={handleRefresh}
               disabled={isRefreshing}
+              aria-label={isRefreshing ? "Refreshing status overview" : "Refresh status overview"}
               leftIcon={
                 <RefreshCw
-                  className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                  className={`h-3.5 w-3.5 shrink-0 ${isRefreshing ? "animate-spin" : ""}`}
                 />
               }
-              className="text-xs h-7 px-2.5"
+              className="text-xs min-h-[40px] sm:min-h-0 sm:h-7 px-3 sm:px-2.5 shrink-0"
             >
-              {isRefreshing ? "Refreshing..." : currentSummary ? "Refresh" : "Generate"}
+              <span className="hidden sm:inline">
+                {isRefreshing ? "Refreshing..." : currentSummary ? "Refresh" : "Generate"}
+              </span>
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 space-y-3">
+      <CardContent className="p-4 sm:p-5 space-y-3">
         {currentSummary ? (
           <>
             <div className="text-sm leading-relaxed text-main-fg max-w-prose whitespace-pre-wrap">

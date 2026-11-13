@@ -114,15 +114,15 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
   // 1. Initial Empty State: No triage yet
   if (!triageSuggestion && (!aiSubdoc || aiSubdoc.status === "none")) {
     return (
-      <Card className="border-dashed border-slate-200 dark:border-slate-800 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <Card className="border-dashed border-slate-200 dark:border-slate-800 p-4 sm:p-5 max-w-full overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
               <Sparkles className="h-4 w-4" />
             </div>
-            <div>
-              <h4 className="text-sm font-semibold text-main-fg">AI & Rules Triage</h4>
-              <p className="text-xs text-muted-fg">
+            <div className="min-w-0">
+              <h4 className="text-sm font-semibold text-main-fg truncate">AI & Rules Triage</h4>
+              <p className="text-xs text-muted-fg line-clamp-1">
                 Run deterministic rules engine and model triage to suggest severity.
               </p>
             </div>
@@ -132,6 +132,7 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
             size="sm"
             onClick={handleTrigger}
             disabled={isTriggering}
+            className="min-h-[40px] sm:min-h-0 text-xs shrink-0 self-start sm:self-auto"
             leftIcon={
               isTriggering ? (
                 <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -155,28 +156,28 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
   const confidencePercent = Math.round(confidence * 100);
 
   return (
-    <Card className="border border-slate-200 dark:border-slate-800/80 shadow-sm overflow-hidden">
+    <Card className="border border-slate-200 dark:border-slate-800/80 shadow-sm overflow-hidden max-w-full">
       {/* Header with Badges */}
-      <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3 px-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
+      <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3 px-4 sm:px-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
             {isRuleBased ? (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 whitespace-nowrap shrink-0">
                 <ShieldAlert className="h-3 w-3" />
                 Deterministic Rule Match
               </span>
             ) : (
               <>
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-brand-100 text-brand-800 dark:bg-brand-950/80 dark:text-brand-300">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold bg-brand-100 text-brand-800 dark:bg-brand-950/80 dark:text-brand-300 whitespace-nowrap shrink-0">
                   <Sparkles className="h-3 w-3" />
                   AI Triage Recommendation
                 </span>
-                <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800">
+                <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800 whitespace-nowrap shrink-0">
                   AI-generated
                 </span>
               </>
             )}
-            <span className="text-[11px] text-muted-fg font-medium">
+            <span className="hidden sm:inline-block text-[11px] text-muted-fg font-medium">
               Human-in-the-Loop
             </span>
           </div>
@@ -184,7 +185,7 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
           {/* Settled Decision Pill */}
           {!isPendingDecision && triageSuggestion && (
             <span
-              className={`text-[11px] font-semibold px-2 py-0.5 rounded ${
+              className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded whitespace-nowrap shrink-0 self-start sm:self-auto ${
                 triageSuggestion.userDecision === AI_USER_DECISION.ACCEPTED
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
                   : triageSuggestion.userDecision === AI_USER_DECISION.EDITED
@@ -198,7 +199,7 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-4 sm:p-5 space-y-4 max-w-full">
         {/* Suggested Severity & Confidence Meter */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/60">
           <div className="flex items-center gap-3">
@@ -352,13 +353,13 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
               <span>AI suggestions do not mutate incidents without responder action.</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDismiss}
                 disabled={isDeciding}
-                className="text-xs h-8 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                className="text-xs min-h-[40px] sm:min-h-0 sm:h-8 px-3 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               >
                 Dismiss
               </Button>
@@ -374,7 +375,7 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
                 disabled={isDeciding || !canModifySeverity}
                 title={!canModifySeverity ? "Requires Manager or Admin role" : undefined}
                 leftIcon={<Edit3 className="h-3.5 w-3.5" />}
-                className="text-xs h-8"
+                className="text-xs min-h-[40px] sm:min-h-0 sm:h-8 px-3"
               >
                 Edit
               </Button>
@@ -386,7 +387,7 @@ export const AiTriageCard: React.FC<AiTriageCardProps> = ({
                 disabled={isDeciding || !canModifySeverity}
                 title={!canModifySeverity ? "Requires Manager or Admin role" : undefined}
                 leftIcon={<Check className="h-3.5 w-3.5" />}
-                className="text-xs h-8"
+                className="text-xs min-h-[40px] sm:min-h-0 sm:h-8 px-3"
               >
                 {isDeciding ? "Accepting..." : "Accept Severity"}
               </Button>

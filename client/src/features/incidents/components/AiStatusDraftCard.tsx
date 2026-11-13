@@ -121,63 +121,69 @@ export const AiStatusDraftCard: React.FC<AiStatusDraftCardProps> = ({
   };
 
   return (
-    <Card className="border border-border-color bg-card-bg shadow-sm rounded-2xl">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+    <Card className="border border-border-color bg-card-bg shadow-sm rounded-2xl max-w-full overflow-hidden">
+      <CardHeader className="py-3 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
               <FileEdit className="h-4 w-4" />
             </div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-main-fg">
-                Status Update Draft
-              </h3>
-              <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50">
-                <Sparkles className="h-2.5 w-2.5" />
-                AI-generated
-              </span>
-            </div>
+            <h3 className="text-[15px] sm:text-base font-semibold text-main-fg truncate min-w-0">
+              Status Update Draft
+            </h3>
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50 whitespace-nowrap shrink-0">
+              <Sparkles className="h-2.5 w-2.5" />
+              AI-generated
+            </span>
           </div>
 
-          {/* Audience Selector Tabs */}
-          <div className="inline-flex items-center rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800/80">
-            <button
-              type="button"
-              onClick={() => {
-                setAudience("internal");
-                if (draftContent && suggestionOutput?.audience !== "internal") {
-                  handleGenerate("internal");
-                }
-              }}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${audience === "internal"
-                  ? "bg-white text-main-fg shadow-sm dark:bg-slate-700"
-                  : "text-muted-fg hover:text-main-fg"
+          <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap min-w-0">
+            <span className="sm:hidden inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50 whitespace-nowrap shrink-0">
+              <Sparkles className="h-2.5 w-2.5" />
+              AI-generated
+            </span>
+            {/* Audience Selector Tabs */}
+            <div className="inline-flex items-center rounded-xl bg-slate-100 p-0.5 dark:bg-slate-800/80">
+              <button
+                type="button"
+                onClick={() => {
+                  setAudience("internal");
+                  if (draftContent && suggestionOutput?.audience !== "internal") {
+                    handleGenerate("internal");
+                  }
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 min-h-[36px] sm:min-h-0 text-xs font-medium transition-colors ${
+                  audience === "internal"
+                    ? "bg-white text-main-fg shadow-sm dark:bg-slate-700 font-semibold"
+                    : "text-muted-fg hover:text-main-fg"
                 }`}
-            >
-              <Lock className="h-3 w-3" />
-              Internal
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAudience("customer");
-                if (draftContent && suggestionOutput?.audience !== "customer") {
-                  handleGenerate("customer");
-                }
-              }}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${audience === "customer"
-                  ? "bg-white text-main-fg shadow-sm dark:bg-slate-700"
-                  : "text-muted-fg hover:text-main-fg"
+              >
+                <Lock className="h-3 w-3" />
+                Internal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAudience("customer");
+                  if (draftContent && suggestionOutput?.audience !== "customer") {
+                    handleGenerate("customer");
+                  }
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 min-h-[36px] sm:min-h-0 text-xs font-medium transition-colors ${
+                  audience === "customer"
+                    ? "bg-white text-main-fg shadow-sm dark:bg-slate-700 font-semibold"
+                    : "text-muted-fg hover:text-main-fg"
                 }`}
-            >
-              <Globe className="h-3 w-3" />
-              Public Status
-            </button>
+              >
+                <Globe className="h-3 w-3" />
+                Public Status
+              </button>
+            </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3 pt-0 text-xs">
+      <CardContent className="p-4 sm:p-5 pt-3 sm:pt-4 space-y-3 text-xs max-w-full">
         {actionError && (
           <div className="flex items-center gap-1.5 rounded-md bg-red-50 p-2.5 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300">
             <AlertCircle className="h-4 w-4 shrink-0" />

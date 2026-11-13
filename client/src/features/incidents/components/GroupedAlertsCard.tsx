@@ -50,44 +50,57 @@ export const GroupedAlertsCard: React.FC<GroupedAlertsCardProps> = ({
   };
 
   return (
-    <Card className="border border-slate-200/80 shadow-sm dark:border-slate-800">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
+    <Card className="border border-slate-200/80 shadow-sm dark:border-slate-800 max-w-full overflow-hidden">
+      <CardHeader className="py-3 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-violet-50 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
               <BellRing className="h-4 w-4" />
             </div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-main-fg">
-                Grouped Alerts
-              </h3>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <h3 className="text-[15px] sm:text-base font-semibold text-main-fg truncate min-w-0">
+              Grouped Alerts
+            </h3>
+            <span className="hidden sm:inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap shrink-0">
+              {alertCount} {alertCount === 1 ? "alert" : "alerts"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap sm:hidden">
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                 {alertCount} {alertCount === 1 ? "alert" : "alerts"}
               </span>
               {suggestedAlerts.length > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60">
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60 whitespace-nowrap">
                   <AlertTriangle className="h-3 w-3" />
-                  {suggestedAlerts.length} review required
+                  {suggestedAlerts.length} review
                 </span>
               )}
             </div>
+            {suggestedAlerts.length > 0 && (
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60 whitespace-nowrap">
+                <AlertTriangle className="h-3 w-3" />
+                {suggestedAlerts.length} review required
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isLoading || isFetching}
+              className="min-h-[40px] sm:min-h-0 sm:h-7 px-3 sm:px-2 text-xs text-muted-fg hover:text-main-fg shrink-0"
+              title="Refresh alerts"
+              aria-label="Refresh alerts"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 shrink-0 ${isFetching ? "animate-spin" : ""}`}
+              />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-            className="h-7 px-2 text-xs text-muted-fg hover:text-main-fg"
-            title="Refresh alerts"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`}
-            />
-          </Button>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 space-y-4">
+      <CardContent className="p-4 sm:p-5 pt-3 sm:pt-4 space-y-4 max-w-full">
         {isLoading ? (
           <div className="space-y-2 pt-1">
             <Skeleton className="h-12 w-full rounded-md" />

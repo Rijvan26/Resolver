@@ -116,21 +116,21 @@ export const OverviewKpiCards: React.FC<OverviewKpiCardsProps> = ({
         {kpis.map((kpi) => (
           <Card
             key={kpi.title}
-            className={`relative overflow-hidden p-5 min-h-[150px] ${
+            className={`relative overflow-hidden p-4 sm:p-5 min-h-[130px] sm:min-h-[150px] max-w-full [overflow-wrap:anywhere] ${
               kpi.highlight ? "border-transparent bg-sidebar text-white dark:border-border-color" : ""
             }`}
           >
-            <span className={`text-sm ${kpi.highlight ? "text-white/70" : "text-muted-fg"}`}>{kpi.title}</span>
+            <span className={`text-xs sm:text-sm ${kpi.highlight ? "text-white/70" : "text-muted-fg"}`}>{kpi.title}</span>
 
             <div
-              className={`mt-2 text-4xl font-bold tracking-tighter tabular-nums ${
+              className={`mt-1.5 sm:mt-2 text-3xl sm:text-4xl font-bold tracking-tighter tabular-nums ${
                 kpi.highlight ? "text-white" : kpi.valueTone || "text-main-fg"
               }`}
             >
               {kpi.value.toLocaleString()}
             </div>
 
-            <p className={`mt-2 text-sm ${kpi.highlight ? "text-white/70" : "text-muted-fg"}`}>
+            <p className={`mt-1.5 sm:mt-2 text-xs sm:text-sm ${kpi.highlight ? "text-white/70" : "text-muted-fg"}`}>
               {kpi.description}
             </p>
 

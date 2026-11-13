@@ -87,15 +87,15 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-              <CardTitle>Recent Organization Activity</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Activity className="h-4 w-4 text-brand-600 dark:text-brand-400 shrink-0" />
+              <CardTitle className="truncate">Recent Organization Activity</CardTitle>
             </div>
-            <CardDescription>Real-time audit log across all incidents</CardDescription>
+            <CardDescription className="truncate">Real-time audit log across all incidents</CardDescription>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-main-fg tabular-nums">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200/60 bg-slate-100 dark:border-slate-800 dark:bg-slate-800 text-main-fg tabular-nums shrink-0">
             {pagination.total} Total Events
           </span>
         </div>
@@ -166,13 +166,14 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
           <span className="text-xs text-muted-fg">
             Page {pagination.page} of {pagination.totalPages}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
               disabled={page <= 1}
               onClick={() => onPageChange(page - 1)}
-              className="h-7 px-2"
+              className="h-8 sm:h-7 px-2.5 sm:px-2 min-h-[36px] sm:min-h-0"
+              aria-label="Previous page"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
@@ -181,7 +182,8 @@ export const RecentActivityWidget: React.FC<RecentActivityWidgetProps> = ({
               size="sm"
               disabled={page >= pagination.totalPages}
               onClick={() => onPageChange(page + 1)}
-              className="h-7 px-2"
+              className="h-8 sm:h-7 px-2.5 sm:px-2 min-h-[36px] sm:min-h-0"
+              aria-label="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>

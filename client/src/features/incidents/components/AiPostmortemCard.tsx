@@ -81,49 +81,56 @@ ${output.lessonsLearned?.map((item) => `- ${item}`).join("\n") || "None specifie
   };
 
   return (
-    <Card className="border border-slate-200 dark:border-slate-800/80 shadow-sm overflow-hidden">
-      <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3.5 px-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+    <Card className="border border-slate-200 dark:border-slate-800/80 shadow-sm overflow-hidden max-w-full">
+      <CardHeader className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/60 py-3.5 px-4 sm:px-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
               <FileCheck2 className="h-3.5 w-3.5" />
             </span>
-            <CardTitle className="text-sm font-semibold text-main-fg">
+            <CardTitle className="text-[15px] sm:text-base font-semibold text-main-fg truncate min-w-0">
               Blameless Postmortem Draft
             </CardTitle>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-fg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+            <span className="hidden sm:inline-flex text-[10px] font-semibold uppercase tracking-wider text-muted-fg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
               AI-Generated Draft
             </span>
           </div>
 
-          {output && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyMarkdown}
-                leftIcon={copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                className="text-xs h-7 px-2.5"
-              >
-                {copied ? "Copied Markdown!" : "Copy Postmortem"}
-              </Button>
+          <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap min-w-0">
+            <span className="sm:hidden inline-flex text-[10px] font-semibold uppercase tracking-wider text-muted-fg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
+              AI-Generated Draft
+            </span>
+            {output && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyMarkdown}
+                  leftIcon={copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  className="text-xs min-h-[40px] sm:min-h-0 sm:h-7 px-3 sm:px-2.5"
+                >
+                  <span className="hidden sm:inline">{copied ? "Copied Markdown!" : "Copy Postmortem"}</span>
+                  <span className="sm:hidden">{copied ? "Copied" : "Copy"}</span>
+                </Button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleGenerate}
-                disabled={isDrafting}
-                leftIcon={<RefreshCw className={`h-3 w-3 ${isDrafting ? "animate-spin" : ""}`} />}
-                className="text-xs h-7 px-2"
-              >
-                {isDrafting ? "Drafting..." : "Re-draft"}
-              </Button>
-            </div>
-          )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerate}
+                  disabled={isDrafting}
+                  aria-label={isDrafting ? "Drafting postmortem" : "Re-draft postmortem"}
+                  leftIcon={<RefreshCw className={`h-3 w-3 ${isDrafting ? "animate-spin" : ""}`} />}
+                  className="text-xs min-h-[40px] sm:min-h-0 sm:h-7 px-3 sm:px-2"
+                >
+                  <span className="hidden sm:inline">{isDrafting ? "Drafting..." : "Re-draft"}</span>
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-4 sm:p-5 space-y-4 max-w-full">
         {output ? (
           <>
             {/* Root Cause */}

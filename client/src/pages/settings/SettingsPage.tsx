@@ -216,7 +216,7 @@ export const SettingsPage: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
             {/* Left Navigation Menu */}
-            <aside className="lg:col-span-1 space-y-1">
+            <aside className="lg:col-span-1 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -225,7 +225,7 @@ export const SettingsPage: React.FC = () => {
                     key={item.id}
                     type="button"
                     onClick={() => setActiveTab(item.id)}
-                    className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs transition-all text-left ${
+                    className={`flex items-center gap-2.5 w-auto lg:w-full px-3.5 py-2.5 rounded-xl text-xs transition-all whitespace-nowrap shrink-0 min-h-[40px] text-left ${
                       isActive
                         ? "bg-card-bg shadow-xs border border-border-color text-main-fg font-semibold"
                         : "text-muted-fg hover:text-main-fg hover:bg-pill font-medium border border-transparent"
@@ -245,29 +245,29 @@ export const SettingsPage: React.FC = () => {
             </aside>
 
             {/* Right Main Card */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 min-w-0 max-w-full">
               {/* Tab 1: General Profile (Pixel-matched with Image 1) */}
               {activeTab === "general" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm overflow-hidden">
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm overflow-hidden max-w-full">
                   {/* Card Header */}
-                  <CardHeader className="p-5 sm:p-6 pb-4 border-b border-border-color">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                  <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border-color">
+                    <div className="flex flex-wrap items-center justify-between gap-3 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
                           <Building className="h-5 w-5" />
                         </div>
-                        <div>
-                          <CardTitle className="text-base font-bold text-main-fg">
+                        <div className="min-w-0">
+                          <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
                             General Profile
                           </CardTitle>
-                          <p className="text-xs text-muted-fg">
+                          <p className="text-xs text-muted-fg truncate">
                             Primary organizational identity and slug
                           </p>
                         </div>
                       </div>
 
                       {!isPrivileged && (
-                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-muted-fg">
+                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-muted-fg shrink-0">
                           <Lock className="h-3 w-3" /> Read Only
                         </span>
                       )}
@@ -275,7 +275,7 @@ export const SettingsPage: React.FC = () => {
                   </CardHeader>
 
                   {/* Card Content Form */}
-                  <CardContent className="p-5 sm:p-6 space-y-6">
+                  <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
                     {/* Organization Name */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-main-fg block">
@@ -396,24 +396,24 @@ export const SettingsPage: React.FC = () => {
 
               {/* Tab 2: Members & Teams */}
               {activeTab === "members" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-4 sm:p-6 space-y-4 max-w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
                         <Users className="h-5 w-5" />
                       </div>
-                      <div>
-                        <CardTitle className="text-base font-bold text-main-fg">
+                      <div className="min-w-0">
+                        <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
                           Members & Teams
                         </CardTitle>
-                        <p className="text-xs text-muted-fg">
+                        <p className="text-xs text-muted-fg truncate">
                           Manage user invitations, team roles, and on-call assignments
                         </p>
                       </div>
                     </div>
                     <Link
                       to="/members"
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors min-h-[40px] sm:min-h-0 shrink-0"
                     >
                       Open Members Directory <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
@@ -426,16 +426,16 @@ export const SettingsPage: React.FC = () => {
 
               {/* Tab 3: Security & SSO */}
               {activeTab === "security" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-5">
-                  <div className="flex items-center gap-3">
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-4 sm:p-6 space-y-5 max-w-full">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
                       <ShieldCheck className="h-5 w-5" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base font-bold text-main-fg">
+                    <div className="min-w-0">
+                      <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
                         Security & SSO
                       </CardTitle>
-                      <p className="text-xs text-muted-fg">
+                      <p className="text-xs text-muted-fg truncate">
                         Session authentication, role credentials, and access control
                       </p>
                     </div>
@@ -476,45 +476,45 @@ export const SettingsPage: React.FC = () => {
 
               {/* Tab 4: Integrations */}
               {activeTab === "integrations" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-4">
-                  <div className="flex items-center gap-3">
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-4 sm:p-6 space-y-4 max-w-full">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
                       <LinkIcon className="h-5 w-5" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base font-bold text-main-fg">
+                    <div className="min-w-0">
+                      <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
                         Integrations
                       </CardTitle>
-                      <p className="text-xs text-muted-fg">
+                      <p className="text-xs text-muted-fg truncate">
                         Connected operational channels and alerting webhooks
                       </p>
                     </div>
                   </div>
                   <div className="divide-y divide-border-color text-xs">
-                    <div className="py-3 flex items-center justify-between">
+                    <div className="py-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <div className="font-semibold text-main-fg">Brevo SMTP Pager</div>
                         <div className="text-[11px] text-muted-fg">Email incident alerting and responder escalation notifications</div>
                       </div>
-                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full shrink-0">
                         Connected
                       </span>
                     </div>
-                    <div className="py-3 flex items-center justify-between">
+                    <div className="py-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <div className="font-semibold text-main-fg">Slack Incident Bot</div>
                         <div className="text-[11px] text-muted-fg">Dedicated #incident channel creation and responder paging</div>
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full shrink-0">
                         Configured
                       </span>
                     </div>
-                    <div className="py-3 flex items-center justify-between">
+                    <div className="py-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <div className="font-semibold text-main-fg">AI Models (Gemini & Groq)</div>
                         <div className="text-[11px] text-muted-fg">Triage recommendations, status drafts, and postmortem generation</div>
                       </div>
-                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full shrink-0">
                         Active
                       </span>
                     </div>
@@ -524,16 +524,16 @@ export const SettingsPage: React.FC = () => {
 
               {/* Tab 5: Billing & Usage */}
               {activeTab === "billing" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-6 space-y-4">
-                  <div className="flex items-center gap-3">
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-4 sm:p-6 space-y-4 max-w-full">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
                       <CreditCard className="h-5 w-5" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base font-bold text-main-fg">
+                    <div className="min-w-0">
+                      <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
                         Billing & Usage
                       </CardTitle>
-                      <p className="text-xs text-muted-fg">
+                      <p className="text-xs text-muted-fg truncate">
                         Subscription tier, incident volume, and API quotas
                       </p>
                     </div>
@@ -557,28 +557,28 @@ export const SettingsPage: React.FC = () => {
 
               {/* Tab 6: AI & Automation (Preserves Phase 3 settings and submission) */}
               {activeTab === "ai" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm">
-                  <CardHeader className="p-5 sm:p-6 pb-4 border-b border-border-color">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm max-w-full">
+                  <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border-color">
+                    <div className="flex flex-wrap items-center justify-between gap-3 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
                           <Sparkles className="h-5 w-5" />
                         </div>
-                        <div>
-                          <CardTitle className="text-base font-bold text-main-fg">
+                        <div className="min-w-0">
+                          <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
                             AI & Automation
                           </CardTitle>
-                          <p className="text-xs text-muted-fg">
+                          <p className="text-xs text-muted-fg truncate">
                             Configure Phase 3 alert grouping, runbook suggestions, and Cmd+K assistant
                           </p>
                         </div>
                       </div>
-                      <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                      <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 shrink-0">
                         AI-generated
                       </span>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-5 sm:p-6 space-y-5">
+                  <CardContent className="p-4 sm:p-6 space-y-5">
                     {/* Alert Grouping Toggle (FR-08) */}
                     <div className="rounded-xl border border-border-color bg-slate-50/40 dark:bg-slate-900/30 p-4">
                       <div className="flex items-start justify-between gap-4">

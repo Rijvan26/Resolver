@@ -28,7 +28,31 @@ build/
 # Local scratch / unused directories & archived invalid benchmark artifacts
 server2/
 server/docs/
-docs/results-raw/archive-invalid/
+docs/results-raw/
+results-raw/
+bench-results/
+test-results/
+playwright-report/
+blob-report/
+
+# Temporary screenshots & dev image captures (brand assets live in client/public/)
+client/*.png
+client/*.jpg
+client/*.jpeg
+client/*.webp
+*-shot.png
+shot-*.png
+shot.png
+test-*.png
+final-*.png
+*screenshot*
+*.capture.*
+
+# Local databases & Redis dumps
+*.sqlite
+*.sqlite3
+*.db
+dump.rdb
 
 # Logs
 logs/
@@ -49,6 +73,8 @@ coverage/
 .idea/
 .DS_Store
 Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
 *.suo
 *.ntvs*
 *.njsproj

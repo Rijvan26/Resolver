@@ -73,15 +73,15 @@ export const CommentList: React.FC<CommentListProps> = ({
   }, [incident, allComments]);
 
   const mainDiscussionContent = (
-    <div className="rounded-2xl border border-border-color bg-card-bg p-5 sm:p-6 shadow-sm space-y-5">
+    <div className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6 shadow-sm space-y-5 max-w-full overflow-hidden [overflow-wrap:anywhere]">
       {/* Header bar (Matching Image 3) */}
-      <div className="flex items-center justify-between pb-3 border-b border-border-color">
-        <div className="flex items-center gap-2.5">
-          <MessageSquare className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-sm sm:text-base font-bold text-main-fg">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border-color min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <MessageSquare className="h-4 w-4 text-brand-600 dark:text-brand-400 shrink-0" />
+          <h3 className="text-sm sm:text-base font-bold text-main-fg truncate">
             Discussion & Updates
           </h3>
-          <span className="rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-0.5 text-xs font-semibold">
+          <span className="rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-0.5 text-xs font-semibold shrink-0">
             {totalComments}
           </span>
         </div>
@@ -89,9 +89,9 @@ export const CommentList: React.FC<CommentListProps> = ({
         <button
           type="button"
           onClick={toggleSortOrder}
-          className="flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-main-fg transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-muted-fg hover:text-main-fg transition-colors min-h-[36px] py-1 px-2 -mr-1"
         >
-          <ArrowUpDown className="h-3 w-3" />
+          <ArrowUpDown className="h-3 w-3 shrink-0" />
           <span>{sortOrder === "asc" ? "Oldest First" : "Newest First"}</span>
         </button>
       </div>
@@ -180,7 +180,7 @@ export const CommentList: React.FC<CommentListProps> = ({
 
       {/* Right 1 col: Discussion Sidebar (Pixel-matched with Image 3) */}
       <div className="lg:col-span-1 space-y-6">
-        <div className="rounded-2xl border border-border-color bg-card-bg p-5 shadow-sm space-y-6 text-xs">
+        <div className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-5 shadow-sm space-y-5 text-xs max-w-full overflow-hidden [overflow-wrap:anywhere]">
           {/* Section 1: Incident Info */}
           <div>
             <h4 className="text-xs font-bold text-main-fg mb-1.5">Incident Info</h4>
@@ -222,22 +222,22 @@ export const CommentList: React.FC<CommentListProps> = ({
           {/* Section 3: Filter & Sort */}
           <div className="pt-4 border-t border-border-color space-y-3">
             <h4 className="text-xs font-bold text-main-fg">Filter & Sort</h4>
-            <div className="flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center justify-between gap-3 text-xs min-h-[36px]">
               <span className="text-main-fg font-medium">View preference</span>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer p-1">
                 <input
                   type="checkbox"
                   checked={viewPreference}
                   onChange={(e) => setViewPreference(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
+                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[6px] after:left-[6px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
               </label>
             </div>
 
-            <div className="flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center justify-between gap-3 text-xs min-h-[36px]">
               <span className="text-main-fg font-medium">Filter & Sort</span>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer p-1">
                 <input
                   type="checkbox"
                   checked={sortOrder === "desc"}
@@ -247,7 +247,7 @@ export const CommentList: React.FC<CommentListProps> = ({
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
+                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[6px] after:left-[6px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600"></div>
               </label>
             </div>
           </div>

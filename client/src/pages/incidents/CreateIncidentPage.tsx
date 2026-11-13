@@ -348,9 +348,9 @@ export const CreateIncidentPage: React.FC = () => {
             </div>
           </CardContent>
 
-          <CardFooter className="flex items-center justify-between border-t border-border-color pt-4">
-            <Link to="/incidents">
-              <Button type="button" variant="outline" disabled={isPending}>
+          <CardFooter className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border-color pt-4">
+            <Link to="/incidents" className="w-full sm:w-auto">
+              <Button type="button" variant="outline" disabled={isPending} className="w-full sm:w-auto min-h-[40px]">
                 Cancel
               </Button>
             </Link>
@@ -361,6 +361,7 @@ export const CreateIncidentPage: React.FC = () => {
               isLoading={isPending}
               disabled={isPending}
               leftIcon={<CheckCircle2 className="h-4 w-4" />}
+              className="w-full sm:w-auto min-h-[40px]"
             >
               {isPending ? "Creating incident..." : "Create Incident"}
             </Button>

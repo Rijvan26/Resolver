@@ -56,3 +56,17 @@ coverage/
 *.temp
 *.bak
 *.tsbuildinfo
+
+# Screenshots & dev captures (official assets belong in public/)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*-shot.png
+shot-*.png
+shot.png
+test-*.png
+final-*.png
+*screenshot*
+!public/
+!public/**

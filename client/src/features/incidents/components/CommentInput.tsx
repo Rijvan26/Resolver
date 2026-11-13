@@ -91,16 +91,16 @@ export const CommentInput: React.FC<CommentInputProps> = ({
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-muted-fg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 text-xs text-muted-fg min-w-0">
         <span className="text-[11px] tabular-nums text-muted-fg">
           {content.length} / 5000 characters
         </span>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 min-w-0">
           {/* Post Tagging Checkboxes (Image matching) */}
-          <div className="flex items-center gap-2.5 text-xs text-main-fg">
-            <span className="text-muted-fg text-[11px]">Tag your post:</span>
-            <label className="inline-flex items-center gap-1 cursor-pointer text-xs select-none">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-main-fg min-w-0">
+            <span className="text-muted-fg text-[11px] shrink-0">Tag:</span>
+            <label className="inline-flex items-center gap-1 cursor-pointer text-xs select-none min-h-[36px] sm:min-h-0 py-1">
               <input
                 type="checkbox"
                 checked={postTag === "general"}
@@ -109,7 +109,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               />
               <span>General</span>
             </label>
-            <label className="inline-flex items-center gap-1 cursor-pointer text-xs select-none">
+            <label className="inline-flex items-center gap-1 cursor-pointer text-xs select-none min-h-[36px] sm:min-h-0 py-1">
               <input
                 type="checkbox"
                 checked={postTag === "update"}
@@ -118,7 +118,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
               />
               <span>Update</span>
             </label>
-            <label className="inline-flex items-center gap-1 cursor-pointer text-xs select-none">
+            <label className="inline-flex items-center gap-1 cursor-pointer text-xs select-none min-h-[36px] sm:min-h-0 py-1">
               <input
                 type="checkbox"
                 checked={postTag === "action"}
@@ -129,30 +129,32 @@ export const CommentInput: React.FC<CommentInputProps> = ({
             </label>
           </div>
 
-          {onCancel && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              disabled={isLoading}
-              className="text-xs h-7 px-2"
-            >
-              <X className="h-3 w-3 mr-1" /> Cancel
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onCancel}
+                disabled={isLoading}
+                className="text-xs min-h-[40px] sm:min-h-0 sm:h-7 px-2.5"
+              >
+                <X className="h-3 w-3 mr-1" /> Cancel
+              </Button>
+            )}
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            isLoading={isLoading}
-            disabled={isLoading || !content.trim()}
-            leftIcon={<Send className="h-3.5 w-3.5" />}
-            className="rounded-xl text-xs h-8 px-3.5 bg-slate-700 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium shadow-sm"
-          >
-            {isLoading ? "Posting..." : submitButtonText}
-          </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={isLoading}
+              disabled={isLoading || !content.trim()}
+              leftIcon={<Send className="h-3.5 w-3.5" />}
+              className="rounded-xl text-xs min-h-[40px] sm:min-h-0 sm:h-8 px-3.5 bg-slate-700 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium shadow-sm"
+            >
+              {isLoading ? "Posting..." : submitButtonText}
+            </Button>
+          </div>
         </div>
       </div>
     </form>

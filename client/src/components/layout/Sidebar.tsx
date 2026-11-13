@@ -126,8 +126,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ unreadNotificationCount = 0 })
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-white/10 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-white font-bold text-lg shadow-sm">
-              R
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+              <img src="/logo-tight.png" alt="Resolver" className="h-7 w-auto object-contain" />
             </div>
             <div>
               <div className="text-sm font-bold tracking-tight text-white">Resolver</div>
@@ -213,12 +213,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ unreadNotificationCount = 0 })
       >
         {/* Floating rounded black pill container (72px wide) */}
         <div className="relative flex h-[calc(100vh-32px)] w-[72px] flex-col items-center rounded-sidebar bg-sidebar py-5">
-          {/* Logo tile: 40px rounded violet square with bold white "R" */}
+          {/* Logo: Custom Resolver brand logo (no background tile) */}
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white font-bold text-lg shadow-sm"
+            className="flex h-10 w-10 shrink-0 items-center justify-center transition-transform hover:scale-105 cursor-pointer"
             title={organization ? `${organization.name} (${organization.slug})` : "Resolver"}
           >
-            R
+            <img src="/logo-tight.png" alt="Resolver" className="h-8 w-auto object-contain" />
           </div>
 
           {/* Navigation rail */}
