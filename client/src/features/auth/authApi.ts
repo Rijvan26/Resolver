@@ -4,7 +4,7 @@ import {
   User,
   Organization,
 } from "@/types";
-import { setCredentials, setUserAndOrganization, logoutState } from "./authSlice";
+import { setCredentials, setUserAndOrganization, logoutState, setUserHasPassword } from "./authSlice";
 
 export interface LoginRequest {
   email: string;
@@ -37,6 +37,47 @@ export interface GetMeResponseData {
   organization: Organization;
 }
 
+export interface GoogleWorkspaceSetupData {
+  requiresWorkspaceSetup: true;
+  setupToken: string;
+  suggestedOrgName: string;
+  suggestedSlug: string;
+  user: {
+    name: string;
+    email: string;
+    avatarUrl?: string;
+  };
+}
+
+export type GoogleAuthResponseData = LoginResponseData | GoogleWorkspaceSetupData;
+
+export interface GoogleAuthRequest {
+  idToken: string;
+  organizationName?: string;
+  slug?: string;
+  invitationToken?: string;
+}
+
+export interface CompleteGoogleSetupRequest {
+  setupToken: string;
+  organizationName: string;
+  slug: string;
+}
+
+export interface SetPasswordRequest {
+  currentPassword?: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<ApiSuccessResponse<LoginResponseData>, LoginRequest>({
@@ -44,6 +85,61 @@ export const authApi = api.injectEndpoints({
         url: "/auth/login",
         method: "POST",
         body: credentials,
+      }),
+      invalidatesTags: ["Dashboard", "Incidents", "Members", "Notifications"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.success && data.data) {
+            dispatch(
+              setCredentials({
+                accessToken: data.data.accessToken,
+                refreshToken: data.data.refreshToken,
+                user: data.data.user,
+                organization: data.data.organization,
+              })
+            );
+          }
+        } catch {
+          // Handled by calling component
+        }
+      },
+    }),
+
+    googleAuth: builder.mutation<ApiSuccessResponse<GoogleAuthResponseData>, GoogleAuthRequest>({
+      query: (body) => ({
+        url: "/auth/google",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Dashboard", "Incidents", "Members", "Notifications"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.success && data.data && !("requiresWorkspaceSetup" in data.data)) {
+            dispatch(
+              setCredentials({
+                accessToken: data.data.accessToken,
+                refreshToken: data.data.refreshToken,
+                user: data.data.user,
+                organization: data.data.organization,
+              })
+            );
+          }
+        } catch {
+          // Handled by calling component
+        }
+      },
+    }),
+
+    completeGoogleSetup: builder.mutation<
+      ApiSuccessResponse<LoginResponseData>,
+      CompleteGoogleSetupRequest
+    >({
+      query: (body) => ({
+        url: "/auth/google/complete-setup",
+        method: "POST",
+        body,
       }),
       invalidatesTags: ["Dashboard", "Incidents", "Members", "Notifications"],
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
@@ -117,6 +213,50 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
+    setPassword: builder.mutation<
+      ApiSuccessResponse<{ message: string; hasPassword: boolean }>,
+      SetPasswordRequest
+    >({
+      query: (body) => ({
+        url: "/auth/set-password",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Auth"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.success) {
+            dispatch(setUserHasPassword(true));
+          }
+        } catch {
+          // Handled by calling component
+        }
+      },
+    }),
+
+    forgotPassword: builder.mutation<
+      ApiSuccessResponse<{ message: string }>,
+      ForgotPasswordRequest
+    >({
+      query: (body) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    resetPassword: builder.mutation<
+      ApiSuccessResponse<{ message: string }>,
+      ResetPasswordRequest
+    >({
+      query: (body) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
     logout: builder.mutation<ApiSuccessResponse<null>, void>({
       query: () => ({
         url: "/auth/logout",
@@ -137,10 +277,15 @@ export const authApi = api.injectEndpoints({
 
 export const {
   useLoginMutation,
+  useGoogleAuthMutation,
+  useCompleteGoogleSetupMutation,
   useRegisterOrganizationMutation,
   useAcceptInvitationMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
   useRefreshSessionMutation,
+  useSetPasswordMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
   useLogoutMutation,
 } = authApi;

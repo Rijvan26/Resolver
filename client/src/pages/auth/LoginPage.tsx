@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { AuthShowcase } from "@/components/shared/AuthShowcase";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { useLoginMutation } from "@/features/auth/authApi";
+import { useLoginMutation, useGoogleAuthMutation } from "@/features/auth/authApi";
+import { GoogleLogin } from "@react-oauth/google";
 import { setCredentials } from "@/features/auth/authSlice";
 import { loginSchema, LoginFormValues } from "@/features/auth/schemas";
 import { parseApiError } from "@/lib/apiErrors";
@@ -35,6 +36,7 @@ export const LoginPage: React.FC = () => {
   }, [isAuthenticated, navigate, from]);
 
   const [loginMutation, { isLoading }] = useLoginMutation();
+  const [googleAuthMutation, { isLoading: isGoogleLoading }] = useGoogleAuthMutation();
 
   const {
     register,
@@ -86,7 +88,7 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const isPending = isLoading || isSubmitting;
+  const isPending = isLoading || isSubmitting || isGoogleLoading;
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-2 sm:p-3 md:p-4 bg-page text-main-fg overflow-y-auto">
@@ -219,6 +221,14 @@ export const LoginPage: React.FC = () => {
                 {errors.password?.message && (
                   <p className="mt-1 text-xs text-[#D92D3A]">{errors.password.message}</p>
                 )}
+                <div className="flex justify-end mt-1.5">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
               {/* Primary Button: Dashboard app primary theme button */}
@@ -235,6 +245,61 @@ export const LoginPage: React.FC = () => {
                 </Button>
               </div>
             </form>
+
+            {/* Divider */}
+            <div className="relative flex items-center justify-center my-3">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border-color" />
+              </div>
+              <div className="relative px-3 bg-card-bg text-xs uppercase tracking-wider text-muted-fg font-medium">
+                Or continue with
+              </div>
+            </div>
+
+            {/* Google Sign-In */}
+            <div className="flex justify-center w-full min-h-[44px]">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    try {
+                      setServerError(null);
+                      const response = await googleAuthMutation({
+                        idToken: credentialResponse.credential,
+                      }).unwrap();
+
+                      if (response.success && response.data) {
+                        if ("requiresWorkspaceSetup" in response.data) {
+                          // Standard Onboarding: Navigate to workspace setup
+                          navigate("/setup-workspace", { state: response.data });
+                          return;
+                        }
+
+                        dispatch(
+                          setCredentials({
+                            accessToken: response.data.accessToken,
+                            refreshToken: response.data.refreshToken,
+                            user: response.data.user,
+                            organization: response.data.organization,
+                          })
+                        );
+                        navigate(from, { replace: true });
+                      }
+                    } catch (err: unknown) {
+                      const parsed = parseApiError(err);
+                      setServerError(parsed.message);
+                    }
+                  }
+                }}
+                onError={() => {
+                  setServerError("Google authentication failed or was cancelled");
+                }}
+                theme="outline"
+                shape="rectangular"
+                size="large"
+                width="360"
+                text="signin_with"
+              />
+            </div>
 
             {/* Footer */}
             <div className="pt-3 border-t border-border-color text-center">

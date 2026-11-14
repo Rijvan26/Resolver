@@ -6,6 +6,9 @@ import { startAiWorker, startEmbedWorker, stopAiWorker } from "./services/ai/que
 import { closeAiQueues } from "./services/ai/queue/bullmq";
 import { closeRedisConnection } from "./services/ai/queue/connection";
 
+// Ensure IPv4 is prioritized to avoid 20s IPv6 socket connect timeouts on dual-stack networks
+dns.setDefaultResultOrder("ipv4first");
+
 // Apply explicit public DNS resolvers only on non-production Windows environments
 // to preserve container/cloud internal DNS resolution in production Linux hosts.
 if (process.platform === "win32" && config.NODE_ENV !== "production") {

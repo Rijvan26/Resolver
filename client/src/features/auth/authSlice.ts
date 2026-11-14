@@ -123,6 +123,16 @@ export const authSlice = createSlice({
     setInitialized: (state, action: PayloadAction<boolean>) => {
       state.isInitialized = action.payload;
     },
+    setUserHasPassword: (state, action: PayloadAction<boolean>) => {
+      if (state.user) {
+        state.user.hasPassword = action.payload;
+        try {
+          localStorage.setItem("resolver_user", JSON.stringify(state.user));
+        } catch {
+          // ignore
+        }
+      }
+    },
     logoutState: (state) => {
       state.user = null;
       state.organization = null;
@@ -147,6 +157,7 @@ export const {
   setUserAndOrganization,
   updateOrganizationState,
   setInitialized,
+  setUserHasPassword,
   logoutState,
 } = authSlice.actions;
 

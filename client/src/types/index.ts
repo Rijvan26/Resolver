@@ -398,6 +398,9 @@ export interface User {
   role: Role;
   organizationId: string;
   isActive: boolean;
+  avatarUrl?: string;
+  authProvider?: "local" | "google";
+  hasPassword?: boolean;
   createdAt: string;
   updatedAt?: string;
 }

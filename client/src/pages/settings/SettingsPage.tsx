@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ROLES } from "@/types";
 import { parseApiError } from "@/lib/apiErrors";
 import { DeleteOrganizationModal } from "@/features/organization/components/DeleteOrganizationModal";
+import { PasswordManagementCard } from "@/features/auth/components/PasswordManagementCard";
 import {
   Building,
   Users,
@@ -315,7 +316,7 @@ export const SettingsPage: React.FC = () => {
                         className="bg-slate-100/70 dark:bg-slate-900/60 font-mono text-xs text-muted-fg rounded-xl h-10 cursor-not-allowed border border-border-color"
                       />
                       <p className="text-[11px] text-muted-fg">
-                        Unique immutable URL identifier assigned during organization creation.
+                        Unique immutable URL identifier assigned during workspace creation.
                       </p>
                     </div>
 
@@ -470,52 +471,56 @@ export const SettingsPage: React.FC = () => {
 
               {/* Tab 3: Security & SSO */}
               {activeTab === "security" && (
-                <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-4 sm:p-6 space-y-5 max-w-full">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
-                      <ShieldCheck className="h-5 w-5" />
+                <div className="space-y-6">
+                  <PasswordManagementCard />
+
+                  <Card className="rounded-2xl border border-border-color bg-card-bg shadow-sm p-4 sm:p-6 space-y-5 max-w-full">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 shrink-0">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
+                          Security & SSO
+                        </CardTitle>
+                        <p className="text-xs text-muted-fg truncate">
+                          Session authentication, role credentials, and access control
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <CardTitle className="text-[15px] sm:text-base font-bold text-main-fg truncate">
-                        Security & SSO
-                      </CardTitle>
-                      <p className="text-xs text-muted-fg truncate">
-                        Session authentication, role credentials, and access control
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-border-color text-xs">
+                      <div>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                          Active User
+                        </span>
+                        <span className="font-semibold text-main-fg">{user?.name}</span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                          Email Address
+                        </span>
+                        <span className="text-main-fg">{user?.email}</span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
+                          Role Privilege
+                        </span>
+                        {user?.role && <RoleBadge role={user.role} size="sm" />}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border-color bg-slate-50/50 dark:bg-slate-900/30 p-4 text-xs space-y-2">
+                      <div className="flex items-center gap-2 font-semibold text-main-fg">
+                        <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        Session Policy Active
+                      </div>
+                      <p className="text-[11px] text-muted-fg leading-relaxed">
+                        HttpOnly refresh token rotation enabled with SameSite=Lax security, automatic 7-day token expiry, and strict organization tenant boundary isolation.
                       </p>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-border-color text-xs">
-                    <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
-                        Active User
-                      </span>
-                      <span className="font-semibold text-main-fg">{user?.name}</span>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
-                        Email Address
-                      </span>
-                      <span className="text-main-fg">{user?.email}</span>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-fg block mb-1">
-                        Role Privilege
-                      </span>
-                      {user?.role && <RoleBadge role={user.role} size="sm" />}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border-color bg-slate-50/50 dark:bg-slate-900/30 p-4 text-xs space-y-2">
-                    <div className="flex items-center gap-2 font-semibold text-main-fg">
-                      <CheckCircle className="h-4 w-4 text-emerald-500" />
-                      Session Policy Active
-                    </div>
-                    <p className="text-[11px] text-muted-fg leading-relaxed">
-                      HttpOnly refresh token rotation enabled with SameSite=Lax security, automatic 7-day token expiry, and strict organization tenant boundary isolation.
-                    </p>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               )}
 
               {/* Tab 4: Integrations */}

@@ -30,6 +30,8 @@ const envSchema = z.object({
   BREVO_SMTP_PASS: z.string().optional(),
   BREVO_API_KEY: z.string().optional(),
   GOOGLE_USER: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
   EMAIL_FROM: z.string().default("Resolver Notifications <notifications@resolver.internal>"),
 
   // Redis & BullMQ Configuration

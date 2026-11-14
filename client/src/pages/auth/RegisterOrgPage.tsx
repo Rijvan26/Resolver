@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { AuthShowcase } from "@/components/shared/AuthShowcase";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { useRegisterOrganizationMutation, useLoginMutation } from "@/features/auth/authApi";
+import { useRegisterOrganizationMutation, useLoginMutation, useGoogleAuthMutation } from "@/features/auth/authApi";
+import { GoogleLogin } from "@react-oauth/google";
 import { setCredentials } from "@/features/auth/authSlice";
 import { registerOrgSchema, RegisterOrgFormValues } from "@/features/auth/schemas";
 import { parseApiError } from "@/lib/apiErrors";
@@ -29,6 +30,7 @@ export const RegisterOrgPage: React.FC = () => {
 
   const [registerOrgMutation, { isLoading: isRegistering }] = useRegisterOrganizationMutation();
   const [loginMutation, { isLoading: isLoggingIn }] = useLoginMutation();
+  const [googleAuthMutation, { isLoading: isGoogleLoading }] = useGoogleAuthMutation();
 
   const {
     register,
@@ -120,7 +122,7 @@ export const RegisterOrgPage: React.FC = () => {
     }
   };
 
-  const isPending = isRegistering || isLoggingIn || isSubmitting;
+  const isPending = isRegistering || isLoggingIn || isSubmitting || isGoogleLoading;
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-2 sm:p-3 md:p-4 bg-page text-main-fg overflow-y-auto">
@@ -396,6 +398,64 @@ export const RegisterOrgPage: React.FC = () => {
                 </Button>
               </div>
             </form>
+
+            {/* Divider */}
+            <div className="relative flex items-center justify-center my-3">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border-color" />
+              </div>
+              <div className="relative px-3 bg-card-bg text-xs uppercase tracking-wider text-muted-fg font-medium">
+                Or sign up with
+              </div>
+            </div>
+
+            {/* Google Sign-Up */}
+            <div className="flex justify-center w-full min-h-[44px]">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    try {
+                      setServerError(null);
+                      const orgNameInput = (document.getElementById("organizationName") as HTMLInputElement)?.value;
+                      const slugInput = (document.getElementById("slug") as HTMLInputElement)?.value;
+                      const response = await googleAuthMutation({
+                        idToken: credentialResponse.credential,
+                        organizationName: orgNameInput?.trim() || undefined,
+                        slug: slugInput?.trim() || undefined,
+                      }).unwrap();
+
+                      if (response.success && response.data) {
+                        if ("requiresWorkspaceSetup" in response.data) {
+                          navigate("/setup-workspace", { state: response.data });
+                          return;
+                        }
+
+                        dispatch(
+                          setCredentials({
+                            accessToken: response.data.accessToken,
+                            refreshToken: response.data.refreshToken,
+                            user: response.data.user,
+                            organization: response.data.organization,
+                          })
+                        );
+                        navigate("/dashboard", { replace: true });
+                      }
+                    } catch (err: unknown) {
+                      const parsed = parseApiError(err);
+                      setServerError(parsed.message);
+                    }
+                  }
+                }}
+                onError={() => {
+                  setServerError("Google sign-up failed or was cancelled");
+                }}
+                theme="outline"
+                shape="rectangular"
+                size="large"
+                width="360"
+                text="signup_with"
+              />
+            </div>
 
             {/* Footer */}
             <div className="pt-2.5 border-t border-border-color text-center">

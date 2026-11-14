@@ -509,6 +509,10 @@ export class OrganizationService {
     }
 
     // 2. Re-authenticate: Verify superadmin password
+    if (!caller.passwordHash) {
+      throw new AuthenticationError("Password confirmation is not supported for Google-authenticated accounts.");
+    }
+
     const isPasswordValid = await comparePassword(input.password, caller.passwordHash);
     if (!isPasswordValid) {
       throw new AuthenticationError("Invalid password. Re-authentication failed.");

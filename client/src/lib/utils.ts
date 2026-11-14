@@ -44,3 +44,15 @@ export function formatRelativeTime(dateString: string | Date | undefined | null)
   return formatDate(dateString);
 }
 
+/**
+ * Convert string into a clean URL slug.
+ */
+export function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+

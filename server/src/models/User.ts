@@ -5,9 +5,14 @@ export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  passwordResetTokenHash?: string;
+  passwordResetExpiresAt?: Date;
   role: Role;
   organizationId: Types.ObjectId;
+  authProvider: "local" | "google";
+  googleId?: string;
+  avatarUrl?: string;
   isActive: boolean;
   seeded?: boolean;
   benchSession?: string;
@@ -35,8 +40,32 @@ const userSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: [true, "Password hash is required"],
+      required: false,
       select: false, // Prevent passwordHash from leaking in accidental find queries
+    },
+    passwordResetTokenHash: {
+      type: String,
+      select: false,
+      index: true,
+      sparse: true,
+    },
+    passwordResetExpiresAt: {
+      type: Date,
+      select: false,
+    },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
+    avatarUrl: {
+      type: String,
+      default: null,
     },
     role: {
       type: String,

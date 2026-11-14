@@ -68,6 +68,60 @@ export class AuthController {
   }
 
   /**
+   * POST /api/v1/auth/google
+   */
+  async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await authService.googleAuth(req.body);
+
+      if ("requiresWorkspaceSetup" in result) {
+        // Return 200 with setupToken without setting cookies yet
+        res.status(200).json({
+          success: true,
+          message: "Workspace setup required",
+          data: result,
+        });
+        return;
+      }
+
+      // Set secure HttpOnly cookie for refresh token
+      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, getRefreshCookieOptions(true));
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: "Google authentication successful",
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/google/complete-setup
+   */
+  async completeGoogleSetup(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await authService.completeGoogleSetup(req.body);
+
+      // Set secure HttpOnly cookie for refresh token
+      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, getRefreshCookieOptions(true));
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: "Workspace created successfully",
+        data: result,
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * POST /api/v1/auth/refresh
    */
   async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -128,6 +182,63 @@ export class AuthController {
 
       const response: ApiSuccessResponse<typeof result> = {
         success: true,
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/set-password
+   */
+  async setPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await authService.setPassword(req.user!.userId, req.body);
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.message,
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/forgot-password
+   */
+  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await authService.forgotPassword(req.body);
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.message,
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/reset-password
+   */
+  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await authService.resetPassword(req.body);
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.message,
         data: result,
       };
 

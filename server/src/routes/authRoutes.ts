@@ -7,9 +7,38 @@ import {
   registerOrganizationSchema,
   loginSchema,
   refreshTokenSchema,
+  googleAuthSchema,
+  completeGoogleSetupSchema,
+  setPasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "../validations/authValidation";
 
 const router = Router();
+
+/**
+ * @route   POST /api/v1/auth/google
+ * @desc    Authenticate with Google OAuth ID token
+ * @access  Public (Rate limited)
+ */
+router.post(
+  "/google",
+  authRateLimiter,
+  validate(googleAuthSchema),
+  authController.googleAuth
+);
+
+/**
+ * @route   POST /api/v1/auth/google/complete-setup
+ * @desc    Complete workspace setup for brand new Google users
+ * @access  Public (Rate limited)
+ */
+router.post(
+  "/google/complete-setup",
+  authRateLimiter,
+  validate(completeGoogleSetupSchema),
+  authController.completeGoogleSetup
+);
 
 /**
  * @route   POST /api/v1/auth/register-organization
@@ -59,5 +88,42 @@ router.post("/logout", authController.logout);
  * @access  Authenticated (Bearer token)
  */
 router.get("/me", authenticate, authController.getMe);
+
+/**
+ * @route   POST /api/v1/auth/set-password
+ * @desc    Set password for Google OAuth users or change password for existing accounts
+ * @access  Authenticated (Rate limited)
+ */
+router.post(
+  "/set-password",
+  authenticate,
+  authRateLimiter,
+  validate(setPasswordSchema),
+  authController.setPassword
+);
+
+/**
+ * @route   POST /api/v1/auth/forgot-password
+ * @desc    Request a password reset link
+ * @access  Public (Rate limited)
+ */
+router.post(
+  "/forgot-password",
+  authRateLimiter,
+  validate(forgotPasswordSchema),
+  authController.forgotPassword
+);
+
+/**
+ * @route   POST /api/v1/auth/reset-password
+ * @desc    Reset password using a token
+ * @access  Public (Rate limited)
+ */
+router.post(
+  "/reset-password",
+  authRateLimiter,
+  validate(resetPasswordSchema),
+  authController.resetPassword
+);
 
 export default router;

@@ -11,6 +11,9 @@ import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 // Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterOrgPage = lazy(() => import("@/pages/auth/RegisterOrgPage"));
+const SetupWorkspacePage = lazy(() => import("@/pages/auth/SetupWorkspacePage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
 const AcceptInvitationPage = lazy(() => import("@/pages/auth/AcceptInvitationPage"));
 const IncidentsListPage = lazy(() => import("@/pages/incidents/IncidentsListPage"));
 const IncidentDetailsPage = lazy(() => import("@/pages/incidents/IncidentDetailsPage"));
@@ -65,6 +68,30 @@ export const router = createBrowserRouter([
     element: (
       <PageSuspense>
         <RegisterOrgPage />
+      </PageSuspense>
+    ),
+  },
+  {
+    path: "/setup-workspace",
+    element: (
+      <PageSuspense>
+        <SetupWorkspacePage />
+      </PageSuspense>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PageSuspense>
+        <ForgotPasswordPage />
+      </PageSuspense>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <PageSuspense>
+        <ResetPasswordPage />
       </PageSuspense>
     ),
   },

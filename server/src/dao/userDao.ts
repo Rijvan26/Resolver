@@ -5,9 +5,12 @@ import { Role, ROLES } from "../types";
 export interface CreateUserInput {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
   role: Role;
   organizationId: Types.ObjectId | string;
+  authProvider?: "local" | "google";
+  googleId?: string;
+  avatarUrl?: string;
   isActive?: boolean;
   seeded?: boolean;
   benchSession?: string;
@@ -39,8 +42,12 @@ export class UserDao {
   /**
    * Find a user by ID (excludes passwordHash by default).
    */
-  async findById(id: string | Types.ObjectId): Promise<IUser | null> {
-    return await User.findById(id).exec();
+  async findById(id: string | Types.ObjectId, includePassword = false): Promise<IUser | null> {
+    const query = User.findById(id);
+    if (includePassword) {
+      query.select("+passwordHash");
+    }
+    return await query.exec();
   }
 
   /**
@@ -49,6 +56,17 @@ export class UserDao {
    */
   async findByEmail(email: string, includePassword = false): Promise<IUser | null> {
     const query = User.findOne({ email: email.toLowerCase().trim() });
+    if (includePassword) {
+      query.select("+passwordHash");
+    }
+    return await query.exec();
+  }
+
+  /**
+   * Find a user by Google ID.
+   */
+  async findByGoogleId(googleId: string, includePassword = false): Promise<IUser | null> {
+    const query = User.findOne({ googleId });
     if (includePassword) {
       query.select("+passwordHash");
     }

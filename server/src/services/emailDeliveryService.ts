@@ -260,6 +260,16 @@ export class EmailDeliveryService {
         };
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
+        // Client errors (400, 401, 403, 404, 422) cannot succeed on retry; break immediately to avoid 30s delay
+        if (
+          lastError.message.includes("status 400") ||
+          lastError.message.includes("status 401") ||
+          lastError.message.includes("status 403") ||
+          lastError.message.includes("status 404") ||
+          lastError.message.includes("status 422")
+        ) {
+          break;
+        }
         if (attempt < this.maxRetries) {
           const delay = this.baseBackoffMs * Math.pow(2, attempt - 1);
           await new Promise((res) => setTimeout(res, delay));
