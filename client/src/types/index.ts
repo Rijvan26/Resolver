@@ -329,6 +329,7 @@ export interface ApiSuccessResponse<T> {
   success: true;
   data: T;
   message?: string;
+  warning?: string;
 }
 
 export interface ApiErrorDetail {
@@ -548,6 +549,9 @@ export interface Invitation {
   };
   invitationLink?: string;
   invitationToken?: string;
+  emailSent?: boolean;
+  emailDeliveryError?: string;
+  warning?: string;
 }
 
 export interface Member {

@@ -12,10 +12,13 @@ import {
   ALLOWED_INVITATION_ROLES,
   AllowedInvitationRole,
 } from "@/features/invitations/schemas";
-import { useCreateInvitationMutation } from "@/features/invitations/invitationsApi";
+import {
+  useCreateInvitationMutation,
+  useResendInvitationMutation,
+} from "@/features/invitations/invitationsApi";
 import { Role, ROLES, INVITATION_PERMISSIONS } from "@/types";
 import { parseApiError } from "@/lib/apiErrors";
-import { Mail, Copy, Check, UserPlus } from "lucide-react";
+import { Mail, Copy, Check, UserPlus, RefreshCw } from "lucide-react";
 
 export interface InviteMemberModalProps {
   isOpen: boolean;
@@ -30,9 +33,13 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
 }) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [emailFailed, setEmailFailed] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const [createInvitation, { isLoading }] = useCreateInvitationMutation();
+  const [resendInvitation, { isLoading: isResending }] = useResendInvitationMutation();
 
   const allowedRoles = (INVITATION_PERMISSIONS[actorRole] || []).filter(
     (r): r is AllowedInvitationRole => ALLOWED_INVITATION_ROLES.includes(r as AllowedInvitationRole)
@@ -55,12 +62,17 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
     reset();
     setServerError(null);
     setCreatedLink(null);
+    setCreatedId(null);
+    setEmailFailed(false);
+    setResendSuccess(false);
     setCopied(false);
     onClose();
   };
 
   const onSubmit = async (values: InvitationFormValues) => {
     setServerError(null);
+    setEmailFailed(false);
+    setResendSuccess(false);
 
     try {
       const result = await createInvitation({
@@ -68,10 +80,39 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
         role: values.role,
       }).unwrap();
 
+      if (result.data?.id) {
+        setCreatedId(result.data.id);
+      }
+
       if (result.data?.invitationLink) {
         setCreatedLink(result.data.invitationLink);
-      } else {
+      }
+
+      if (result.data?.emailSent === false || result.warning || result.data?.warning) {
+        setEmailFailed(true);
+      } else if (!result.data?.invitationLink) {
         handleModalClose();
+      }
+    } catch (err: unknown) {
+      const parsed = parseApiError(err);
+      setServerError(parsed.message);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!createdId) return;
+    setServerError(null);
+    try {
+      const res = await resendInvitation(createdId).unwrap();
+      if (res.data?.invitationLink) {
+        setCreatedLink(res.data.invitationLink);
+      }
+      if (res.data?.emailSent === false || res.warning || res.data?.warning) {
+        setEmailFailed(true);
+        setResendSuccess(false);
+      } else {
+        setEmailFailed(false);
+        setResendSuccess(true);
       }
     } catch (err: unknown) {
       const parsed = parseApiError(err);
@@ -94,9 +135,17 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={handleModalClose}
-      title={createdLink ? "Invitation Link Ready" : "Invite Team Member"}
+      title={
+        emailFailed
+          ? "Email could not be sent"
+          : createdLink
+          ? "Invitation Link Ready"
+          : "Invite Team Member"
+      }
       description={
-        createdLink
+        emailFailed
+          ? "The invitation was created, but delivery failed. You can copy the link or resend."
+          : createdLink
           ? "Share this direct link with the invited member"
           : "Send an email invitation to join your organization"
       }
@@ -111,9 +160,19 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
 
         {createdLink ? (
           <div className="space-y-4">
-            <Alert variant="success" title="Invitation Created">
-              An invitation has been created. In this environment, you can copy the direct registration link below:
-            </Alert>
+            {emailFailed ? (
+              <Alert variant="warning" title="Email could not be sent">
+                The invitation has been generated, but the email could not be sent automatically. You can copy the invite link below to send manually, or click Resend.
+              </Alert>
+            ) : resendSuccess ? (
+              <Alert variant="success" title="Email Resent Successfully">
+                The invitation email was resent to the member.
+              </Alert>
+            ) : (
+              <Alert variant="success" title="Invitation Created">
+                An invitation has been created. In this environment, you can copy the direct registration link below:
+              </Alert>
+            )}
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-main-fg">
@@ -134,8 +193,22 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                   leftIcon={copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                   className="shrink-0 text-xs"
                 >
-                  {copied ? "Copied" : "Copy Link"}
+                  {copied ? "Copied" : "Copy invite link"}
                 </Button>
+                {createdId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResend}
+                    isLoading={isResending}
+                    disabled={isResending}
+                    leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+                    className="shrink-0 text-xs"
+                  >
+                    Resend
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -146,6 +219,9 @@ export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                 size="sm"
                 onClick={() => {
                   setCreatedLink(null);
+                  setCreatedId(null);
+                  setEmailFailed(false);
+                  setResendSuccess(false);
                   reset();
                 }}
                 className="text-xs"

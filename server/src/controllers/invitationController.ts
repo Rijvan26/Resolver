@@ -18,7 +18,10 @@ export class InvitationController {
 
       const response: ApiSuccessResponse<typeof result> = {
         success: true,
-        message: "Invitation sent successfully",
+        message: result.emailSent === false
+          ? "Invitation created, but email could not be sent"
+          : "Invitation sent successfully",
+        warning: result.warning,
         data: result,
       };
 
@@ -87,6 +90,34 @@ export class InvitationController {
       const response: ApiSuccessResponse<typeof result> = {
         success: true,
         message: "Invitation revoked successfully",
+        data: result,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/invitations/:invitationId/resend
+   * Resend an active pending invitation email and refresh the token.
+   */
+  async resendInvitation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const rawId = req.params.invitationId;
+      const invitationId = Array.isArray(rawId) ? rawId[0] : rawId;
+      const result = await invitationService.resendInvitation(
+        invitationId,
+        req.user!.organizationId
+      );
+
+      const response: ApiSuccessResponse<typeof result> = {
+        success: true,
+        message: result.emailSent === false
+          ? "Invitation refreshed, but email could not be sent"
+          : "Invitation email resent successfully",
+        warning: result.warning,
         data: result,
       };
 

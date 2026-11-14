@@ -51,6 +51,19 @@ router.post(
 );
 
 /**
+ * @route   POST /api/v1/invitations/:invitationId/resend
+ * @desc    Resend an active pending invitation email
+ * @access  Authenticated (SUPER_ADMIN, ADMIN)
+ */
+router.post(
+  "/:invitationId/resend",
+  authenticate,
+  authorize(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  invitationRateLimiter,
+  invitationController.resendInvitation
+);
+
+/**
  * @route   DELETE /api/v1/invitations/:invitationId
  * @desc    Revoke an active pending invitation
  * @access  Authenticated (SUPER_ADMIN, ADMIN)

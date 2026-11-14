@@ -16,10 +16,14 @@ app.set("trust proxy", config.TRUST_PROXY);
 // Security HTTP headers
 app.use(helmet());
 
-// CORS configuration (supports single or comma-separated origins)
-const allowedOrigins = config.CORS_ORIGIN.split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+// CORS configuration (supports single or comma-separated origins, plus CLIENT_URL)
+const rawOrigins = [
+  ...config.CORS_ORIGIN.split(","),
+  ...(config.CLIENT_URL ? [config.CLIENT_URL] : []),
+];
+const allowedOrigins = Array.from(
+  new Set(rawOrigins.map((o) => o.trim().replace(/\/+$/, "")).filter(Boolean))
+);
 
 app.use(
   cors({

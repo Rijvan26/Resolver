@@ -6,6 +6,7 @@ import {
 } from "@/features/members/membersApi";
 import {
   useListInvitationsQuery,
+  useResendInvitationMutation,
 } from "@/features/invitations/invitationsApi";
 import {
   Member,
@@ -41,6 +42,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 
 export const MembersPage: React.FC = () => {
@@ -122,11 +124,25 @@ export const MembersPage: React.FC = () => {
   const pagination = membersData?.data?.pagination;
   const totalMembers = pagination?.total || 0;
 
+  const [resendInvitation, { isLoading: isResending }] = useResendInvitationMutation();
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
   const invitations = invitationsData?.data || [];
   const pendingInvitations = useMemo(
     () => invitations.filter((i) => i.status === "PENDING"),
     [invitations]
   );
+
+  const handleResendInvitation = async (invitationId: string) => {
+    setResendingId(invitationId);
+    try {
+      await resendInvitation(invitationId).unwrap();
+    } catch {
+      // Handled by toast/notification or error banner
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   const handleTabChange = (tab: "members" | "invitations") => {
     setSearchParams((prev) => {
@@ -212,11 +228,10 @@ export const MembersPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleTabChange("members")}
-              className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${
-                activeTab === "members"
+              className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${activeTab === "members"
                   ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
-              }`}
+                }`}
             >
               <Users className="h-4 w-4" />
               Members
@@ -229,11 +244,10 @@ export const MembersPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleTabChange("invitations")}
-                className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${
-                  activeTab === "invitations"
+                className={`flex items-center gap-2 border-b-2 pb-3.5 text-sm font-semibold transition-colors ${activeTab === "invitations"
                     ? "border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400"
                     : "border-transparent text-slate-500 hover:text-slate-800 dark:text-muted-fg dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <Mail className="h-4 w-4" />
                 Pending Invitations
@@ -341,11 +355,11 @@ export const MembersPage: React.FC = () => {
                         const canModify = canModifyMember(member);
                         const initials = member.name
                           ? member.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase()
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()
                           : "U";
 
                         return (
@@ -383,16 +397,14 @@ export const MembersPage: React.FC = () => {
                             {/* Status */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
                               <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                  member.isActive
+                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${member.isActive
                                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/40"
                                     : "bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/40"
-                                }`}
+                                  }`}
                               >
                                 <span
-                                  className={`h-1.5 w-1.5 rounded-full ${
-                                    member.isActive ? "bg-emerald-500" : "bg-rose-500"
-                                  }`}
+                                  className={`h-1.5 w-1.5 rounded-full ${member.isActive ? "bg-emerald-500" : "bg-rose-500"
+                                    }`}
                                 />
                                 {member.isActive ? "Active" : "Deactivated"}
                               </span>
@@ -433,11 +445,10 @@ export const MembersPage: React.FC = () => {
                                     <button
                                       type="button"
                                       onClick={() => setMemberForStatus(member)}
-                                      className={`rounded p-1.5 text-muted-fg transition-colors ${
-                                        member.isActive
+                                      className={`rounded p-1.5 text-muted-fg transition-colors ${member.isActive
                                           ? "hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
                                           : "hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
-                                      }`}
+                                        }`}
                                       title={member.isActive ? "Deactivate account" : "Reactivate account"}
                                       aria-label={member.isActive ? "Deactivate account" : "Reactivate account"}
                                     >
@@ -569,15 +580,28 @@ export const MembersPage: React.FC = () => {
                             </div>
                           </td>
                           <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setInvitationForRevoke(inv)}
-                              className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                              leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                            >
-                              Revoke
-                            </Button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleResendInvitation(inv.id)}
+                                isLoading={isResending && resendingId === inv.id}
+                                disabled={isResending && resendingId === inv.id}
+                                className="h-7 text-xs text-primary-600 hover:text-primary-700 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-950/40"
+                                leftIcon={<RefreshCw className="h-3 w-3" />}
+                              >
+                                Resend
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setInvitationForRevoke(inv)}
+                                className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                                leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                              >
+                                Revoke
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}

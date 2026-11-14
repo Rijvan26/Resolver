@@ -72,7 +72,7 @@ export class EmailDeliveryService {
   }
 
   /**
-   * For testing: explicitly allow live SMTP delivery even when NODE_ENV === 'test'.
+   * For testing: explicitly allow live delivery even when NODE_ENV === 'test'.
    */
   public setLiveInTest(enabled: boolean): void {
     this.liveInTest = enabled;
@@ -104,46 +104,151 @@ export class EmailDeliveryService {
   }
 
   /**
+   * Extracts clean email address from "Name <email@domain>" or raw email.
+   */
+  private parseSenderEmail(raw: string): string {
+    const match = raw.match(/<([^>]+)>/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    return raw.trim();
+  }
+
+  /**
+   * Send transactional email using Brevo HTTP API over HTTPS (port 443).
+   * Used for cloud environments like Render where outbound SMTP ports (25/465/587) are blocked.
+   */
+  public async sendViaBrevoHttp(payload: EmailDeliveryPayload): Promise<{ messageId: string }> {
+    const apiKey = (process.env.EMAIL_API_KEY || config.EMAIL_API_KEY || config.BREVO_API_KEY || process.env.BREVO_API_KEY)?.trim();
+    if (!apiKey) {
+      throw new Error("Brevo API key is not configured. Set EMAIL_API_KEY in environment variables.");
+    }
+
+    const rawFrom = process.env.EMAIL_FROM || config.EMAIL_FROM || config.GOOGLE_USER?.trim() || "notifications@resolver.internal";
+    const senderEmail = this.parseSenderEmail(rawFrom);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    try {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": apiKey,
+          "content-type": "application/json",
+          "accept": "application/json",
+        },
+        body: JSON.stringify({
+          sender: {
+            name: "Resolver",
+            email: senderEmail,
+          },
+          to: [
+            {
+              email: payload.to,
+            },
+          ],
+          subject: payload.subject,
+          htmlContent: payload.html || `<p>${payload.text}</p>`,
+          textContent: payload.text,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        let errorDetails = "";
+        try {
+          const errJson = (await response.json()) as { message?: string; code?: string };
+          errorDetails = errJson?.message || errJson?.code || JSON.stringify(errJson);
+        } catch {
+          errorDetails = await response.text().catch(() => "Unknown response body");
+        }
+        console.error(
+          `❌ [EmailDeliveryService] Brevo HTTP API error (HTTP ${response.status}): ${errorDetails}`
+        );
+        throw new Error(`Brevo HTTP API delivery failed with status ${response.status}: ${errorDetails}`);
+      }
+
+      const data = (await response.json().catch(() => ({}))) as { messageId?: string; messageIds?: string[] };
+      const messageId = data?.messageId || data?.messageIds?.[0] || "brevo-http-msg";
+      return { messageId };
+    } catch (err: unknown) {
+      if ((err as Error)?.name === "AbortError" || (err as Error)?.message?.includes("aborted")) {
+        console.error("❌ [EmailDeliveryService] Brevo HTTP API request timed out after 10000ms");
+        throw new Error("Brevo HTTP API request timed out after 10000ms");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Send transactional email using Nodemailer SMTP transporter.
+   */
+  private async sendViaSmtp(payload: EmailDeliveryPayload): Promise<{ messageId: string }> {
+    if (!this.transporter) {
+      throw new Error("SMTP transporter is not initialized. Check BREVO_SMTP_USER and BREVO_SMTP_PASS.");
+    }
+    const rawFrom = config.GOOGLE_USER?.trim() || config.EMAIL_FROM;
+    const from = rawFrom.includes("<") ? rawFrom : `Resolver <${rawFrom}>`;
+    const info = await this.transporter.sendMail({
+      from,
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text,
+      html: payload.html,
+    });
+    return { messageId: info.messageId };
+  }
+
+  /**
    * Send an email with bounded retries and exponential backoff.
    * Never exposes credentials or sensitive payload tokens in error logs.
    */
   async sendEmail(payload: EmailDeliveryPayload): Promise<EmailDeliveryResult> {
-    // 1. Determine active sender (custom mock or live Nodemailer transport)
     const isLiveAllowed = config.NODE_ENV !== "test" || this.liveInTest;
-    const activeSender =
-      this.customSender ||
-      (this.transporter && isLiveAllowed
-        ? async (p: EmailDeliveryPayload) => {
-            const rawFrom = config.GOOGLE_USER?.trim() || config.EMAIL_FROM;
-            const from = rawFrom.includes("<") ? rawFrom : `Resolver <${rawFrom}>`;
-            const info = await this.transporter!.sendMail({
-              from,
-              to: p.to,
-              subject: p.subject,
-              text: p.text,
-              html: p.html,
-            });
-            return { messageId: info.messageId };
-          }
-        : null);
+    let activeSender: EmailSender | null = this.customSender;
 
-    // 2. If no provider is configured and no mock is present, safely skip
-    if (!activeSender) {
-      if (config.NODE_ENV !== "test") {
-        console.log(
-          `📧 [EmailDeliveryService] No email provider configured. Notification email to ${this.maskEmail(payload.to)} skipped.`
-        );
+    if (!activeSender && isLiveAllowed) {
+      if (config.EMAIL_PROVIDER === "brevo") {
+        activeSender = (p: EmailDeliveryPayload) => this.sendViaBrevoHttp(p);
+      } else if (config.EMAIL_PROVIDER === "smtp") {
+        if (this.transporter) {
+          activeSender = (p: EmailDeliveryPayload) => this.sendViaSmtp(p);
+        } else {
+          // Fallback to Brevo HTTP if API key is present
+          const apiKey = (config.EMAIL_API_KEY || config.BREVO_API_KEY || process.env.EMAIL_API_KEY || process.env.BREVO_API_KEY)?.trim();
+          if (apiKey) {
+            activeSender = (p: EmailDeliveryPayload) => this.sendViaBrevoHttp(p);
+          }
+        }
       }
+    }
+
+    // If in test mode with no mock sender and live not allowed, safely skip
+    if (!activeSender) {
+      if (config.NODE_ENV === "test") {
+        return {
+          success: true,
+          status: "SKIPPED_NO_PROVIDER",
+          attempts: 0,
+        };
+      }
+
+      const warnMsg = "No email provider configured or EMAIL_API_KEY is missing";
+      console.warn(`⚠️ [EmailDeliveryService] ${warnMsg}. Email to ${this.maskEmail(payload.to)} skipped.`);
       return {
-        success: true,
-        status: "SKIPPED_NO_PROVIDER",
+        success: false,
+        status: "FAILED",
+        error: warnMsg,
         attempts: 0,
       };
     }
 
     let lastError: Error | null = null;
 
-    // 3. Attempt delivery with bounded retries & exponential backoff
+    // Attempt delivery with bounded retries & exponential backoff
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         const result = await activeSender(payload);
@@ -162,7 +267,7 @@ export class EmailDeliveryService {
       }
     }
 
-    // 4. Safe error reporting (never leak tokens, passwords or secrets)
+    // Safe error reporting (never leak tokens, passwords or secrets)
     const safeErrorMessage = lastError ? lastError.message : "Unknown email delivery error";
     console.error(
       `❌ [EmailDeliveryService] Failed to deliver email to ${this.maskEmail(payload.to)} after ${this.maxRetries} attempts: ${safeErrorMessage}`

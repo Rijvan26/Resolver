@@ -51,6 +51,17 @@ export const invitationsApi = api.injectEndpoints({
         { type: "Invitations", id: "LIST" },
       ],
     }),
+
+    resendInvitation: builder.mutation<ApiSuccessResponse<Invitation>, string>({
+      query: (invitationId) => ({
+        url: `/invitations/${invitationId}/resend`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Invitations", id },
+        { type: "Invitations", id: "LIST" },
+      ],
+    }),
   }),
 });
 
@@ -58,5 +69,6 @@ export const {
   useListInvitationsQuery,
   useCreateInvitationMutation,
   useRevokeInvitationMutation,
+  useResendInvitationMutation,
 } = invitationsApi;
 

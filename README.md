@@ -151,6 +151,22 @@ PORT=5000
 MONGODB_URI=mongodb://localhost:27017/resolver
 REDIS_URL=redis://localhost:6379
 
+# Frontend URLs & Invitations
+CLIENT_URL=http://localhost:5173
+INVITATION_BASE_URL=http://localhost:5173/accept-invitation
+
+# Email Delivery Configuration (brevo HTTP API is default for cloud platforms like Render)
+EMAIL_PROVIDER=brevo
+EMAIL_API_KEY=your_brevo_api_key_here
+EMAIL_FROM="Resolver Notifications <notifications@resolver.internal>"
+
+# Optional SMTP Provider (alternative to Brevo HTTP; ports 25/465/587 blocked on Render free)
+# EMAIL_PROVIDER=smtp
+# SMTP_HOST=smtp-relay.brevo.com
+# SMTP_PORT=587
+# BREVO_SMTP_USER=your_brevo_smtp_login
+# BREVO_SMTP_PASS=your_brevo_smtp_key
+
 # AI Phase 1 Settings
 AI_ENABLED=true
 AI_PROVIDER=fake                   # Options: fake | groq | gemini | ollama
@@ -166,6 +182,24 @@ AI_TIMEOUT_MS=30000
 AI_DAILY_CAP=50
 AI_REDACT_IPS=true
 ```
+
+#### Deployment & Email Configuration Table
+
+| Variable | Description | Default / Example | Required in Production |
+|---|---|---|---|
+| `NODE_ENV` | Environment mode | `production` | Yes |
+| `PORT` | Listening port (assigned by host on Render) | `10000` | Yes |
+| `APP_URL` | Public backend URL | `https://resolver-api.onrender.com` | Yes |
+| `MONGODB_URI` | MongoDB Atlas cluster connection URI | `mongodb+srv://...` | Yes |
+| `REDIS_URL` | Upstash Redis connection URI (with TLS) | `rediss://...` | Yes |
+| `CLIENT_URL` | Frontend origin for CORS and invitation links | `https://resolver.vercel.app` | Yes |
+| `EMAIL_PROVIDER` | Email delivery adapter (`brevo` HTTP API or `smtp`) | `brevo` (Render default) | Yes |
+| `EMAIL_API_KEY` | Brevo v3 API key for HTTPS transactional email | `xkeysib-...` | Yes |
+| `EMAIL_FROM` | Sender address verified in Brevo | `notifications@yourdomain.com` | Yes |
+| `JWT_ACCESS_SECRET` | Secret key for access token signing | Strong 32+ char secret | Yes |
+| `JWT_REFRESH_SECRET`| Secret key for refresh token signing | Strong 32+ char secret | Yes |
+| `COOKIE_SECRET` | Secret key for signed cookie verification | Strong 32+ char secret | Yes |
+| `ALERT_INGEST_SECRET` | Secret key for alert webhook ingestion | Strong 16+ char secret | Yes |
 
 ### 2. Backend (Server)
 

@@ -46,11 +46,100 @@ export interface SafeInvitation {
   };
   invitationLink?: string;
   invitationToken?: string;
+  emailSent?: boolean;
+  emailDeliveryError?: string;
+  warning?: string;
 }
 
 export interface AcceptInvitationResult {
   user: SafeUser;
   organization: SafeOrganization;
+}
+
+export function buildInvitationLink(rawToken: string): string {
+  const rawBase = config.CLIENT_URL?.trim() || config.INVITATION_BASE_URL?.trim() || "http://localhost:5173/accept-invitation";
+  
+  let baseUrl: string;
+  if (config.CLIENT_URL?.trim()) {
+    const cleanClient = config.CLIENT_URL.trim().replace(/\/+$/, "");
+    baseUrl = cleanClient.endsWith("/accept-invitation") ? cleanClient : `${cleanClient}/accept-invitation`;
+  } else {
+    const cleanBase = rawBase.replace(/\/+$/, "");
+    baseUrl = cleanBase.endsWith("/accept-invitation") ? cleanBase : `${cleanBase}/accept-invitation`;
+  }
+
+  return `${baseUrl}?token=${encodeURIComponent(rawToken)}`;
+}
+
+interface InvitationEmailParams {
+  subject: string;
+  orgName: string;
+  inviterName: string;
+  targetRole: Role;
+  invitationLink: string;
+}
+
+function generateInvitationEmailHtml(params: InvitationEmailParams): string {
+  const { subject, orgName, inviterName, targetRole, invitationLink } = params;
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ECECE8; margin: 0; padding: 24px 16px; color: #111113;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; border: 1px solid #EEEEE9; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);">
+    <tr>
+      <td style="padding: 32px 32px 24px; text-align: left;">
+        <table border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+          <tr>
+            <td style="vertical-align: middle;">
+              <span style="display: inline-block; width: 36px; height: 36px; line-height: 36px; text-align: center; background-color: #111113; color: #FFFFFF; border-radius: 10px; font-weight: 700; font-size: 18px;">R</span>
+            </td>
+            <td style="vertical-align: middle; padding-left: 10px;">
+              <span style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #111113;">Resolver</span>
+            </td>
+          </tr>
+        </table>
+        
+        <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #111113; letter-spacing: -0.02em;">You've been invited!</h1>
+        <p style="font-size: 14px; line-height: 1.6; margin: 0 0 20px; color: #55555C;">
+          <strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on <strong>Resolver</strong> as a <strong>${targetRole}</strong>.
+        </p>
+        
+        <table border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
+          <tr>
+            <td style="border-radius: 12px; background-color: #111113; text-align: center;">
+              <a href="${invitationLink}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; border-radius: 12px; letter-spacing: -0.01em;">
+                Accept Invitation &rarr;
+              </a>
+            </td>
+          </tr>
+        </table>
+        
+        <p style="font-size: 12px; line-height: 1.5; color: #6B6B72; margin: 0 0 8px;">
+          Or copy and paste this link into your browser:
+        </p>
+        <p style="font-size: 12px; line-height: 1.5; color: #6A4CFF; word-break: break-all; margin: 0 0 24px;">
+          <a href="${invitationLink}" style="color: #6A4CFF; text-decoration: underline;">${invitationLink}</a>
+        </p>
+
+        <p style="font-size: 12px; line-height: 1.5; color: #9E9EA7; margin: 0;">
+          This invitation link will expire in ${INVITATION_EXPIRATION_DAYS} days. If you did not expect this invitation, please ignore this email.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #F7F7F5; padding: 16px 32px; border-top: 1px solid #EEEEE9; text-align: center; font-size: 11px; color: #9E9EA7;">
+        Resolver Incident Management Platform &bull; Automated System Email
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
 }
 
 export class InvitationService {
@@ -113,9 +202,12 @@ export class InvitationService {
     });
 
     // 7. Construct secure invitation URL
-    const invitationLink = `${config.INVITATION_BASE_URL}?token=${rawToken}`;
+    const invitationLink = buildInvitationLink(rawToken);
 
     // 8. Deliver invitation email with the onboarding link
+    let emailSent = false;
+    let emailDeliveryError: string | undefined;
+
     try {
       const [organization, inviter] = await Promise.all([
         organizationDao.findById(organizationId),
@@ -127,68 +219,15 @@ export class InvitationService {
 
       const subject = `Invitation to join ${orgName} on Resolver`;
       const text = `Hello,\n\n${inviterName} has invited you to join ${orgName} on Resolver as a ${targetRole}.\n\nClick the link below to accept your invitation and set up your account:\n${invitationLink}\n\nThis invitation link expires in ${INVITATION_EXPIRATION_DAYS} days.\n\nIf you did not expect this invitation, you can safely ignore this email.\n\nBest regards,\nThe Resolver Team`;
+      const html = generateInvitationEmailHtml({
+        subject,
+        orgName,
+        inviterName,
+        targetRole,
+        invitationLink,
+      });
 
-      const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ECECE8; margin: 0; padding: 24px 16px; color: #111113;">
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; border: 1px solid #EEEEE9; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);">
-    <tr>
-      <td style="padding: 32px 32px 24px; text-align: left;">
-        <table border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
-          <tr>
-            <td style="vertical-align: middle;">
-              <span style="display: inline-block; width: 36px; height: 36px; line-height: 36px; text-align: center; background-color: #111113; color: #FFFFFF; border-radius: 10px; font-weight: 700; font-size: 18px;">R</span>
-            </td>
-            <td style="vertical-align: middle; padding-left: 10px;">
-              <span style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #111113;">Resolver</span>
-            </td>
-          </tr>
-        </table>
-        
-        <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #111113; letter-spacing: -0.02em;">You've been invited!</h1>
-        <p style="font-size: 14px; line-height: 1.6; margin: 0 0 20px; color: #55555C;">
-          <strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on <strong>Resolver</strong> as a <strong>${targetRole}</strong>.
-        </p>
-        
-        <table border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
-          <tr>
-            <td style="border-radius: 12px; background-color: #111113; text-align: center;">
-              <a href="${invitationLink}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; border-radius: 12px; letter-spacing: -0.01em;">
-                Accept Invitation &rarr;
-              </a>
-            </td>
-          </tr>
-        </table>
-        
-        <p style="font-size: 12px; line-height: 1.5; color: #6B6B72; margin: 0 0 8px;">
-          Or copy and paste this link into your browser:
-        </p>
-        <p style="font-size: 12px; line-height: 1.5; color: #6A4CFF; word-break: break-all; margin: 0 0 24px;">
-          <a href="${invitationLink}" style="color: #6A4CFF; text-decoration: underline;">${invitationLink}</a>
-        </p>
-
-        <p style="font-size: 12px; line-height: 1.5; color: #9E9EA7; margin: 0;">
-          This invitation link will expire in ${INVITATION_EXPIRATION_DAYS} days. If you did not expect this invitation, please ignore this email.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="background-color: #F7F7F5; padding: 16px 32px; border-top: 1px solid #EEEEE9; text-align: center; font-size: 11px; color: #9E9EA7;">
-        Resolver Incident Management Platform &bull; Automated System Email
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `.trim();
-
-      await emailDeliveryService.sendEmail({
+      const deliveryResult = await emailDeliveryService.sendEmail({
         to: normalizedEmail,
         recipientName: normalizedEmail,
         subject,
@@ -201,7 +240,14 @@ export class InvitationService {
           invitationId: invitation._id.toString(),
         },
       });
+
+      emailSent = deliveryResult.success;
+      if (!deliveryResult.success) {
+        emailDeliveryError = deliveryResult.error || "Email delivery failed";
+      }
     } catch (emailErr) {
+      emailSent = false;
+      emailDeliveryError = emailErr instanceof Error ? emailErr.message : String(emailErr);
       console.error(
         `[InvitationService] Failed to dispatch invitation email to ${normalizedEmail}:`,
         emailErr
@@ -220,6 +266,114 @@ export class InvitationService {
       inviterId: invitation.inviterId.toString(),
       invitationLink,
       invitationToken: rawToken,
+      emailSent,
+      emailDeliveryError,
+      warning: !emailSent ? "Email could not be sent" : undefined,
+    };
+  }
+
+  /**
+   * Resend an active pending invitation and refresh the security token.
+   */
+  async resendInvitation(
+    invitationId: string,
+    organizationId: string
+  ): Promise<SafeInvitation> {
+    if (!Types.ObjectId.isValid(invitationId)) {
+      throw new NotFoundError("Invitation not found");
+    }
+
+    const invitation = await invitationDao.findById(invitationId);
+    if (!invitation) {
+      throw new NotFoundError("Invitation not found");
+    }
+
+    if (invitation.organizationId.toString() !== organizationId.toString()) {
+      throw new ForbiddenError(
+        "Access denied: cannot resend invitation belonging to another organization"
+      );
+    }
+
+    if (invitation.status !== INVITATION_STATUS.PENDING) {
+      throw new ConflictError(
+        `Invitation is already ${invitation.status.toLowerCase()} and cannot be resent`
+      );
+    }
+
+    // Refresh token and expiration
+    const rawToken = generateRandomToken(32);
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + INVITATION_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
+
+    invitation.tokenHash = tokenHash;
+    invitation.expiresAt = expiresAt;
+    await invitation.save();
+
+    const invitationLink = buildInvitationLink(rawToken);
+
+    let emailSent = false;
+    let emailDeliveryError: string | undefined;
+
+    try {
+      const [organization, inviter] = await Promise.all([
+        organizationDao.findById(organizationId),
+        userDao.findById(invitation.inviterId),
+      ]);
+
+      const orgName = organization?.name || "your organization";
+      const inviterName = inviter?.name || "A team member";
+
+      const subject = `Invitation to join ${orgName} on Resolver`;
+      const text = `Hello,\n\n${inviterName} has invited you to join ${orgName} on Resolver as a ${invitation.role}.\n\nClick the link below to accept your invitation and set up your account:\n${invitationLink}\n\nThis invitation link expires in ${INVITATION_EXPIRATION_DAYS} days.\n\nIf you did not expect this invitation, you can safely ignore this email.\n\nBest regards,\nThe Resolver Team`;
+      const html = generateInvitationEmailHtml({
+        subject,
+        orgName,
+        inviterName,
+        targetRole: invitation.role,
+        invitationLink,
+      });
+
+      const deliveryResult = await emailDeliveryService.sendEmail({
+        to: invitation.email,
+        recipientName: invitation.email,
+        subject,
+        text,
+        html,
+        metadata: {
+          organizationId,
+          inviterId: invitation.inviterId.toString(),
+          role: invitation.role,
+          invitationId: invitation._id.toString(),
+        },
+      });
+
+      emailSent = deliveryResult.success;
+      if (!deliveryResult.success) {
+        emailDeliveryError = deliveryResult.error || "Email delivery failed";
+      }
+    } catch (emailErr) {
+      emailSent = false;
+      emailDeliveryError = emailErr instanceof Error ? emailErr.message : String(emailErr);
+      console.error(
+        `[InvitationService] Failed to resend invitation email to ${invitation.email}:`,
+        emailErr
+      );
+    }
+
+    return {
+      id: invitation._id.toString(),
+      organizationId: invitation.organizationId.toString(),
+      email: invitation.email,
+      role: invitation.role,
+      status: invitation.status,
+      expiresAt: invitation.expiresAt,
+      createdAt: invitation.createdAt,
+      inviterId: invitation.inviterId.toString(),
+      invitationLink,
+      invitationToken: rawToken,
+      emailSent,
+      emailDeliveryError,
+      warning: !emailSent ? "Email could not be sent" : undefined,
     };
   }
 

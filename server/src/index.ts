@@ -23,6 +23,17 @@ const startServer = async () => {
         `🚀 Resolver API server listening on 0.0.0.0:${config.PORT} [${config.NODE_ENV}]`
       );
       console.log(`👉 Health check: http://0.0.0.0:${config.PORT}/health`);
+      console.log(`Email provider: ${config.EMAIL_PROVIDER}, from: ${config.EMAIL_FROM}`);
+
+      if (config.NODE_ENV === "production") {
+        const hasApiKey = Boolean(config.EMAIL_API_KEY || config.BREVO_API_KEY);
+        if (!hasApiKey) {
+          console.warn("⚠️ [Startup Warning] EMAIL_API_KEY is missing in production. Brevo HTTP email delivery will fail.");
+        }
+        if (!config.CLIENT_URL) {
+          console.warn("⚠️ [Startup Warning] CLIENT_URL is missing in production. Defaulting to INVITATION_BASE_URL.");
+        }
+      }
     });
 
     // 3. Start background AI & embedding workers (fail-open if Redis is down)

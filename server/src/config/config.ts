@@ -1,8 +1,11 @@
+import path from "node:path";
 import dotenv from "dotenv";
 import { z } from "zod";
 
-// Load environment variables from .env file
+// Load environment variables from .env file (supports running from root or server dir)
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), "..", ".env") });
+dotenv.config({ path: path.resolve(process.cwd(), "server", ".env") });
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
@@ -17,7 +20,10 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   COOKIE_SECRET: z.string().min(16, "COOKIE_SECRET must be at least 16 characters long"),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  CLIENT_URL: z.string().optional(),
   INVITATION_BASE_URL: z.string().default("http://localhost:5173/accept-invitation"),
+  EMAIL_PROVIDER: z.enum(["brevo", "smtp"]).default("brevo"),
+  EMAIL_API_KEY: z.string().optional(),
   SMTP_HOST: z.string().default("smtp-relay.brevo.com"),
   SMTP_PORT: z.coerce.number().default(587),
   BREVO_SMTP_USER: z.string().optional(),
@@ -139,19 +145,21 @@ export const productionEnvSchema = envSchema.superRefine((env, ctx) => {
     });
   }
 
-  if (!env.CORS_ORIGIN || isLocalhostUrl(env.CORS_ORIGIN)) {
+  const effectiveCors = env.CLIENT_URL || env.CORS_ORIGIN;
+  if (!effectiveCors || isLocalhostUrl(effectiveCors)) {
     ctx.addIssue({
       code: "custom",
       path: ["CORS_ORIGIN"],
-      message: "CORS_ORIGIN must be set to your production frontend origin (not localhost) in production",
+      message: "CORS_ORIGIN (or CLIENT_URL) must be set to your production frontend origin (not localhost) in production",
     });
   }
 
-  if (!env.INVITATION_BASE_URL || isLocalhostUrl(env.INVITATION_BASE_URL)) {
+  const effectiveInviteUrl = env.CLIENT_URL || env.INVITATION_BASE_URL;
+  if (!effectiveInviteUrl || isLocalhostUrl(effectiveInviteUrl)) {
     ctx.addIssue({
       code: "custom",
       path: ["INVITATION_BASE_URL"],
-      message: "INVITATION_BASE_URL must be set to your production frontend invitation URL in production",
+      message: "CLIENT_URL (or INVITATION_BASE_URL) must be set to your production frontend URL (not localhost) in production",
     });
   }
 
